@@ -1,0 +1,578 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Examples &#8212; FC-DFT 1.0.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'examples';</script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="About" href="about.html" />
+    <link rel="prev" title="Installation" href="install.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">FC-DFT 1.0.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="about.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/Yang-Laboratory/FC-DFT" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="about.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/Yang-Laboratory/FC-DFT" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Examples</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h1>
+<p>This chapter introduces brief exmaples of running FC-DFT and Poisson-Boltzmann solvation calculations</p>
+<section id="wide-band-limit">
+<h2>Wide-Band Limit<a class="headerlink" href="#wide-band-limit" title="Link to this heading">#</a></h2>
+<p>FC-DFT employs a special type of the wide-band limit (WBL) approximation, where the self-energy is constructed under the absence of electrodes. This requires users to provide the imaginary part of the self-energy in <code class="docutils literal notranslate"><span class="pre">WBLMolecule</span></code> object.
+Currently, spin-restricted version of FC-DFT (<code class="docutils literal notranslate"><span class="pre">fcdft.wbl.rks</span></code>) is supported. Below is a sample code, where the self-energy of 0.01 eV is attached to the sulfur atom of methanethiol with 25.95 electrons.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf</span><span class="w"> </span><span class="kn">import</span> <span class="n">gto</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf.dft</span><span class="w"> </span><span class="kn">import</span> <span class="n">RKS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="go">            C       -1.718553971     -0.000000250     -0.626147715</span>
+<span class="go">            H       -2.739245971     -0.008907250     -0.227127715</span>
+<span class="go">            H       -1.200493971     -0.879491250     -0.227127715</span>
+<span class="go">            H       -1.215921971      0.888398750     -0.227127715</span>
+<span class="go">            S       -1.718553971     -0.000000250     -2.396147715</span>
+<span class="go">            H       -2.150082583      0.805150681     -2.710667448&#39;&#39;&#39;,</span>
+<span class="go">        charge=0, basis=&#39;6-31g**&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">mf = RKS(mol, xc=&#39;pbe&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">mf.kernel()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">from fcdft.wbl.rks import *</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">wblmf = WBLMolecule(mf, broad=0.01, nelectron=25.95)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">wblmf.kernel()</span>
+</pre></div>
+</div>
+</section>
+<section id="non-linear-poisson-boltzmann-solvation-model">
+<h2>Non-Linear Poisson-Boltzmann Solvation Model<a class="headerlink" href="#non-linear-poisson-boltzmann-solvation-model" title="Link to this heading">#</a></h2>
+<p>We provide the Poisson-Boltzmann solver for general purpose. <code class="docutils literal notranslate"><span class="pre">fcdft.solvent.pbe</span></code> module supports usual solvation energy calculations as what polarizable continuum model does.
+To do so, a few attributes of <code class="docutils literal notranslate"><span class="pre">PBE</span></code> needs to be controlled since it was originally intended to solve the electrostatic potential under the Gouy-Chapman-Stern theory:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf</span><span class="w"> </span><span class="kn">import</span> <span class="n">gto</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf.dft</span><span class="w"> </span><span class="kn">import</span> <span class="n">RKS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="go">            O        0.152427064      0.959723218     -2.275350162</span>
+<span class="go">            H        0.152427064      1.719060218     -1.679307162</span>
+<span class="go">            H        0.152427064      0.200386218     -1.679307162&#39;&#39;&#39;,</span>
+<span class="go">        charge=0, basis=&#39;6-31g**&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">mf = RKS(mol, xc=&#39;b3lyp&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">from fcdft.solvent.pbe import *</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">cm = PBE(mol, cb=1.0, length=15, ngrids=41)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">cm.eps = 78.3553</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">cm.atom_bottom = &#39;center&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">cm.nelectron = mol.nelectron</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">cm.bias = 0.0e0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">cm.surf = 0.0e0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">solmf = pbe_for_scf(mf, cm)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">solmf.kernel()</span>
+</pre></div>
+</div>
+<p>The following example introduces how to run the Poisson-Boltzmann solver under the Gouy-Chapman-Stern boundary values:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf</span><span class="w"> </span><span class="kn">import</span> <span class="n">gto</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf.dft</span><span class="w"> </span><span class="kn">import</span> <span class="n">RKS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="go">            C       -1.718553971     -0.000000250     -0.626147715</span>
+<span class="go">            H       -2.739245971     -0.008907250     -0.227127715</span>
+<span class="go">            H       -1.200493971     -0.879491250     -0.227127715</span>
+<span class="go">            H       -1.215921971      0.888398750     -0.227127715</span>
+<span class="go">            S       -1.718553971     -0.000000250     -2.396147715</span>
+<span class="go">            H       -2.150082583      0.805150681     -2.710667448&#39;&#39;&#39;,</span>
+<span class="go">        charge=0, basis=&#39;6-31g**&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">mf = RKS(mol, xc=&#39;pbe&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">mf.kernel()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">from fcdft.wbl.rks import *</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">wblmf = WBLMolecule(mf, broad=0.01, nelectron=25.95)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">wblmf.kernel()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">dm = wblmf.make_rdm1()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">from fcdft.solvent.pbe import *</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">cm = PBE(mol, cb=1.0, length=15, ngrids=41, stern_sam=3.0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">cm.eps = 78.3553</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">cm.eps_sam = 2.284</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">cm._dm = dm</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">solmf = pbe_for_scf(wblmf, cm)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">solmf.kernel()</span>
+</pre></div>
+</div>
+</section>
+<section id="geometry-optimization">
+<h2>Geometry Optimization<a class="headerlink" href="#geometry-optimization" title="Link to this heading">#</a></h2>
+<p>Our code supports analytic nuclear gradients of FC-DFT as well as the Poisson-Boltzmann solvation model. We have tested geometry optimization using GeomeTRIC, an external geometry optimizer implemented in PySCF:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf.geomopt.geometric_solver</span><span class="w"> </span><span class="kn">import</span> <span class="n">optimize</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">moleq</span> <span class="o">=</span> <span class="n">optimize</span><span class="p">(</span><span class="n">solmf</span><span class="p">,</span> <span class="n">maxstep</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="thermochemistry">
+<h2>Thermochemistry<a class="headerlink" href="#thermochemistry" title="Link to this heading">#</a></h2>
+<p>We provide a code for numerical Hessian matrix constructed by analytic forces due to the non-Hermitian Hamiltonian resulted by the self-energy. Thermochemical properties can be calculated by utilizing <code class="docutils literal notranslate"><span class="pre">pyscf.hessian.thermo</span></code> module.
+<code class="docutils literal notranslate"><span class="pre">Hessian</span></code> offers three-point (default) and five-point finite difference method for calculating the Hessian matrix. The following code introduces how to obtain thermochemical properties using <code class="docutils literal notranslate"><span class="pre">harmonic_analysis</span></code> function:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fcdft.hessian</span> <span class="n">numhess</span> <span class="kn">import</span><span class="w"> </span><span class="o">*</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hessmf</span> <span class="o">=</span> <span class="n">Hessian</span><span class="p">(</span><span class="n">solmf</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hess</span> <span class="o">=</span> <span class="n">hessmf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf.hessian.thermo</span><span class="w"> </span><span class="kn">import</span> <span class="n">harmonic_analysis</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">freq_info</span> <span class="o">=</span> <span class="n">harmonic_analysis</span><span class="p">(</span><span class="n">moleq</span><span class="p">,</span> <span class="n">hess</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Once the quantities are obtained, these can be saved into a molden format as implemented in <code class="docutils literal notranslate"><span class="pre">fcdft.tools.molden</span></code>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fcdft.tools.molden</span><span class="w"> </span><span class="kn">import</span> <span class="n">dump_freq</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dump_freq</span><span class="p">(</span><span class="n">moleq</span><span class="p">,</span> <span class="n">freq_info</span><span class="p">,</span> <span class="s1">&#39;freq.molden&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="install.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Installation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="about.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">About</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wide-band-limit">Wide-Band Limit</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#non-linear-poisson-boltzmann-solvation-model">Non-Linear Poisson-Boltzmann Solvation Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#geometry-optimization">Geometry Optimization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermochemistry">Thermochemistry</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/examples.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Jun-Hyeong Kim.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

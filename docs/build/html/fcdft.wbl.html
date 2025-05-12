@@ -1,0 +1,1116 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>fcdft.wbl package &#8212; FC-DFT 1.0.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'fcdft.wbl';</script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">FC-DFT 1.0.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="examples.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="about.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/Yang-Laboratory/FC-DFT" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="examples.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="about.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/Yang-Laboratory/FC-DFT" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="fcdft.dft.html">fcdft.dft package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fcdft.grad.html">fcdft.grad package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fcdft.hessian.html">fcdft.hessian package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fcdft.jellium.html">fcdft.jellium package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fcdft.lib.html">fcdft.lib package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fcdft.lifcdft.html">fcdft.lifcdft package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fcdft.solvent.html">fcdft.solvent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fcdft.tools.html">fcdft.tools package</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">fcdft.wbl package</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fcdft.wbl package</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="fcdft-wbl-package">
+<h1>fcdft.wbl package<a class="headerlink" href="#fcdft-wbl-package" title="Link to this heading">#</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
+</section>
+<section id="module-fcdft.wbl.rks">
+<span id="fcdft-wbl-rks-module"></span><h2>fcdft.wbl.rks module<a class="headerlink" href="#module-fcdft.wbl.rks" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLBase">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fcdft.wbl.rks.</span></span><span class="sig-name descname"><span class="pre">WBLBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">broad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smear</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_cycle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_pot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.51</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nelectron</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLBase" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLBase._eig">
+<span class="sig-name descname"><span class="pre">_eig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLBase._eig" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLBase._keys">
+<span class="sig-name descname"><span class="pre">_keys</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'abscissas',</span> <span class="pre">'bias',</span> <span class="pre">'broad',</span> <span class="pre">'fermi',</span> <span class="pre">'inner_cycle',</span> <span class="pre">'nelectron',</span> <span class="pre">'pot_cycle',</span> <span class="pre">'pot_damp',</span> <span class="pre">'quad_order',</span> <span class="pre">'ref_pot',</span> <span class="pre">'smear',</span> <span class="pre">'weights',</span> <span class="pre">'window'}</span></em><a class="headerlink" href="#fcdft.wbl.rks.WBLBase._keys" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLBase.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLBase.build" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLBase.dump_flags">
+<span class="sig-name descname"><span class="pre">dump_flags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLBase.dump_flags" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLBase.eig">
+<span class="sig-name descname"><span class="pre">eig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLBase.eig" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLBase.get_fermi_level">
+<span class="sig-name descname"><span class="pre">get_fermi_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nelec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pot_cycle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">broad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_energy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fermi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLBase.get_fermi_level" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLBase.get_grad">
+<span class="sig-name descname"><span class="pre">get_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo_coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_occ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fock</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLBase.get_grad" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLBase.init_guess_by_chkfile">
+<span class="sig-name descname"><span class="pre">init_guess_by_chkfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chkfile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLBase.init_guess_by_chkfile" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLBase.nuc_grad_method">
+<span class="sig-name descname"><span class="pre">nuc_grad_method</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLBase.nuc_grad_method" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLMoleculeRKS">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fcdft.wbl.rks.</span></span><span class="sig-name descname"><span class="pre">WBLMoleculeRKS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LDA,VWN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">broad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smear</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_cycle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_pot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.51</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nelectron</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLMoleculeRKS" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#fcdft.wbl.rks.WBLBase" title="fcdft.wbl.rks.WBLBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">WBLBase</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">RKS</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLMoleculeRKS._finalize">
+<span class="sig-name descname"><span class="pre">_finalize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLMoleculeRKS._finalize" title="Link to this definition">#</a></dt>
+<dd><p>Hook for dumping results and clearing up the object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLMoleculeRKS.dump_flags">
+<span class="sig-name descname"><span class="pre">dump_flags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLMoleculeRKS.dump_flags" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLMoleculeRKS.get_fock">
+<span class="sig-name descname"><span class="pre">get_fock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h1e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s1e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vhf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cycle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diis_start_cycle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level_shift_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damp_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fock_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLMoleculeRKS.get_fock" title="Link to this definition">#</a></dt>
+<dd><p>F = h^{core} + V^{HF}</p>
+<p>Special treatment (damping, DIIS, or level shift) will be applied to the
+Fock matrix if diis and cycle is specified (The two parameters are passed
+to get_fock function during the SCF iteration)</p>
+<dl>
+<dt>Kwargs:</dt><dd><dl>
+<dt>h1e<span class="classifier">2D ndarray</span></dt><dd><p>Core hamiltonian</p>
+</dd>
+<dt>s1e<span class="classifier">2D ndarray</span></dt><dd><p>Overlap matrix, for DIIS</p>
+</dd>
+<dt>vhf<span class="classifier">2D ndarray</span></dt><dd><p>HF potential matrix</p>
+</dd>
+<dt>dm<span class="classifier">2D ndarray</span></dt><dd><p>Density matrix, for DIIS</p>
+</dd>
+<dt>cycle<span class="classifier">int</span></dt><dd><p>Then present SCF iteration step, for DIIS</p>
+</dd>
+<dt>diis<span class="classifier">an object of <code class="xref py py-attr docutils literal notranslate"><span class="pre">SCF.DIIS</span></code> class</span></dt><dd><p>DIIS object to hold intermediate Fock and error vectors</p>
+</dd>
+<dt>diis_start_cycle<span class="classifier">int</span></dt><dd><p>The step to start DIIS.  Default is 0.</p>
+</dd>
+<dt>level_shift_factor<span class="classifier">float or int</span></dt><dd><p>Level shift (in AU) for virtual space.  Default is 0.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLMoleculeRKS.get_occ">
+<span class="sig-name descname"><span class="pre">get_occ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo_energy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLMoleculeRKS.get_occ" title="Link to this definition">#</a></dt>
+<dd><p>Occupation matrix through numerical integration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mo_energy</strong> (<em>1D numpy.ndarray</em><em>, </em><em>optional</em>) – MO energies. Defaults to None.</p></li>
+<li><p><strong>mo_coeff</strong> (<em>2D numpy.ndarray</em><em>, </em><em>optional</em>) – MO coefficients. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>MO occupation</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>1D numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLMoleculeRKS.get_sigmaR">
+<span class="sig-name descname"><span class="pre">get_sigmaR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s1e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLMoleculeRKS.get_sigmaR" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLMoleculeRKS.get_veff">
+<span class="sig-name descname"><span class="pre">get_veff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vhf_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLMoleculeRKS.get_veff" title="Link to this definition">#</a></dt>
+<dd><p>Construct the effective potential for the WBLMolecule Hamiltonian.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLMoleculeRKS.make_rdm1">
+<span class="sig-name descname"><span class="pre">make_rdm1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_occ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLMoleculeRKS.make_rdm1" title="Link to this definition">#</a></dt>
+<dd><p>Reduced density matrix of non-hermitian Hamiltonian</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mo_coeff</strong> (<em>numpy.ndarray</em>) – MO coefficients</p></li>
+<li><p><strong>mo_occ</strong> (<em>numpy.ndarray</em>) – MO occupations</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Reduced density matrix</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.WBLMoleculeRKS.nuc_grad_method">
+<span class="sig-name descname"><span class="pre">nuc_grad_method</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.WBLMoleculeRKS.nuc_grad_method" title="Link to this definition">#</a></dt>
+<dd><p>Hook to create object for analytical nuclear gradients.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.rks._make_rdm1">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.rks.</span></span><span class="sig-name descname"><span class="pre">_make_rdm1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo_coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_occ</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks._make_rdm1" title="Link to this definition">#</a></dt>
+<dd><p>One-particle density matrix in AO representation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mo_coeff</strong> – tuple of 2D ndarrays
+Orbital coefficients for alpha and beta spins. Each column is one orbital.</p></li>
+<li><p><strong>mo_occ</strong> – tuple of 1D ndarrays
+Occupancies for alpha and beta spins.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of 2D ndarrays for alpha and beta spins</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.eig">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.rks.</span></span><span class="sig-name descname"><span class="pre">eig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.eig" title="Link to this definition">#</a></dt>
+<dd><p>Eigensolver for nonhermitian Hamiltonian.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h</strong> (<em>2D numpy.ndarray</em>) – Fock matrix</p></li>
+<li><p><strong>s</strong> (<em>2D numpy.ndarray</em>) – Overlap matrix</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>mo energies and mo coefficients</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>e, c</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.get_fermi_level">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.rks.</span></span><span class="sig-name descname"><span class="pre">get_fermi_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nelec_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pot_cycle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">broad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_energy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fermi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.get_fermi_level" title="Link to this definition">#</a></dt>
+<dd><p>Calculates the Fermi level by the Newton-Raphson method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mf</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">WBLMolecule</span></code>) – WBLMolecule object.</p></li>
+<li><p><strong>pot_cycle</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum cycle for the Newton-Raphson method. Defaults to 50.</p></li>
+<li><p><strong>broad</strong> (<em>float</em><em>, </em><em>optional</em>) – Broadening parameter. Defaults to None.</p></li>
+<li><p><strong>mo_energy</strong> (<em>1D numpy.ndarray</em><em>, </em><em>optional</em>) – MO energies. Defaults to None.</p></li>
+<li><p><strong>fermi</strong> (<em>float</em><em>, </em><em>optional</em>) – Guess Fermi level. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>RuntimeError</strong> – Failure of the Gaussian quadrature method.</p></li>
+<li><p><strong>RuntimeError</strong> – Infinite Fermi level detected.</p></li>
+<li><p><strong>RuntimeError</strong> – Failed to converge in the maximum cycle.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Fermi level and MO occupancy</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float, 1D numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.get_fock">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.rks.</span></span><span class="sig-name descname"><span class="pre">get_fock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h1e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s1e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vhf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cycle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diis_start_cycle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level_shift_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damp_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fock_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.get_fock" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.get_grad">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.rks.</span></span><span class="sig-name descname"><span class="pre">get_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo_coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_occ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fock_ao</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.get_grad" title="Link to this definition">#</a></dt>
+<dd><p>Fractional orbital gradients. Seems that this is meaningless in FC-DFT?</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.get_occ">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.rks.</span></span><span class="sig-name descname"><span class="pre">get_occ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_energy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.get_occ" title="Link to this definition">#</a></dt>
+<dd><p>Occupation matrix through numerical integration</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mo_energy</strong> (<em>1D numpy.ndarray</em><em>, </em><em>optional</em>) – MO energies. Defaults to None.</p></li>
+<li><p><strong>mo_coeff</strong> (<em>2D numpy.ndarray</em><em>, </em><em>optional</em>) – MO coefficients. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>MO occupation</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>1D numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.get_sigmaR">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.rks.</span></span><span class="sig-name descname"><span class="pre">get_sigmaR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s1e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.get_sigmaR" title="Link to this definition">#</a></dt>
+<dd><p>WBL-Molecule self-energy + Hamiltonian correction by bias voltage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>AttributeError</strong> – No atom detected to apply the bias voltage.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Self-energy + voltage correction</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2D numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.get_veff">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.rks.</span></span><span class="sig-name descname"><span class="pre">get_veff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vhf_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.get_veff" title="Link to this definition">#</a></dt>
+<dd><p>Construct the effective potential for the WBLMolecule Hamiltonian.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.init_guess_by_chkfile">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.rks.</span></span><span class="sig-name descname"><span class="pre">init_guess_by_chkfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chkfile_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.init_guess_by_chkfile" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.rks.make_rdm1">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.rks.</span></span><span class="sig-name descname"><span class="pre">make_rdm1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo_coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_occ</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.rks.make_rdm1" title="Link to this definition">#</a></dt>
+<dd><p>Reduced density matrix of non-hermitian Hamiltonian</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mo_coeff</strong> (<em>numpy.ndarray</em>) – MO coefficients</p></li>
+<li><p><strong>mo_occ</strong> (<em>numpy.ndarray</em>) – MO occupations</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Reduced density matrix</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-fcdft.wbl.uks">
+<span id="fcdft-wbl-uks-module"></span><h2>fcdft.wbl.uks module<a class="headerlink" href="#module-fcdft.wbl.uks" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.WBLMoleculeUKS">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fcdft.wbl.uks.</span></span><span class="sig-name descname"><span class="pre">WBLMoleculeUKS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LDA,VWN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">broad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smear</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_cycle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_pot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.51</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nelectron</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.WBLMoleculeUKS" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#fcdft.wbl.rks.WBLBase" title="fcdft.wbl.rks.WBLBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">WBLBase</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">UKS</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.WBLMoleculeUKS._finalize">
+<span class="sig-name descname"><span class="pre">_finalize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.WBLMoleculeUKS._finalize" title="Link to this definition">#</a></dt>
+<dd><p>Hook for dumping results and clearing up the object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.WBLMoleculeUKS.eig">
+<span class="sig-name descname"><span class="pre">eig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fock</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.WBLMoleculeUKS.eig" title="Link to this definition">#</a></dt>
+<dd><p>Solver for generalized eigenvalue problem</p>
+<div class="math notranslate nohighlight">
+\[HC = SCE\]</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.WBLMoleculeUKS.get_fock">
+<span class="sig-name descname"><span class="pre">get_fock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h1e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s1e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vhf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cycle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diis_start_cycle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level_shift_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damp_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fock_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.WBLMoleculeUKS.get_fock" title="Link to this definition">#</a></dt>
+<dd><p>F = h^{core} + V^{HF}</p>
+<p>Special treatment (damping, DIIS, or level shift) will be applied to the
+Fock matrix if diis and cycle is specified (The two parameters are passed
+to get_fock function during the SCF iteration)</p>
+<dl>
+<dt>Kwargs:</dt><dd><dl>
+<dt>h1e<span class="classifier">2D ndarray</span></dt><dd><p>Core hamiltonian</p>
+</dd>
+<dt>s1e<span class="classifier">2D ndarray</span></dt><dd><p>Overlap matrix, for DIIS</p>
+</dd>
+<dt>vhf<span class="classifier">2D ndarray</span></dt><dd><p>HF potential matrix</p>
+</dd>
+<dt>dm<span class="classifier">2D ndarray</span></dt><dd><p>Density matrix, for DIIS</p>
+</dd>
+<dt>cycle<span class="classifier">int</span></dt><dd><p>Then present SCF iteration step, for DIIS</p>
+</dd>
+<dt>diis<span class="classifier">an object of <code class="xref py py-attr docutils literal notranslate"><span class="pre">SCF.DIIS</span></code> class</span></dt><dd><p>DIIS object to hold intermediate Fock and error vectors</p>
+</dd>
+<dt>diis_start_cycle<span class="classifier">int</span></dt><dd><p>The step to start DIIS.  Default is 0.</p>
+</dd>
+<dt>level_shift_factor<span class="classifier">float or int</span></dt><dd><p>Level shift (in AU) for virtual space.  Default is 0.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.WBLMoleculeUKS.get_grad">
+<span class="sig-name descname"><span class="pre">get_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo_coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_occ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fock</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.WBLMoleculeUKS.get_grad" title="Link to this definition">#</a></dt>
+<dd><p>RHF orbital gradients</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mo_coeff</strong> – 2D ndarray
+Obital coefficients</p></li>
+<li><p><strong>mo_occ</strong> – 1D ndarray
+Orbital occupancy</p></li>
+<li><p><strong>fock_ao</strong> – 2D ndarray
+Fock matrix in AO representation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Gradients in MO representation.  It’s a num_occ*num_vir vector.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.WBLMoleculeUKS.get_occ">
+<span class="sig-name descname"><span class="pre">get_occ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo_energy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.WBLMoleculeUKS.get_occ" title="Link to this definition">#</a></dt>
+<dd><p>Label the occupancies for each orbital</p>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><dl class="simple">
+<dt>mo_energy<span class="classifier">1D ndarray</span></dt><dd><p>Obital energies</p>
+</dd>
+<dt>mo_coeff<span class="classifier">2D ndarray</span></dt><dd><p>Obital coefficients</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf</span><span class="w"> </span><span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;H 0 0 0; F 0 0 1.1&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">hf</span><span class="o">.</span><span class="n">SCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">energy</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">10.</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">get_occ</span><span class="p">(</span><span class="n">energy</span><span class="p">)</span>
+<span class="go">array([2, 2, 0, 2, 2, 2])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.WBLMoleculeUKS.get_sigmaR">
+<span class="sig-name descname"><span class="pre">get_sigmaR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s1e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.WBLMoleculeUKS.get_sigmaR" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.WBLMoleculeUKS.get_veff">
+<span class="sig-name descname"><span class="pre">get_veff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vhf_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.WBLMoleculeUKS.get_veff" title="Link to this definition">#</a></dt>
+<dd><p>Coulomb + XC functional for UKS.  See pyscf/dft/rks.py
+<a class="reference internal" href="#fcdft.wbl.uks.get_veff" title="fcdft.wbl.uks.get_veff"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_veff()</span></code></a> fore more details.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.WBLMoleculeUKS.make_rdm1">
+<span class="sig-name descname"><span class="pre">make_rdm1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_occ</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.WBLMoleculeUKS.make_rdm1" title="Link to this definition">#</a></dt>
+<dd><p>One-particle density matrix in AO representation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mo_coeff</strong> – tuple of 2D ndarrays
+Orbital coefficients for alpha and beta spins. Each column is one orbital.</p></li>
+<li><p><strong>mo_occ</strong> – tuple of 1D ndarrays
+Occupancies for alpha and beta spins.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A list of 2D ndarrays for alpha and beta spins</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.WBLMoleculeUKS.nuc_grad_method">
+<span class="sig-name descname"><span class="pre">nuc_grad_method</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.WBLMoleculeUKS.nuc_grad_method" title="Link to this definition">#</a></dt>
+<dd><p>Hook to create object for analytical nuclear gradients.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.WBLMoleculeUKS.spin_square">
+<span class="sig-name descname"><span class="pre">spin_square</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s1e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.WBLMoleculeUKS.spin_square" title="Link to this definition">#</a></dt>
+<dd><p>Spin square and multiplicity of UHF determinant</p>
+<div class="math notranslate nohighlight">
+\[S^2 = \frac{1}{2}(S_+ S_-  +  S_- S_+) + S_z^2\]</div>
+<p>where <span class="math notranslate nohighlight">\(S_+ = \sum_i S_{i+}\)</span> is effective for all beta occupied
+orbitals; <span class="math notranslate nohighlight">\(S_- = \sum_i S_{i-}\)</span> is effective for all alpha occupied
+orbitals.</p>
+<ol class="arabic">
+<li><dl>
+<dt>There are two possibilities for <span class="math notranslate nohighlight">\(S_+ S_-\)</span></dt><dd><ol class="arabic simple">
+<li><p>same electron <span class="math notranslate nohighlight">\(S_+ S_- = \sum_i s_{i+} s_{i-}\)</span>,</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\sum_i \langle UHF|s_{i+} s_{i-}|UHF\rangle
+ = \sum_{pq}\langle p|s_+s_-|q\rangle \gamma_{qp} = n_\alpha\]</div>
+<p>2) different electrons <span class="math notranslate nohighlight">\(S_+ S_- = \sum s_{i+} s_{j-},  (i\neq j)\)</span>.
+There are in total <span class="math notranslate nohighlight">\(n(n-1)\)</span> terms.  As a two-particle operator,</p>
+<div class="math notranslate nohighlight">
+\[\langle S_+ S_- \rangle = \langle ij|s_+ s_-|ij\rangle
+                        - \langle ij|s_+ s_-|ji\rangle
+                        = -\langle i^\alpha|j^\beta\rangle
+                           \langle j^\beta|i^\alpha\rangle\]</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>Similarly, for <span class="math notranslate nohighlight">\(S_- S_+\)</span></dt><dd><ol class="arabic simple">
+<li><p>same electron</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\sum_i \langle s_{i-} s_{i+}\rangle = n_\beta\]</div>
+<ol class="arabic simple" start="2">
+<li><p>different electrons</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\langle S_- S_+ \rangle = -\langle i^\beta|j^\alpha\rangle
+                           \langle j^\alpha|i^\beta\rangle\]</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>For <span class="math notranslate nohighlight">\(S_z^2\)</span></dt><dd><ol class="arabic simple">
+<li><p>same electron</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\langle s_z^2\rangle = \frac{1}{4}(n_\alpha + n_\beta)\]</div>
+<ol class="arabic simple" start="2">
+<li><p>different electrons</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\begin{split}&amp;\frac{1}{2}\sum_{ij}(\langle ij|2s_{z1}s_{z2}|ij\rangle
+                     -\langle ij|2s_{z1}s_{z2}|ji\rangle) \\
+&amp;=\frac{1}{4}(\langle i^\alpha|i^\alpha\rangle \langle j^\alpha|j^\alpha\rangle
+ - \langle i^\alpha|i^\alpha\rangle \langle j^\beta|j^\beta\rangle
+ - \langle i^\beta|i^\beta\rangle \langle j^\alpha|j^\alpha\rangle
+ + \langle i^\beta|i^\beta\rangle \langle j^\beta|j^\beta\rangle) \\
+&amp;-\frac{1}{4}(\langle i^\alpha|j^\alpha\rangle \langle j^\alpha|i^\alpha\rangle
+ + \langle i^\beta|j^\beta\rangle\langle j^\beta|i^\beta\rangle) \\
+&amp;=\frac{1}{4}(n_\alpha^2 - n_\alpha n_\beta - n_\beta n_\alpha + n_\beta^2)
+ -\frac{1}{4}(n_\alpha + n_\beta) \\
+&amp;=\frac{1}{4}((n_\alpha-n_\beta)^2 - (n_\alpha+n_\beta))\end{split}\]</div>
+</dd>
+</dl>
+</li>
+</ol>
+<p>In total</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\langle S^2\rangle &amp;= \frac{1}{2}
+(n_\alpha-\sum_{ij}\langle i^\alpha|j^\beta\rangle \langle j^\beta|i^\alpha\rangle
++n_\beta -\sum_{ij}\langle i^\beta|j^\alpha\rangle\langle j^\alpha|i^\beta\rangle)
++ \frac{1}{4}(n_\alpha-n_\beta)^2 \\\end{split}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mo</strong> – a list of 2 ndarrays
+Occupied alpha and occupied beta orbitals</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Kwargs:</dt><dd><dl class="simple">
+<dt>s<span class="classifier">ndarray</span></dt><dd><p>AO overlap</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of two floats.  The first is the expectation value of S^2.
+The second is the corresponding 2S+1</p>
+</dd>
+</dl>
+<p>Examples:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;O 0 0 0; H 0 0 1; H 0 1 0&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;ccpvdz&#39;</span><span class="p">,</span> <span class="n">charge</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">spin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">UHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="go">-75.623975516256706</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mo</span> <span class="o">=</span> <span class="p">(</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_occ</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">],</span> <span class="n">mf</span><span class="o">.</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">1</span><span class="p">][:,</span><span class="n">mf</span><span class="o">.</span><span class="n">mo_occ</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;S^2 = </span><span class="si">%.7f</span><span class="s1">, 2S+1 = </span><span class="si">%.7f</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">spin_square</span><span class="p">(</span><span class="n">mo</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor</span><span class="p">(</span><span class="s1">&#39;int1e_ovlp_sph&#39;</span><span class="p">)))</span>
+<span class="go">S^2 = 0.7570150, 2S+1 = 2.0070027</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.get_fock">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.uks.</span></span><span class="sig-name descname"><span class="pre">get_fock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h1e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s1e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vhf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cycle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diis_start_cycle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level_shift_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damp_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fock_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.get_fock" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.get_grad">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.uks.</span></span><span class="sig-name descname"><span class="pre">get_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo_coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_occ</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fock_ao</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.get_grad" title="Link to this definition">#</a></dt>
+<dd><p>Fractional orbital gradients. Seems that this is meaningless for our purpose?</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.get_occ">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.uks.</span></span><span class="sig-name descname"><span class="pre">get_occ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_energy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.get_occ" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.get_sigmaR">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.uks.</span></span><span class="sig-name descname"><span class="pre">get_sigmaR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s1e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.get_sigmaR" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.get_veff">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.uks.</span></span><span class="sig-name descname"><span class="pre">get_veff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vhf_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.get_veff" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.make_rdm1">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.uks.</span></span><span class="sig-name descname"><span class="pre">make_rdm1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo_coeff</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mo_occ</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.make_rdm1" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="fcdft.wbl.uks.spin_square">
+<span class="sig-prename descclassname"><span class="pre">fcdft.wbl.uks.</span></span><span class="sig-name descname"><span class="pre">spin_square</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s1e</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.wbl.uks.spin_square" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-fcdft.wbl">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-fcdft.wbl" title="Link to this heading">#</a></h2>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-fcdft.wbl.rks">fcdft.wbl.rks module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLBase"><code class="docutils literal notranslate"><span class="pre">WBLBase</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLBase._eig"><code class="docutils literal notranslate"><span class="pre">WBLBase._eig()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLBase._keys"><code class="docutils literal notranslate"><span class="pre">WBLBase._keys</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLBase.build"><code class="docutils literal notranslate"><span class="pre">WBLBase.build()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLBase.dump_flags"><code class="docutils literal notranslate"><span class="pre">WBLBase.dump_flags()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLBase.eig"><code class="docutils literal notranslate"><span class="pre">WBLBase.eig()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLBase.get_fermi_level"><code class="docutils literal notranslate"><span class="pre">WBLBase.get_fermi_level()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLBase.get_grad"><code class="docutils literal notranslate"><span class="pre">WBLBase.get_grad()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLBase.init_guess_by_chkfile"><code class="docutils literal notranslate"><span class="pre">WBLBase.init_guess_by_chkfile()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLBase.nuc_grad_method"><code class="docutils literal notranslate"><span class="pre">WBLBase.nuc_grad_method()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLMoleculeRKS"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLMoleculeRKS._finalize"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS._finalize()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLMoleculeRKS.dump_flags"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS.dump_flags()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLMoleculeRKS.get_fock"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS.get_fock()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLMoleculeRKS.get_occ"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS.get_occ()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLMoleculeRKS.get_sigmaR"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS.get_sigmaR()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLMoleculeRKS.get_veff"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS.get_veff()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLMoleculeRKS.make_rdm1"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS.make_rdm1()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.WBLMoleculeRKS.nuc_grad_method"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS.nuc_grad_method()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks._make_rdm1"><code class="docutils literal notranslate"><span class="pre">_make_rdm1()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.eig"><code class="docutils literal notranslate"><span class="pre">eig()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.get_fermi_level"><code class="docutils literal notranslate"><span class="pre">get_fermi_level()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.get_fock"><code class="docutils literal notranslate"><span class="pre">get_fock()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.get_grad"><code class="docutils literal notranslate"><span class="pre">get_grad()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.get_occ"><code class="docutils literal notranslate"><span class="pre">get_occ()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.get_sigmaR"><code class="docutils literal notranslate"><span class="pre">get_sigmaR()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.get_veff"><code class="docutils literal notranslate"><span class="pre">get_veff()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.init_guess_by_chkfile"><code class="docutils literal notranslate"><span class="pre">init_guess_by_chkfile()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.rks.make_rdm1"><code class="docutils literal notranslate"><span class="pre">make_rdm1()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-fcdft.wbl.uks">fcdft.wbl.uks module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.WBLMoleculeUKS"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.WBLMoleculeUKS._finalize"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS._finalize()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.WBLMoleculeUKS.eig"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.eig()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.WBLMoleculeUKS.get_fock"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.get_fock()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.WBLMoleculeUKS.get_grad"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.get_grad()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.WBLMoleculeUKS.get_occ"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.get_occ()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.WBLMoleculeUKS.get_sigmaR"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.get_sigmaR()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.WBLMoleculeUKS.get_veff"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.get_veff()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.WBLMoleculeUKS.make_rdm1"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.make_rdm1()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.WBLMoleculeUKS.nuc_grad_method"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.nuc_grad_method()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.WBLMoleculeUKS.spin_square"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.spin_square()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.get_fock"><code class="docutils literal notranslate"><span class="pre">get_fock()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.get_grad"><code class="docutils literal notranslate"><span class="pre">get_grad()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.get_occ"><code class="docutils literal notranslate"><span class="pre">get_occ()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.get_sigmaR"><code class="docutils literal notranslate"><span class="pre">get_sigmaR()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.get_veff"><code class="docutils literal notranslate"><span class="pre">get_veff()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.make_rdm1"><code class="docutils literal notranslate"><span class="pre">make_rdm1()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.wbl.uks.spin_square"><code class="docutils literal notranslate"><span class="pre">spin_square()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-fcdft.wbl">Module contents</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/fcdft.wbl.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Jun-Hyeong Kim.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,29 @@
+fcdft.geomopt package
+=====================
+
+Submodules
+----------
+
+fcdft.geomopt.geometric\_solver module
+--------------------------------------
+
+.. automodule:: fcdft.geomopt.geometric_solver
+   :private-members:
+   :private-members:
+   :private-members:
+   :private-members:
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: fcdft.geomopt
+   :private-members:
+   :private-members:
+   :private-members:
+   :private-members:
+   :members:
+   :undoc-members:
+   :show-inheritance:

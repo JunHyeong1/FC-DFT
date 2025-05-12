@@ -1,0 +1,34 @@
+# Fractional Charge Density Functional Theory (FC-DFT)
+This code computes single-point energies, optimized structures, vibrational frequencies, and solvation free energies of open quantum systems through fractional charge density functional theory (FC-DFT).
+
+## Requirements
+- [GeomeTRIC](https://github.com/leeping/geomeTRIC)
+- [PySCF](https://pyscf.org/)
+- [PyAMG](https://github.com/pyamg/pyamg)
+- [PyAMGCL](https://github.com/ddemidov/amgcl)
+  
+## Installation
+  - Clone the repository.
+  - `cd FC-DFT`
+  - `pip install .`
+  - Go to `$PYTHONPATH/fcdft/lib` directory and make `build`.
+  - Go to `build` and install C shared libraries by `cmake ..` and `make`.
+
+## Features
+  - FC-DFT calculations by all density functional approximations supported by LibXC library.
+  - Wide-band limit calculations, namely WBL-Molecule
+  - Non-linear Poisson-Boltzmann solver in real space and its analytic nuclear gradients
+  - Numerical Hessian calculations
+
+## Notes
+Poisson-Boltzmann geometry optimization uses RESP atomic charges, which are computed by the code provided by https://github.com/swillow/pyscf_esp after some modifications.
+
+## How to Cite
+Please cite the paper below if this code was directly or indirectly helpful to your research.
+
+Jun-Hyeong Kim, Dongju Kim, Weitao Yang, and Mu-Hyun Baik. Fractional Charge Density Functional Theory and Its Application to the Electro-inductive Effect. _J. Phys. Chem. Lett._ **2023**, _14_, 3329-3334
+
+Jun-Hyeong Kim and Weitao Yang. Fractional Charge Density Functional Theory Elucidates Electro-Inductive and Electric Field Effects at Electrochemical Interfaces. _To be submitted_
+
+## Bug reports and feature requests
+Please create a posting on [Issues](https://github.com/Yang-Laboratory/FC-DFT/issues) tab.

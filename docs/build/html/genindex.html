@@ -1,0 +1,1246 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Index &#8212; FC-DFT 1.0.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">FC-DFT 1.0.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="examples.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="about.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/Yang-Laboratory/FC-DFT" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="install.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="examples.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="about.html">
+    About
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/Yang-Laboratory/FC-DFT" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none"></div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#_"><strong>_</strong></a>
+ | <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#J"><strong>J</strong></a>
+ | <a href="#K"><strong>K</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#Q"><strong>Q</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
+ 
+</div>
+<h2 id="_">_</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.dft.html#fcdft.dft.numint._contract_rho">_contract_rho() (in module fcdft.dft.numint)</a>
+</li>
+      <li><a href="fcdft.dft.html#fcdft.dft.numint._dot_ao_dm">_dot_ao_dm() (in module fcdft.dft.numint)</a>
+</li>
+      <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLBase._eig">_eig() (fcdft.wbl.rks.WBLBase method)</a>
+</li>
+      <li><a href="fcdft.grad.html#fcdft.grad.lifcdft.Gradients._finalize">_finalize() (fcdft.grad.lifcdft.Gradients method)</a>
+
+      <ul>
+        <li><a href="fcdft.lifcdft.html#fcdft.lifcdft.lifcdft.LIFCDFT._finalize">(fcdft.lifcdft.lifcdft.LIFCDFT method)</a>
+</li>
+        <li><a href="fcdft.solvent.html#fcdft.solvent.pbe_grad.WithSolventGrad._finalize">(fcdft.solvent.pbe_grad.WithSolventGrad method)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS._finalize">(fcdft.wbl.rks.WBLMoleculeRKS method)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS._finalize">(fcdft.wbl.uks.WBLMoleculeUKS method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.dft.html#fcdft.dft.numint.NumInt._gen_rho_evaluator">_gen_rho_evaluator() (fcdft.dft.numint.NumInt method)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.PBE._get_v">_get_v() (fcdft.solvent.pbe.PBE method)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.PBE._get_vind">_get_vind() (fcdft.solvent.pbe.PBE method)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.PBE._get_vmat">_get_vmat() (fcdft.solvent.pbe.PBE method)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.PBE._keys">_keys (fcdft.solvent.pbe.PBE attribute)</a>
+
+      <ul>
+        <li><a href="fcdft.solvent.html#fcdft.solvent.pbe_grad.WithSolventGrad._keys">(fcdft.solvent.pbe_grad.WithSolventGrad attribute)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLBase._keys">(fcdft.wbl.rks.WBLBase attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.wbl.html#fcdft.wbl.rks._make_rdm1">_make_rdm1() (in module fcdft.wbl.rks)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.esp.ang2bohr">ang2bohr (in module fcdft.solvent.esp)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.jellium.html#fcdft.jellium.jellium.bc">bc() (in module fcdft.jellium.jellium)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.bc_grad">bc_grad() (in module fcdft.solvent.pbe)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.bc_laplacian">bc_laplacian() (in module fcdft.solvent.pbe)</a>
+</li>
+      <li><a href="fcdft.jellium.html#fcdft.jellium.jellium.Jellium.build">build() (fcdft.jellium.jellium.Jellium method)</a>
+
+      <ul>
+        <li><a href="fcdft.lifcdft.html#fcdft.lifcdft.lifcdft.LIFCDFT.build">(fcdft.lifcdft.lifcdft.LIFCDFT method)</a>
+</li>
+        <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.Grids.build">(fcdft.solvent.pbe.Grids method)</a>
+</li>
+        <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.build">(fcdft.solvent.pbe.PBE method)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLBase.build">(fcdft.wbl.rks.WBLBase method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe_grad.db_force">db_force() (in module fcdft.solvent.pbe_grad)</a>
+</li>
+      <li><a href="fcdft.lib.html#fcdft.lib.pbe_helper.db_force_helper">db_force_helper() (in module fcdft.lib.pbe_helper)</a>
+</li>
+      <li><a href="fcdft.lib.html#fcdft.lib.pbe_helper.distance_calculator">distance_calculator() (in module fcdft.lib.pbe_helper)</a>
+</li>
+      <li><a href="fcdft.lifcdft.html#fcdft.lifcdft.lifcdft.LIFCDFT.dump_flags">dump_flags() (fcdft.lifcdft.lifcdft.LIFCDFT method)</a>
+
+      <ul>
+        <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.Grids.dump_flags">(fcdft.solvent.pbe.Grids method)</a>
+</li>
+        <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.dump_flags">(fcdft.solvent.pbe.PBE method)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLBase.dump_flags">(fcdft.wbl.rks.WBLBase method)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS.dump_flags">(fcdft.wbl.rks.WBLMoleculeRKS method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.tools.html#fcdft.tools.molden.dump_freq">dump_freq() (in module fcdft.tools.molden)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLBase.eig">eig() (fcdft.wbl.rks.WBLBase method)</a>
+
+      <ul>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.eig">(fcdft.wbl.uks.WBLMoleculeUKS method)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.eig">(in module fcdft.wbl.rks)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.jellium.html#fcdft.jellium.jellium.eps_s">eps_s() (in module fcdft.jellium.jellium)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.esp.esp_atomic_charges">esp_atomic_charges() (in module fcdft.solvent.esp)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.esp.esp_esp">esp_esp() (in module fcdft.solvent.esp)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.esp.esp_fit">esp_fit() (in module fcdft.solvent.esp)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.esp.esp_grid">esp_grid() (in module fcdft.solvent.esp)</a>
+</li>
+      <li><a href="fcdft.dft.html#fcdft.dft.numint.eval_rho">eval_rho() (in module fcdft.dft.numint)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    fcdft
+
+      <ul>
+        <li><a href="fcdft.html#module-fcdft">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.dft
+
+      <ul>
+        <li><a href="fcdft.dft.html#module-fcdft.dft">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.dft.numint
+
+      <ul>
+        <li><a href="fcdft.dft.html#module-fcdft.dft.numint">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.grad
+
+      <ul>
+        <li><a href="fcdft.grad.html#module-fcdft.grad">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.grad.lifcdft
+
+      <ul>
+        <li><a href="fcdft.grad.html#module-fcdft.grad.lifcdft">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.grad.rks
+
+      <ul>
+        <li><a href="fcdft.grad.html#module-fcdft.grad.rks">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.grad.uks
+
+      <ul>
+        <li><a href="fcdft.grad.html#module-fcdft.grad.uks">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.hessian
+
+      <ul>
+        <li><a href="fcdft.hessian.html#module-fcdft.hessian">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.hessian.lifcdft
+
+      <ul>
+        <li><a href="fcdft.hessian.html#module-fcdft.hessian.lifcdft">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.hessian.numhess
+
+      <ul>
+        <li><a href="fcdft.hessian.html#module-fcdft.hessian.numhess">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.jellium
+
+      <ul>
+        <li><a href="fcdft.jellium.html#module-fcdft.jellium">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.jellium.jellium
+
+      <ul>
+        <li><a href="fcdft.jellium.html#module-fcdft.jellium.jellium">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.lib
+
+      <ul>
+        <li><a href="fcdft.lib.html#module-fcdft.lib">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.lib.fcdft_helper
+
+      <ul>
+        <li><a href="fcdft.lib.html#module-fcdft.lib.fcdft_helper">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.lib.misc
+
+      <ul>
+        <li><a href="fcdft.lib.html#module-fcdft.lib.misc">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.lib.pbe_helper
+
+      <ul>
+        <li><a href="fcdft.lib.html#module-fcdft.lib.pbe_helper">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    fcdft.lifcdft
+
+      <ul>
+        <li><a href="fcdft.lifcdft.html#module-fcdft.lifcdft">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.lifcdft.lifcdft
+
+      <ul>
+        <li><a href="fcdft.lifcdft.html#module-fcdft.lifcdft.lifcdft">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.solvent
+
+      <ul>
+        <li><a href="fcdft.solvent.html#module-fcdft.solvent">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.solvent.calculus_helper
+
+      <ul>
+        <li><a href="fcdft.solvent.html#module-fcdft.solvent.calculus_helper">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.solvent.esp
+
+      <ul>
+        <li><a href="fcdft.solvent.html#module-fcdft.solvent.esp">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.solvent.pbe
+
+      <ul>
+        <li><a href="fcdft.solvent.html#module-fcdft.solvent.pbe">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.solvent.pbe_grad
+
+      <ul>
+        <li><a href="fcdft.solvent.html#module-fcdft.solvent.pbe_grad">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.solvent.radii
+
+      <ul>
+        <li><a href="fcdft.solvent.html#module-fcdft.solvent.radii">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.tools
+
+      <ul>
+        <li><a href="fcdft.tools.html#module-fcdft.tools">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.tools.addons
+
+      <ul>
+        <li><a href="fcdft.tools.html#module-fcdft.tools.addons">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.tools.molden
+
+      <ul>
+        <li><a href="fcdft.tools.html#module-fcdft.tools.molden">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.wbl
+
+      <ul>
+        <li><a href="fcdft.wbl.html#module-fcdft.wbl">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.wbl.rks
+
+      <ul>
+        <li><a href="fcdft.wbl.html#module-fcdft.wbl.rks">module</a>
+</li>
+      </ul></li>
+      <li>
+    fcdft.wbl.uks
+
+      <ul>
+        <li><a href="fcdft.wbl.html#module-fcdft.wbl.uks">module</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.tools.html#fcdft.tools.addons.frac_occ">frac_occ() (in module fcdft.tools.addons)</a>
+</li>
+      <li><a href="fcdft.tools.html#fcdft.tools.addons.frac_occ_">frac_occ_() (in module fcdft.tools.addons)</a>
+</li>
+      <li><a href="fcdft.jellium.html#fcdft.jellium.jellium.fun">fun() (in module fcdft.jellium.jellium)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.jellium.html#fcdft.jellium.jellium.gamma">gamma() (in module fcdft.jellium.jellium)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.gen_pbe_solver">gen_pbe_solver() (in module fcdft.solvent.pbe)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.Grids.get_coords">get_coords() (fcdft.solvent.pbe.Grids method)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.esp.get_esp_radii">get_esp_radii() (in module fcdft.solvent.esp)</a>
+</li>
+      <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLBase.get_fermi_level">get_fermi_level() (fcdft.wbl.rks.WBLBase method)</a>
+
+      <ul>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.get_fermi_level">(in module fcdft.wbl.rks)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS.get_fock">get_fock() (fcdft.wbl.rks.WBLMoleculeRKS method)</a>
+
+      <ul>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.get_fock">(fcdft.wbl.uks.WBLMoleculeUKS method)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.get_fock">(in module fcdft.wbl.rks)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.uks.get_fock">(in module fcdft.wbl.uks)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLBase.get_grad">get_grad() (fcdft.wbl.rks.WBLBase method)</a>
+
+      <ul>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.get_grad">(fcdft.wbl.uks.WBLMoleculeUKS method)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.get_grad">(in module fcdft.wbl.rks)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.uks.get_grad">(in module fcdft.wbl.uks)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.grad.html#fcdft.grad.rks.GradientsBase.get_j">get_j() (fcdft.grad.rks.GradientsBase method)</a>
+</li>
+      <li><a href="fcdft.grad.html#fcdft.grad.rks.GradientsBase.get_jk">get_jk() (fcdft.grad.rks.GradientsBase method)</a>
+
+      <ul>
+        <li><a href="fcdft.grad.html#fcdft.grad.rks.get_jk">(in module fcdft.grad.rks)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.grad.html#fcdft.grad.rks.GradientsBase.get_k">get_k() (fcdft.grad.rks.GradientsBase method)</a>
+</li>
+      <li><a href="fcdft.grad.html#fcdft.grad.rks.get_nlc_vxc">get_nlc_vxc() (in module fcdft.grad.rks)</a>
+</li>
+      <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS.get_occ">get_occ() (fcdft.wbl.rks.WBLMoleculeRKS method)</a>
+
+      <ul>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.get_occ">(fcdft.wbl.uks.WBLMoleculeUKS method)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.get_occ">(in module fcdft.wbl.rks)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.uks.get_occ">(in module fcdft.wbl.uks)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.get_rho_ions">get_rho_ions() (fcdft.solvent.pbe.PBE method)</a>
+
+      <ul>
+        <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.get_rho_ions">(in module fcdft.solvent.pbe)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS.get_sigmaR">get_sigmaR() (fcdft.wbl.rks.WBLMoleculeRKS method)</a>
+
+      <ul>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.get_sigmaR">(fcdft.wbl.uks.WBLMoleculeUKS method)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.get_sigmaR">(in module fcdft.wbl.rks)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.uks.get_sigmaR">(in module fcdft.wbl.uks)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.grad.html#fcdft.grad.rks.Gradients.get_veff">get_veff() (fcdft.grad.rks.Gradients method)</a>
+
+      <ul>
+        <li><a href="fcdft.grad.html#fcdft.grad.uks.Gradients.get_veff">(fcdft.grad.uks.Gradients method)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS.get_veff">(fcdft.wbl.rks.WBLMoleculeRKS method)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.get_veff">(fcdft.wbl.uks.WBLMoleculeUKS method)</a>
+</li>
+        <li><a href="fcdft.grad.html#fcdft.grad.rks.get_veff">(in module fcdft.grad.rks)</a>
+</li>
+        <li><a href="fcdft.grad.html#fcdft.grad.uks.get_veff">(in module fcdft.grad.uks)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.get_veff">(in module fcdft.wbl.rks)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.uks.get_veff">(in module fcdft.wbl.uks)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.grad.html#fcdft.grad.rks.get_vxc">get_vxc() (in module fcdft.grad.rks)</a>
+
+      <ul>
+        <li><a href="fcdft.grad.html#fcdft.grad.uks.get_vxc">(in module fcdft.grad.uks)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.grad.html#fcdft.grad.rks.Gradients.grad_elec">grad_elec() (fcdft.grad.rks.Gradients method)</a>
+
+      <ul>
+        <li><a href="fcdft.grad.html#fcdft.grad.uks.Gradients.grad_elec">(fcdft.grad.uks.Gradients method)</a>
+</li>
+        <li><a href="fcdft.grad.html#fcdft.grad.rks.grad_elec">(in module fcdft.grad.rks)</a>
+</li>
+        <li><a href="fcdft.grad.html#fcdft.grad.uks.grad_elec">(in module fcdft.grad.uks)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.lib.html#fcdft.lib.pbe_helper.grad_eps">grad_eps() (in module fcdft.lib.pbe_helper)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.calculus_helper.gradient">gradient() (in module fcdft.solvent.calculus_helper)</a>
+</li>
+      <li><a href="fcdft.grad.html#fcdft.grad.lifcdft.Gradients">Gradients (class in fcdft.grad.lifcdft)</a>
+
+      <ul>
+        <li><a href="fcdft.grad.html#fcdft.grad.rks.Gradients">(class in fcdft.grad.rks)</a>
+</li>
+        <li><a href="fcdft.grad.html#fcdft.grad.uks.Gradients">(class in fcdft.grad.uks)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.grad.html#fcdft.grad.rks.GradientsBase">GradientsBase (class in fcdft.grad.rks)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.Grids">Grids (class in fcdft.solvent.pbe)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.hessian.html#fcdft.hessian.numhess.Hessian.hess">hess() (fcdft.hessian.numhess.Hessian method)</a>
+</li>
+      <li><a href="fcdft.hessian.html#fcdft.hessian.numhess.hess_generator">hess_generator() (in module fcdft.hessian.numhess)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.hessian.html#fcdft.hessian.lifcdft.Hessian">Hessian (class in fcdft.hessian.lifcdft)</a>
+
+      <ul>
+        <li><a href="fcdft.hessian.html#fcdft.hessian.numhess.Hessian">(class in fcdft.hessian.numhess)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.lifcdft.html#fcdft.lifcdft.lifcdft.LIFCDFT.Hessian">Hessian() (fcdft.lifcdft.lifcdft.LIFCDFT method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe_grad.ib_force">ib_force() (in module fcdft.solvent.pbe_grad)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.impose_bc">impose_bc() (in module fcdft.solvent.pbe)</a>
+</li>
+      <li><a href="fcdft.jellium.html#fcdft.jellium.jellium.Jellium.init_guess">init_guess() (fcdft.jellium.jellium.Jellium method)</a>
+
+      <ul>
+        <li><a href="fcdft.jellium.html#fcdft.jellium.jellium.init_guess">(in module fcdft.jellium.jellium)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLBase.init_guess_by_chkfile">init_guess_by_chkfile() (fcdft.wbl.rks.WBLBase method)</a>
+
+      <ul>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.init_guess_by_chkfile">(in module fcdft.wbl.rks)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="J">J</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.jellium.html#fcdft.jellium.jellium.Jellium">Jellium (class in fcdft.jellium.jellium)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.grad.html#fcdft.grad.lifcdft.Gradients.kernel">kernel() (fcdft.grad.lifcdft.Gradients method)</a>
+
+      <ul>
+        <li><a href="fcdft.hessian.html#fcdft.hessian.lifcdft.Hessian.kernel">(fcdft.hessian.lifcdft.Hessian method)</a>
+</li>
+        <li><a href="fcdft.hessian.html#fcdft.hessian.numhess.Hessian.kernel">(fcdft.hessian.numhess.Hessian method)</a>
+</li>
+        <li><a href="fcdft.jellium.html#fcdft.jellium.jellium.Jellium.kernel">(fcdft.jellium.jellium.Jellium method)</a>
+</li>
+        <li><a href="fcdft.lifcdft.html#fcdft.lifcdft.lifcdft.LIFCDFT.kernel">(fcdft.lifcdft.lifcdft.LIFCDFT method)</a>
+</li>
+        <li><a href="fcdft.solvent.html#fcdft.solvent.pbe_grad.WithSolventGrad.kernel">(fcdft.solvent.pbe_grad.WithSolventGrad method)</a>
+</li>
+        <li><a href="fcdft.jellium.html#fcdft.jellium.jellium.kernel">(in module fcdft.jellium.jellium)</a>
+</li>
+        <li><a href="fcdft.solvent.html#fcdft.solvent.pbe_grad.kernel">(in module fcdft.solvent.pbe_grad)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.lib.html#fcdft.lib.pbe_helper.lap_sas">lap_sas() (in module fcdft.lib.pbe_helper)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.lifcdft.html#fcdft.lifcdft.lifcdft.LIFCDFT">LIFCDFT (class in fcdft.lifcdft.lifcdft)</a>
+</li>
+      <li><a href="fcdft.lib.html#fcdft.lib.misc.load_library">load_library() (in module fcdft.lib.misc)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.make_eps">make_eps() (fcdft.solvent.pbe.PBE method)</a>
+
+      <ul>
+        <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.make_eps">(in module fcdft.solvent.pbe)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.make_grad_eps">make_grad_eps() (fcdft.solvent.pbe.PBE method)</a>
+
+      <ul>
+        <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.make_grad_eps">(in module fcdft.solvent.pbe)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe_grad.make_grad_object">make_grad_object() (in module fcdft.solvent.pbe_grad)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.make_lambda">make_lambda() (fcdft.solvent.pbe.PBE method)</a>
+
+      <ul>
+        <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.make_lambda">(in module fcdft.solvent.pbe)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.make_phi">make_phi() (in module fcdft.solvent.pbe)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.make_phi_sol">make_phi_sol() (in module fcdft.solvent.pbe)</a>
+</li>
+      <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS.make_rdm1">make_rdm1() (fcdft.wbl.rks.WBLMoleculeRKS method)</a>
+
+      <ul>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.make_rdm1">(fcdft.wbl.uks.WBLMoleculeUKS method)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.make_rdm1">(in module fcdft.wbl.rks)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.uks.make_rdm1">(in module fcdft.wbl.uks)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.esp.make_rdm1_with_orbital_response">make_rdm1_with_orbital_response() (in module fcdft.solvent.esp)</a>
+</li>
+      <li><a href="fcdft.grad.html#fcdft.grad.rks.Gradients.make_rdm1e">make_rdm1e() (fcdft.grad.rks.Gradients method)</a>
+
+      <ul>
+        <li><a href="fcdft.grad.html#fcdft.grad.uks.Gradients.make_rdm1e">(fcdft.grad.uks.Gradients method)</a>
+</li>
+        <li><a href="fcdft.grad.html#fcdft.grad.rks.make_rdm1e">(in module fcdft.grad.rks)</a>
+</li>
+        <li><a href="fcdft.grad.html#fcdft.grad.uks.make_rdm1e">(in module fcdft.grad.uks)</a>
+</li>
+      </ul></li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.make_rho_sol">make_rho_sol() (in module fcdft.solvent.pbe)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.make_sas">make_sas() (fcdft.solvent.pbe.PBE method)</a>
+
+      <ul>
+        <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.make_sas">(in module fcdft.solvent.pbe)</a>
+</li>
+      </ul></li>
+      <li>
+    module
+
+      <ul>
+        <li><a href="fcdft.html#module-fcdft">fcdft</a>
+</li>
+        <li><a href="fcdft.dft.html#module-fcdft.dft">fcdft.dft</a>
+</li>
+        <li><a href="fcdft.dft.html#module-fcdft.dft.numint">fcdft.dft.numint</a>
+</li>
+        <li><a href="fcdft.grad.html#module-fcdft.grad">fcdft.grad</a>
+</li>
+        <li><a href="fcdft.grad.html#module-fcdft.grad.lifcdft">fcdft.grad.lifcdft</a>
+</li>
+        <li><a href="fcdft.grad.html#module-fcdft.grad.rks">fcdft.grad.rks</a>
+</li>
+        <li><a href="fcdft.grad.html#module-fcdft.grad.uks">fcdft.grad.uks</a>
+</li>
+        <li><a href="fcdft.hessian.html#module-fcdft.hessian">fcdft.hessian</a>
+</li>
+        <li><a href="fcdft.hessian.html#module-fcdft.hessian.lifcdft">fcdft.hessian.lifcdft</a>
+</li>
+        <li><a href="fcdft.hessian.html#module-fcdft.hessian.numhess">fcdft.hessian.numhess</a>
+</li>
+        <li><a href="fcdft.jellium.html#module-fcdft.jellium">fcdft.jellium</a>
+</li>
+        <li><a href="fcdft.jellium.html#module-fcdft.jellium.jellium">fcdft.jellium.jellium</a>
+</li>
+        <li><a href="fcdft.lib.html#module-fcdft.lib">fcdft.lib</a>
+</li>
+        <li><a href="fcdft.lib.html#module-fcdft.lib.fcdft_helper">fcdft.lib.fcdft_helper</a>
+</li>
+        <li><a href="fcdft.lib.html#module-fcdft.lib.misc">fcdft.lib.misc</a>
+</li>
+        <li><a href="fcdft.lib.html#module-fcdft.lib.pbe_helper">fcdft.lib.pbe_helper</a>
+</li>
+        <li><a href="fcdft.lifcdft.html#module-fcdft.lifcdft">fcdft.lifcdft</a>
+</li>
+        <li><a href="fcdft.lifcdft.html#module-fcdft.lifcdft.lifcdft">fcdft.lifcdft.lifcdft</a>
+</li>
+        <li><a href="fcdft.solvent.html#module-fcdft.solvent">fcdft.solvent</a>
+</li>
+        <li><a href="fcdft.solvent.html#module-fcdft.solvent.calculus_helper">fcdft.solvent.calculus_helper</a>
+</li>
+        <li><a href="fcdft.solvent.html#module-fcdft.solvent.esp">fcdft.solvent.esp</a>
+</li>
+        <li><a href="fcdft.solvent.html#module-fcdft.solvent.pbe">fcdft.solvent.pbe</a>
+</li>
+        <li><a href="fcdft.solvent.html#module-fcdft.solvent.pbe_grad">fcdft.solvent.pbe_grad</a>
+</li>
+        <li><a href="fcdft.solvent.html#module-fcdft.solvent.radii">fcdft.solvent.radii</a>
+</li>
+        <li><a href="fcdft.tools.html#module-fcdft.tools">fcdft.tools</a>
+</li>
+        <li><a href="fcdft.tools.html#module-fcdft.tools.addons">fcdft.tools.addons</a>
+</li>
+        <li><a href="fcdft.tools.html#module-fcdft.tools.molden">fcdft.tools.molden</a>
+</li>
+        <li><a href="fcdft.wbl.html#module-fcdft.wbl">fcdft.wbl</a>
+</li>
+        <li><a href="fcdft.wbl.html#module-fcdft.wbl.rks">fcdft.wbl.rks</a>
+</li>
+        <li><a href="fcdft.wbl.html#module-fcdft.wbl.uks">fcdft.wbl.uks</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.lifcdft.html#fcdft.lifcdft.lifcdft.LIFCDFT.newton">newton() (fcdft.lifcdft.lifcdft.LIFCDFT method)</a>
+</li>
+      <li><a href="fcdft.lifcdft.html#fcdft.lifcdft.lifcdft.LIFCDFT.nuc_grad_method">nuc_grad_method() (fcdft.lifcdft.lifcdft.LIFCDFT method)</a>
+
+      <ul>
+        <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.nuc_grad_method">(fcdft.solvent.pbe.PBE method)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLBase.nuc_grad_method">(fcdft.wbl.rks.WBLBase method)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS.nuc_grad_method">(fcdft.wbl.rks.WBLMoleculeRKS method)</a>
+</li>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.nuc_grad_method">(fcdft.wbl.uks.WBLMoleculeUKS method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.dft.html#fcdft.dft.numint.NumInt">NumInt (class in fcdft.dft.numint)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.PBE">PBE (class in fcdft.solvent.pbe)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.pbe_for_scf">pbe_for_scf() (in module fcdft.solvent.pbe)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.phi_a_finder">phi_a_finder() (in module fcdft.solvent.pbe)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.calculus_helper.poisson">poisson() (in module fcdft.solvent.calculus_helper)</a>
+</li>
+      <li><a href="fcdft.lib.html#fcdft.lib.pbe_helper.product_atom_vector_scalar">product_atom_vector_scalar() (in module fcdft.lib.pbe_helper)</a>
+</li>
+      <li><a href="fcdft.lib.html#fcdft.lib.pbe_helper.product_vector_scalar">product_vector_scalar() (in module fcdft.lib.pbe_helper)</a>
+</li>
+      <li><a href="fcdft.lib.html#fcdft.lib.pbe_helper.product_vector_vector">product_vector_vector() (in module fcdft.lib.pbe_helper)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Q">Q</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.lib.html#fcdft.lib.fcdft_helper.quadrature">quadrature() (in module fcdft.lib.fcdft_helper)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.lifcdft.html#fcdft.lifcdft.lifcdft.LIFCDFT.reset">reset() (fcdft.lifcdft.lifcdft.LIFCDFT method)</a>
+
+      <ul>
+        <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.Grids.reset">(fcdft.solvent.pbe.Grids method)</a>
+</li>
+        <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.reset">(fcdft.solvent.pbe.PBE method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe_grad.rf_force">rf_force() (in module fcdft.solvent.pbe_grad)</a>
+</li>
+      <li><a href="fcdft.lib.html#fcdft.lib.fcdft_helper.roots_legendre">roots_legendre() (in module fcdft.lib.fcdft_helper)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.spin_square">spin_square() (fcdft.wbl.uks.WBLMoleculeUKS method)</a>
+
+      <ul>
+        <li><a href="fcdft.wbl.html#fcdft.wbl.uks.spin_square">(in module fcdft.wbl.uks)</a>
+</li>
+      </ul></li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.to_gpu">to_gpu() (fcdft.solvent.pbe.PBE method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe_grad.WithSolventGrad.undo_solvent">undo_solvent() (fcdft.solvent.pbe_grad.WithSolventGrad method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.calculus_helper.vectorize_grad">vectorize_grad() (in module fcdft.solvent.calculus_helper)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLBase">WBLBase (class in fcdft.wbl.rks)</a>
+</li>
+      <li><a href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS">WBLMoleculeRKS (class in fcdft.wbl.rks)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS">WBLMoleculeUKS (class in fcdft.wbl.uks)</a>
+</li>
+      <li><a href="fcdft.solvent.html#fcdft.solvent.pbe_grad.WithSolventGrad">WithSolventGrad (class in fcdft.solvent.pbe_grad)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025, Jun-Hyeong Kim.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
