@@ -29,13 +29,13 @@ def poisson(grid, dtype=float, format=None, type='FD'):
         # Eighth-order finite difference method
         stencil = np.zeros((9,) * N, dtype=dtype)
         for i in range(N):
+            stencil[(4,)*i + (0,) + (4,)*(N-i-1)] = 1/560
+            stencil[(4,)*i + (1,) + (4,)*(N-i-1)] = -8/315
+            stencil[(4,)*i + (2,) + (4,)*(N-i-1)] = 1/5
             stencil[(4,)*i + (3,) + (4,)*(N-i-1)] = -8/5
             stencil[(4,)*i + (5,) + (4,)*(N-i-1)] = -8/5
-            stencil[(4,)*i + (2,) + (4,)*(N-i-1)] = 1/5
             stencil[(4,)*i + (6,) + (4,)*(N-i-1)] = 1/5
-            stencil[(4,)*i + (1,) + (4,)*(N-i-1)] = -8/315
             stencil[(4,)*i + (7,) + (4,)*(N-i-1)] = -8/315
-            stencil[(4,)*i + (0,) + (4,)*(N-i-1)] = 1/560
             stencil[(4,)*i + (8,) + (4,)*(N-i-1)] = 1/560
         stencil[(4,)*N] = 205/72*N
 
