@@ -32,6 +32,7 @@ solmf.kernel()
 from pyscf.dft import RKS
 mf = RKS(mol, xc='pbe')
 cm = PBE(mol, cb=1.0, length=20, ngrids=41, stern_sam=-100)
+cm.pzc = 0.0
 cm.atom_bottom='center'
 solmf = pbe_for_scf(mf, cm)
 solmf.kernel()
