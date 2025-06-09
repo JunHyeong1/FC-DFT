@@ -136,19 +136,20 @@ def make_phi_sol(solvent_obj, dm=None, coords=None):
         coords (2D numpy.ndarray): Cartesian grids.
 
     Returns:
-        1D numpy.ndarray: Solute electrostatic potential
+        numpy tag_array: Solute electrostatic potential.
     """
     if dm is None: dm = solvent_obj._dm
     if coords is None: coords = solvent_obj.grids.coords
+
+    tot_ngrids = solvent_obj.grids.get_ngrids()
     
     logger.info(solvent_obj, 'Generating the solute electrostatic potential...')
     mol = solvent_obj.mol
 
-    Vnuc = 0
     atom_coords = mol.atom_coords()
     Z = mol.atom_charges()
     dist = pbe_helper.distance_calculator(coords, atom_coords)
-    dist[dist < 1.0e-100] = 1.0e-100 # Machine precision
+    dist[dist < 1.0e-100] = numpy.inf # Machine precision
     Vnuc = numpy.tensordot(1.0e0 / dist, Z, axes=([0], [0]))
 
     gpu_accel = solvent_obj.gpu_accel
@@ -157,14 +158,14 @@ def make_phi_sol(solvent_obj, dm=None, coords=None):
         logger.info(solvent_obj, 'Will utilize GPUs for computing the electrostatic potential.')
         import cupy
         nbatch = 256*256
-        ngrids = coords.shape[0]
+        tot_ngrids = coords.shape[0]
         from gpu4pyscf.gto.moleintor import intor, VHFOpt
         _dm = cupy.asarray(dm.real)
-        _Vele = cupy.zeros(ngrids)
+        _Vele = cupy.zeros(tot_ngrids, order='C')
         intopt = VHFOpt(mol)
         intopt.build(cutoff=1e-14)
-        for ibatch in range(0, ngrids, nbatch):
-            max_grid = min(ibatch+nbatch, ngrids)
+        for ibatch in range(0, tot_ngrids, nbatch):
+            max_grid = min(ibatch+nbatch, tot_ngrids)
             _Vele[ibatch:max_grid] += \
                 intor(mol, 'int1e_grids', coords[ibatch:max_grid], dm=_dm, intopt=intopt)
         Vele = _Vele.get()
@@ -172,19 +173,19 @@ def make_phi_sol(solvent_obj, dm=None, coords=None):
         lib.num_threads(OMP_NUM_THREADS)
 
     else:
-        Vele = numpy.empty_like(Vnuc)
+        Vele = numpy.empty(tot_ngrids, order='C')
         nao = mol.nao
         max_memory = solvent_obj.max_memory - lib.current_memory()[0] - Vele.nbytes*1e-6
         blksize = int(max(max_memory*.9e6/8/nao**2, 400))
         cintopt = gto.moleintor.make_cintopt(mol._atm, mol._bas, mol._env, 'int3c2e')
-        for p0, p1 in lib.prange(0, Vele.size, blksize):
+        for p0, p1 in lib.prange(0, tot_ngrids, blksize):
             fakemol = gto.fakemol_for_charges(coords[p0:p1])
             ints = df.incore.aux_e2(mol, fakemol, cintopt=cintopt)
             Vele[p0:p1] = numpy.tensordot(ints, dm.real, axes=([1,0], [0,1]))
             del ints
 
     MEP = Vnuc - Vele
-    return MEP
+    return lib.tag_array(MEP, Vnuc=Vnuc, Vele=-Vele)
 
 def make_rho_sol(solvent_obj, phi_sol=None, spacing=None):
     """Solute charge density by solving the Poisson equation.
@@ -199,9 +200,18 @@ def make_rho_sol(solvent_obj, phi_sol=None, spacing=None):
     """
     if phi_sol is None: phi_sol = solvent_obj.phi_sol
     if spacing is None: spacing = solvent_obj.grids.spacing
+    ngrids = solvent_obj.grids.ngrids
 
     L = solvent_obj.L
     rho_sol = L.dot(phi_sol) / 4.0e0 / PI / spacing**2
+
+    # # Zero out the boundary values
+    # rho_sol = rho_sol.reshape((ngrids,)*3)
+    # idx = numpy.array([-4, -3, -2, -1, 0, 1, 2, 3])
+    # rho_sol[idx,:,:] = 0.0e0
+    # rho_sol[:,idx,:] = 0.0e0
+    # rho_sol[:,:,idx] = 0.0e0
+    # rho_sol = rho_sol.flatten()
     return rho_sol
 
 def get_rho_ions(solvent_obj, phi_tot=None, cb=None, lambda_r=None, T=None):
@@ -472,6 +482,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
     _intermediates = solvent_obj._intermediates
 
     ngrids = solvent_obj.grids.ngrids
+    tot_ngrids = solvent_obj.grids.get_ngrids()
     T = solvent_obj.T
     spacing = solvent_obj.grids.spacing
     stern_sam = solvent_obj.stern_sam / BOHR
@@ -488,7 +499,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
     eta = 0.6e0
     kappa = 0.2e0
 
-    phi_tot = numpy.zeros_like(rho_sol, order='C')
+    phi_tot = numpy.zeros(tot_ngrids, order='C')
     bc, phi_z, slope= impose_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, 
                                 solvent_obj.eps_sam, solvent_obj.eps, sas, pzc, ref_pot, jump_coeff)
     grad_bc, grad_phi_z, grad_sas = bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas)
@@ -500,7 +511,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
     rho_ions = solvent_obj.get_rho_ions(phi_tot, cb, lambda_r, T)
 
     rho_tot = rho_sol + rho_ions
-    rho_iter = numpy.zeros_like(phi_tot, order='C')
+    rho_iter = numpy.zeros(tot_ngrids, order='C')
     rho_pol = (1.0e0 - eps) / eps * rho_tot + rho_iter
 
 
@@ -522,6 +533,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
 
         phi_opt = phi_old - bc
         dphi_opt = ch.vectorize_grad(ch.gradient(phi_opt.reshape((ngrids,)*3))) / spacing
+
         rho_iter = 0.25e0 / PI * pbe_helper.product_vector_vector(grad_lneps, dphi_opt)
 
         rho_iter = eta * rho_iter + (1.0e0 - eta) * rho_iter_old
@@ -549,7 +561,8 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
             return phi_tot, rho_ions, rho_pol
         iter += 1
     logger.info(solvent_obj, 'PBE failed to converge.')
-    raise RuntimeError('PBE solver failed to converge. Decreasing grid size might help convergence.')
+    raise RuntimeError('PBE solver failed to converge. ' \
+                       'Decreasing grid size might help convergence.')
 
 class PBE(ddcosmo.DDCOSMO):
     _keys = {'cb', 'T', 'bias', 'stern_sam', 'delta1', 'delta2', 'eps_sam', 'probe', 'kappa', 'stern_mol', 'cation_rad', 'anion_rad', 'cmax', 'rho_sol', 'rho_ions', 'rho_pol', 'phi_pol', 'phi_tot', 'phi_sol', 'L', 'ml', 'nelectron', 'phi_pol', 'thresh_pol', 'thresh_ions', 'thresh_amg', 'gpu_accel', 'cycle', 'atom_bottom', 'pzc', 'jump_coeff', 'ref_pot'}
@@ -638,6 +651,15 @@ class PBE(ddcosmo.DDCOSMO):
         lnlambda = numpy.log(_lambda_r)
         lnlambda[lambda_r < 1.0e-100] = -1.0e100
 
+        # Zero out the boundary values to eliminate error
+        ngrids = self.grids.ngrids
+        rho_sol = rho_sol.reshape((ngrids,)*3)
+        idx = numpy.array([-4, -3, -2, -1, 0, 1, 2, 3])
+        rho_sol[idx,:,:] = 0.0e0
+        rho_sol[:,idx,:] = 0.0e0
+        rho_sol[:,:,idx] = 0.0e0
+        rho_sol = rho_sol.flatten()
+
         lnA = numpy.log(0.5) + lnlambda - phi_tot / KB2HARTREE / self.T
         lnB = numpy.log(0.5) + lnlambda + phi_tot / KB2HARTREE / self.T
         # Reaction field contribution
@@ -669,13 +691,13 @@ class PBE(ddcosmo.DDCOSMO):
         spacing = self.grids.spacing
         nao = mol.nao
 
-        vmat = numpy.zeros([nao, nao], dtype=numpy.float64, order='C')
+        vmat = numpy.zeros([nao, nao], order='C')
         max_memory = self.max_memory - lib.current_memory()[0]
         blksize = int(max(max_memory*.9e6/8/nao, 400))
-        vmat = numpy.zeros([nao, nao], dtype=numpy.float64, order='C')
+        vmat = numpy.zeros([nao, nao], order='C')
         for p0, p1 in lib.prange(0, phi_pol.size, blksize):
             ao = mol.eval_gto('GTOval', coords[p0:p1])
-            vmat -= 0.5e0 * numpy.dot(ao.T * phi_pol[p0:p1], ao)
+            vmat -= 0.5e0*numpy.dot(ao.T * phi_pol[p0:p1], ao)
         vmat = vmat * spacing**3
         return vmat
     
