@@ -11,8 +11,8 @@ This code computes single-point energies, optimized structures, vibrational freq
   - Clone the repository.
   - `cd FC-DFT`
   - `pip install .`
-  - Go to `$PYTHONPATH/fcdft/lib` directory and make `build`.
-  - Go to `build` and install C shared libraries by `cmake ..` and `make`.
+  - Change directory to `$PYTHONPATH/fcdft/lib` and create `build` directory.
+  - Go to `build` and compile C shared libraries by `cmake ..` and `make`.
 
 ## Features
   - FC-DFT calculations by all density functional approximations supported by LibXC library.
