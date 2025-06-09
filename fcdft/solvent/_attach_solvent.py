@@ -45,7 +45,7 @@ class SCFWithSolvent(_attach_solvent.SCFWithSolvent):
             e_solvent, v_solvent = 0.0e0, 0.0e0
         else:
             if not with_solvent.frozen:
-                with_solvent.e, with_solvent.v = with_solvent.kernel(dm)
-        e_solvent, v_solvent = with_solvent.e, with_solvent.v
+                e_solvent, v_solvent = with_solvent.kernel(dm)
+        with_solvent.e, with_solvent.v = e_solvent, v_solvent
 
         return lib.tag_array(vhf, e_solvent=e_solvent, v_solvent=v_solvent)
