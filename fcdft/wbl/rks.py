@@ -6,11 +6,16 @@ from pyscf.data.nist import *
 from functools import reduce
 import numpy
 import scipy
-from fcdft.lib import fcdft_helper
+import fcdft
+import ctypes
+import os
 from fcdft.dft import numint
 
+libfcdft = lib.load_library(os.path.join(fcdft.__path__[0], 'lib', 'libfcdft'))
+
 def get_veff(mf, mol=None, dm=None, dm_last=0, vhf_last=0, *args, **kwargs):
-    """Construct the effective potential for the WBLMolecule Hamiltonian.
+    """
+    Construct the effective potential for the WBLMolecule Hamiltonian.
 
     """
     if mf.fermi is None:
@@ -137,25 +142,36 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
     if mo_energy is None: mo_energy = mf.mo_energy
     if fermi is None: fermi = mf.fermi / HARTREE2EV
 
+    moe_energy = numpy.asarray(mo_energy.real, order='C')
+    nbas = moe_energy.shape[0]
     smear = mf.smear / HARTREE2EV
-    moe_energy = mo_energy.real
     window = mf.window * broad
     pot_cycle = mf.pot_cycle
     pot_damp = mf.pot_damp
+    abscissas, weights = mf.abscissas, mf.weights
+    quad_order = mf.quad_order
+
+    drv = libfcdft.fermi_level_drv
+    c_moe_energy = moe_energy.ctypes.data_as(ctypes.c_void_p)
+    c_abscissas, c_weights = abscissas.ctypes.data_as(ctypes.c_void_p), weights.ctypes.data_as(ctypes.c_void_p)
+    c_broad, c_smear = ctypes.c_double(broad), ctypes.c_double(smear)
+    c_windows, c_quad_order = ctypes.c_double(window), ctypes.c_int(quad_order)
+    c_nbas = ctypes.c_int(nbas)
 
     fermi_last = None
 
-    abscissas, weights = mf.abscissas, mf.weights
     for cycle in range(pot_cycle):
         fermi_last = fermi
-        mo_occ = numpy.zeros_like(moe_energy)
-        ni_grad = 0.0e0
-        mo_occ, mo_grad = fcdft_helper.quadrature(moe_energy, abscissas, weights, fermi, broad, smear, window, 1)
+        mo_occ = numpy.empty(nbas, order='C')
+        mo_grad = ctypes.c_double(0.0)
+        drv(c_moe_energy, c_abscissas, c_weights,
+            ctypes.c_double(fermi), c_broad, c_smear, c_windows, c_quad_order, c_nbas,
+            mo_occ.ctypes.data_as(ctypes.c_void_p), ctypes.byref(mo_grad))
         if numpy.any(mo_occ > 1.0e0):
             raise RuntimeError('Numerical integration failed. Integration window: %s eV' % window*HARTREE2EV)
         nelec_last = mo_occ.sum()
-        ni_grad = mo_grad.sum()
-        delta = (nelec_a - nelec_last) / ni_grad
+        
+        delta = (nelec_a - nelec_last) / mo_grad.value
         if delta > 1.0e0:
             fermi += 10**(numpy.log10(delta) - int(numpy.log10(delta)) - 1)
         elif delta < -1.0e0:
@@ -228,7 +244,7 @@ def init_guess_by_chkfile(mol, chkfile_name, project=None):
             mo = mo[0]
         dm = _make_rdm1([fproj(mo[0]),fproj(mo[1])], mo_occ)
     return dm[0] + dm[1]
- 
+
 def _make_rdm1(mo_coeff, mo_occ, **kwargs):
     '''One-particle density matrix in AO representation
 
@@ -315,7 +331,17 @@ class WBLBase:
     
     def build(self, mol=None):
         super().build(mol)
-        self.abscissas, self.weights = fcdft_helper.roots_legendre(self.quad_order)
+        quad_order = self.quad_order
+        if quad_order == 20001:
+            path = os.path.join(fcdft.__path__[0], 'wbl')
+            self.abscissas = numpy.load(os.path.join(path, 'abscissas.npy'))
+            self.weights = numpy.load(os.path.join(path, 'weights.npy'))
+        else:
+            drv = libfcdft.roots_legendre
+            c_quad_order = ctypes.c_int(quad_order)
+            abscissas, weights = numpy.empty(quad_order, order='C'), numpy.empty(quad_order, order='C')
+            drv(c_quad_order, abscissas.ctypes.data_as(ctypes.c_void_p), weights.ctypes.data_as(ctypes.c_void_p))
+            self.abscissas, self.weights = abscissas, weights
         return self
     
     def init_guess_by_chkfile(self, chkfile=None, project=None):
@@ -336,7 +362,6 @@ class WBLMoleculeRKS(WBLBase, rks.RKS):
         if s1e is None: s1e = self.get_ovlp()
         return get_sigmaR(self, s1e)
 
-    
     def nuc_grad_method(self):
         from fcdft.grad import rks as wblrks_grad
         return wblrks_grad.Gradients(self)
@@ -374,6 +399,6 @@ N        0.0819851974      0.3199013851      7.1972568519
 S        0.0000000000      0.0000000000      0.0000000000
 H        1.3390319419     -0.0095801980     -0.2157234144''',
         charge=0, basis='6-31g**', verbose=5)
-    wblmf = WBLMoleculeRKS(mol, xc='pbe', broad=0.01, smear=0.2, nelectron=69.95)
+    wblmf = WBLMoleculeRKS(mol, xc='b3lyp', broad=0.01, smear=0.2, nelectron=70.00)
     wblmf.conv_tol = 1e-8
     wblmf.kernel()
