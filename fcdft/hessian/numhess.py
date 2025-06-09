@@ -48,13 +48,15 @@ def hess_generator(mol, g_scanner, h, order):
                     counter += 1
                 H[i, :] = (Hx[0] - 8*Hx[1] + 8*Hx[2] - Hx[3]).reshape(-1)
 
+    mol.set_geom_(geom, unit="Bohr")
+
     if order == 3:
         H = (H + H.T) / (2*delta) / 2
     elif order == 5:
         H = (H + H.T) / (12*delta) / 2
 
     # Save the Hessian just in case
-    np.savetxt('%s.hessian' %mol.output, H)
+    np.save('%s.hessian' %mol.output, H)
     
     # Converting 2d hessian to 4d analogue to follow PySCF convention.
     hess = np.zeros((nat, nat, 3, 3))
