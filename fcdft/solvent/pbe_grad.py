@@ -245,7 +245,6 @@ def ib_force(pbeobj, dm):
     dist = pbe_helper.distance_calculator(coords, atom_coords)
     x = (dist - r_vdw[:,None] - probe - stern_mol) / delta2
     _erf = scipy.special.erf(x)
-    # _erf[x < -8.0e0*delta2] = -1.0e0
     erf_list = 0.5e0 * (1.0e0 + _erf)
     gauss_list = numpy.exp(-x**2)
 
