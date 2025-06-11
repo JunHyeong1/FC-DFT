@@ -21,7 +21,7 @@ def get_veff(mf, mol=None, dm=None, dm_last=0, vhf_last=0, *args, **kwargs):
     if mf.fermi is None:
         for _ in range(mf.inner_cycle):
             h1e = mf.get_hcore()
-            vhf = rks.get_veff(mf, dm=dm)
+            vhf = mf._get_veff(dm=dm)
             s1e = mf.get_ovlp()
             fock = h1e + vhf
             e, c = rhf.eig(fock, s1e)
@@ -36,7 +36,7 @@ def get_veff(mf, mol=None, dm=None, dm_last=0, vhf_last=0, *args, **kwargs):
     if dm is not None: dm = dm
     if dm_last is not None: dm_last = dm_last
     sigmaR= mf.get_sigmaR()
-    _vhf = rks.get_veff(mf, mol, dm, dm_last, vhf_last, *args, **kwargs)
+    _vhf = mf._get_veff(mol, dm, dm_last, vhf_last, *args, **kwargs)
     vhf = lib.tag_array(_vhf.real+sigmaR, ecoul=_vhf.ecoul, exc=_vhf.exc, vj=_vhf.vj.real, vk=_vhf.vk)
     if vhf.vk is not None:
         vhf.vk = vhf.vk.real
@@ -365,6 +365,10 @@ class WBLMoleculeRKS(WBLBase, rks.RKS):
     def nuc_grad_method(self):
         from fcdft.grad import rks as wblrks_grad
         return wblrks_grad.Gradients(self)
+    
+    def _get_veff(self, mol=None, dm=None, dm_last=0, vhf_last=0, *args, **kwargs):
+        """ A hooker to call get_veff of the parant class."""
+        return super().get_veff(mol, dm, dm_last, vhf_last, *args, **kwargs)
 
     def _finalize(self):
         super()._finalize()

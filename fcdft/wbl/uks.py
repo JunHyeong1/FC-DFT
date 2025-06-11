@@ -15,7 +15,7 @@ def get_veff(mf, mol=None, dm=None, dm_last=0, vhf_last=0, *args, **kwargs):
         nelec_a, nelec_b = mf.nelec
         for _ in range(mf.inner_cycle):
             h1e = mf.get_hcore()
-            vhf = uks.get_veff(mf, dm=dm)
+            vhf = mf._get_veff(mf, dm=dm)
             s1e = mf.get_ovlp()
             fock = h1e + vhf
             ea, ca = rhf.eig(fock[0], s1e)
@@ -32,7 +32,7 @@ def get_veff(mf, mol=None, dm=None, dm_last=0, vhf_last=0, *args, **kwargs):
     if dm is not None: dm = dm
     if dm_last is not None: dm_last = dm_last
     sigmaR= mf.get_sigmaR()
-    _vhf = uks.get_veff(mf, mol, dm, dm_last, vhf_last, *args, **kwargs)
+    _vhf = mf._get_veff(mf, mol, dm, dm_last, vhf_last, *args, **kwargs)
     vhf = lib.tag_array(_vhf.real+sigmaR, ecoul=_vhf.ecoul, exc=_vhf.exc, vj=_vhf.vj.real, vk=_vhf.vk)
     if vhf.vk is not None:
         vhf.vk = vhf.vk.real
@@ -102,70 +102,6 @@ def spin_square(dm, s1e=1):
     s = numpy.sqrt(ss+.25) - .5
     return ss, s*2+1
 
-# def init_guess_by_chkfile(mol, chkfile_name, project=None):
-#     from pyscf.scf import addons, chkfile
-#     chk_mol, scf_rec = chkfile.load_scf(chkfile_name)
-#     if project is None:
-#         project = not gto.same_basis_set(chk_mol, mol)
-
-#     # Check whether the two molecules are similar
-#     im1 = scipy.linalg.eigvalsh(mol.inertia_moment())
-#     im2 = scipy.linalg.eigvalsh(chk_mol.inertia_moment())
-#     # im1+1e-7 to avoid 'divide by zero' error
-#     if abs((im1-im2)/(im1+1e-7)).max() > 0.01:
-#         logger.warn(mol, "Large deviations found between the input "
-#                     "molecule and the molecule from chkfile\n"
-#                     "Initial guess density matrix may have large error.")
-
-#     if project:
-#         s = rhf.get_ovlp(mol)
-
-#     def fproj(mo):
-#         if project:
-#             mo = addons.project_mo_nr2nr(chk_mol, mo, mol)
-#             norm = numpy.einsum('pi,pi->i', mo.conj(), s.dot(mo))
-#             mo /= numpy.sqrt(norm)
-#         return mo
-
-#     mo = scf_rec['mo_coeff']
-#     mo_occ = scf_rec['mo_occ']
-#     if getattr(mo[0], 'ndim', None) == 1:  # RHF
-#         mo_coeff = fproj(mo)
-#         mo_occa = (mo_occ>1e-8).astype(numpy.complex128)
-#         mo_occb = mo_occ - mo_occa
-#         dm = _make_rdm1([mo_coeff,mo_coeff], [mo_occa,mo_occb])
-#     else:  #UHF
-#         if getattr(mo[0][0], 'ndim', None) == 2:  # KUHF
-#             logger.warn(mol, 'k-point UHF results are found.  Density matrix '
-#                         'at Gamma point is used for the molecular SCF initial guess')
-#             mo = mo[0]
-#         dm = _make_rdm1([fproj(mo[0]),fproj(mo[1])], mo_occ)
-#     return dm[0] + dm[1]
-
-
-# def _make_rdm1(mo_coeff, mo_occ, **kwargs):
-#     '''One-particle density matrix in AO representation
-
-#     Args:
-#         mo_coeff : tuple of 2D ndarrays
-#             Orbital coefficients for alpha and beta spins. Each column is one orbital.
-#         mo_occ : tuple of 1D ndarrays
-#             Occupancies for alpha and beta spins.
-#     Returns:
-#         A list of 2D ndarrays for alpha and beta spins
-#     '''
-#     mo_a = mo_coeff[0]
-#     mo_b = mo_coeff[1]
-
-#     dm_a = numpy.dot(numpy.dot(mo_a, numpy.diag(mo_occ[0])), mo_a.T)
-#     dm_b = numpy.dot(numpy.dot(mo_b, numpy.diag(mo_occ[1])), mo_b.T)
-
-# # DO NOT make tag_array for DM here because the DM arrays may be modified and
-# # passed to functions like get_jk, get_vxc.  These functions may take the tags
-# # (mo_coeff, mo_occ) to compute the potential if tags were found in the DM
-# # arrays and modifications to DM arrays may be ignored.
-#     return lib.tag_array((dm_a, dm_b), mo_coeff=mo_coeff, mo_occ=mo_occ)
-
 def get_grad(mo_coeff, mo_occ, fock_ao):
     '''Fractional orbital gradients. Seems that this is meaningless for our purpose?
     '''
@@ -190,15 +126,15 @@ class WBLMoleculeUKS(wblrks.WBLBase, uks.UKS):
         from fcdft.grad import uks as wbluks_grad
         return wbluks_grad.Gradients(self)
     
-    # def init_guess_by_chkfile(self, chkfile=None, project=None):
-    #     if chkfile is None: chkfile = self.chkfile
-    #     return init_guess_by_chkfile(self.mol, chkfile, project=project)
-    
     def get_grad(self, mo_coeff, mo_occ, fock=None):
         if fock is None:
             dm1 = self.make_rdm1(mo_coeff, mo_occ)
             fock = self.get_hcore(self.mol) + self.get_veff(self.mol, dm1)
         return get_grad(mo_coeff, mo_occ, fock)
+    
+    def _get_veff(self, mol=None, dm=None, dm_last=0, vhf_last=0, *args, **kwargs):
+        """ A hooker to call get_veff of the parant class."""
+        return super().get_veff(mol, dm, dm_last, vhf_last, *args, **kwargs)
 
     def _finalize(self):
         super()._finalize()
