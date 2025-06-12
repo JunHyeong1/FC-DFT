@@ -6,15 +6,13 @@ Fractional Charge Density Functional Theory (FC-DFT) is a theory that reformulat
 Developers
 ===========
 Jun-Hyeong Kim, Duke University
-
 Weitao Yang, Duke University
 
 Citation
 =========
 Jun-Hyeong Kim, Dongju Kim, Weitao Yang, and Mu-Hyun Baik. Fractional Charge Density Functional Theory and Its Application to the Electro-inductive Effect. *J. Phys. Chem. Lett.* **2023**, *14*, 3329-3334
+Jun-Hyeong Kim and Weitao Yang. Fractional Charge Density Functional Theory Elucidates Electro-Inductive and Electric Field Effects at Electrochemical Interfaces. *Submitted*
 
-Jun-Hyeong Kim and Weitao Yang. Fractional Charge Density Functional Theory Elucidates Electro-Inductive and Electric Field Effects at Electrochemical Interfaces. *To be submitted*
-
-Bug reports and feature requests
+Bug Report and Feature Request
 ================================
-Please create a posting on `Issues <https://github.com/Yang-Laboratory/FC-DFT/issues>`_ tab.
+Please open a thread on the `Issues <https://github.com/Yang-Laboratory/FC-DFT/issues>`_ tab.

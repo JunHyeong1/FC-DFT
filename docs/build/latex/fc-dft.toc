@@ -10,5 +10,5 @@
 \contentsline {chapter}{\numberline {3}About}{7}{chapter.3}%
 \contentsline {section}{\numberline {3.1}Developers}{7}{section.3.1}%
 \contentsline {section}{\numberline {3.2}Citation}{7}{section.3.2}%
-\contentsline {section}{\numberline {3.3}Bug reports and feature requests}{7}{section.3.3}%
+\contentsline {section}{\numberline {3.3}Bug Report and Feature Request}{7}{section.3.3}%
 \contentsline {chapter}{\numberline {4}Indices and tables}{9}{chapter.4}%
