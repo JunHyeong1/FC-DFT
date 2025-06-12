@@ -414,17 +414,20 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.lib.pbe_helper.product_atom_vector_scalar">
 <span class="sig-prename descclassname"><span class="pre">fcdft.lib.pbe_helper.</span></span><span class="sig-name descname"><span class="pre">product_atom_vector_scalar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lib.pbe_helper.product_atom_vector_scalar" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>numpy.einsum(‘ijk,jk-&gt;ijk’)</p>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.lib.pbe_helper.product_vector_scalar">
 <span class="sig-prename descclassname"><span class="pre">fcdft.lib.pbe_helper.</span></span><span class="sig-name descname"><span class="pre">product_vector_scalar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lib.pbe_helper.product_vector_scalar" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>numpy.einsum(‘ij,i-&gt;ij’)</p>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.lib.pbe_helper.product_vector_vector">
 <span class="sig-prename descclassname"><span class="pre">fcdft.lib.pbe_helper.</span></span><span class="sig-name descname"><span class="pre">product_vector_vector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lib.pbe_helper.product_vector_vector" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dd><p>numpy.einsum(‘ij,ij-&gt;i’)</p>
+</dd></dl>
 
 </section>
 <section id="module-fcdft.lib">
