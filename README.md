@@ -30,5 +30,5 @@ Jun-Hyeong Kim, Dongju Kim, Weitao Yang, and Mu-Hyun Baik. Fractional Charge Den
 
 Jun-Hyeong Kim and Weitao Yang. Fractional Charge Density Functional Theory Elucidates Electro-Inductive and Electric Field Effects at Electrochemical Interfaces. _Submitted_
 
-## Bug Report and Reature Request
+## Bug Report and Feature Request
 Please open a thread on the [Issues](https://github.com/Yang-Laboratory/FC-DFT/issues) tab.
