@@ -378,6 +378,10 @@ class WBLMoleculeRKS(WBLBase, rks.RKS):
         logger.info(self, 'number of electrons = %.15g', nelectron)
         logger.info(self, 'optimized chemical potential = %.15g eV', self.fermi) # Unit in eV
         return self
+    
+    def density_fit(self, auxbasis=None, with_df=None, only_dfj=False):
+        import fcdft.df.df_jk
+        return fcdft.df.df_jk.density_fit(self, auxbasis, with_df, only_dfj)
 
     get_veff = get_veff
     get_fock = get_fock
