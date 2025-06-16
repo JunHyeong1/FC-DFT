@@ -342,7 +342,7 @@ def get_veff(ks_grad, mol=None, dm=None):
     mem_now = lib.current_memory()[0]
     max_memory = max(2000, ks_grad.max_memory*.9-mem_now)
     if ks_grad.grid_response:
-        exc, vxc = rks_grad.get_vxc_full_response(
+        exc, vxc = _rks_grad.get_vxc_full_response(
             ni, mol, grids, mf.xc, dm,
             max_memory=max_memory, verbose=ks_grad.verbose)
         if mf.do_nlc():
