@@ -318,7 +318,7 @@ def _cho_solve_rhojk (mf_grad, mol, auxmol, orbol, orbor,
         def __init__(self, my_f):
             self.f_rhok = my_f
         def __call__(self, set_id, p0, p1):
-            buf = numpy.empty((p1-p0,nocc[set_id],nao))
+            buf = numpy.empty((p1-p0,nocc[set_id],nao), dtype=numpy.complex128)
             col1 = 0
             for istep in range(nsteps):
                 dat = self.f_rhok['%s/%s'%(set_id,istep)][p0:p1]
