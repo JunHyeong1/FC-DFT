@@ -28,7 +28,7 @@ Please cite the paper below if this code was directly or indirectly helpful to y
 
 Jun-Hyeong Kim, Dongju Kim, Weitao Yang, and Mu-Hyun Baik. Fractional Charge Density Functional Theory and Its Application to the Electro-inductive Effect. _J. Phys. Chem. Lett._ **2023**, _14_, 3329-3334
 
-Jun-Hyeong Kim and Weitao Yang. Fractional Charge Density Functional Theory Elucidates Electro-Inductive and Electric Field Effects at Electrochemical Interfaces. _Submitted_
+Jun-Hyeong Kim and Weitao Yang. Fractional Charge Density Functional Theory Elucidates Electro-Inductive and Electric Field Effects at Electrochemical Interfaces. _Submitted_ ChemRxiv: 10.26434/chemrxiv-2025-6qqfb
 
 ## Bug Report and Feature Request
 Please open a thread on the [Issues](https://github.com/Yang-Laboratory/FC-DFT/issues) tab.
