@@ -15,7 +15,7 @@ def get_veff(mf, mol=None, dm=None, dm_last=0, vhf_last=0, *args, **kwargs):
         nelec_a, nelec_b = mf.nelec
         for _ in range(mf.inner_cycle):
             h1e = mf.get_hcore()
-            vhf = mf._get_veff(mf, dm=dm)
+            vhf = mf._get_veff(dm=dm)
             s1e = mf.get_ovlp()
             fock = h1e + vhf
             ea, ca = rhf.eig(fock[0], s1e)
@@ -32,7 +32,7 @@ def get_veff(mf, mol=None, dm=None, dm_last=0, vhf_last=0, *args, **kwargs):
     if dm is not None: dm = dm
     if dm_last is not None: dm_last = dm_last
     sigmaR= mf.get_sigmaR()
-    _vhf = mf._get_veff(mf, mol, dm, dm_last, vhf_last, *args, **kwargs)
+    _vhf = mf._get_veff(mol, dm, dm_last, vhf_last, *args, **kwargs)
     vhf = lib.tag_array(_vhf.real+sigmaR, ecoul=_vhf.ecoul, exc=_vhf.exc, vj=_vhf.vj.real, vk=_vhf.vk)
     if vhf.vk is not None:
         vhf.vk = vhf.vk.real
@@ -157,6 +157,10 @@ class WBLMoleculeUKS(wblrks.WBLBase, uks.UKS):
             s1e = self.get_ovlp()
         dm = self.make_rdm1(mo_coeff, self.mo_occ)
         return spin_square(dm, s1e)
+    
+    def density_fit(self, auxbasis=None, with_df=None, only_dfj=False):
+        import fcdft.df.df_jk
+        return fcdft.df.df_jk.density_fit(self, auxbasis, with_df, only_dfj)
     
     get_veff = get_veff
     get_fock = get_fock
