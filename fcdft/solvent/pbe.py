@@ -152,6 +152,9 @@ def make_phi_sol(solvent_obj, dm=None, coords=None):
     dist[dist < 1.0e-100] = numpy.inf # Machine precision
     Vnuc = numpy.tensordot(1.0e0 / dist, Z, axes=([0], [0]))
 
+    if dm.ndim == 3: # Spin-unrestricted
+        dm = dm[0] + dm[1]
+
     gpu_accel = solvent_obj.gpu_accel
 
     if gpu_accel:
@@ -159,18 +162,15 @@ def make_phi_sol(solvent_obj, dm=None, coords=None):
         import cupy
         nbatch = 256*256
         tot_ngrids = coords.shape[0]
-        from gpu4pyscf.gto.moleintor import intor, VHFOpt
+        from gpu4pyscf.gto.int3c1e import int1e_grids
         _dm = cupy.asarray(dm.real)
         _Vele = cupy.zeros(tot_ngrids, order='C')
-        intopt = VHFOpt(mol)
-        intopt.build(cutoff=1e-14)
         for ibatch in range(0, tot_ngrids, nbatch):
             max_grid = min(ibatch+nbatch, tot_ngrids)
-            _Vele[ibatch:max_grid] += \
-                intor(mol, 'int1e_grids', coords[ibatch:max_grid], dm=_dm, intopt=intopt)
+            _Vele[ibatch:max_grid] += int1e_grids(mol, coords[ibatch:max_grid], dm=_dm, direct_scf_tol=1e-14)
         Vele = _Vele.get()
-        del _dm, _Vele, intopt, intor, VHFOpt
-        lib.num_threads(OMP_NUM_THREADS)
+        del _dm, _Vele,  cupy, int1e_grids # Release GPU memory
+        lib.num_threads(OMP_NUM_THREADS) # GPU4PySCF sets OMP_NUM_THREADS=4 when running.
 
     else:
         Vele = numpy.empty(tot_ngrids, order='C')
@@ -200,18 +200,9 @@ def make_rho_sol(solvent_obj, phi_sol=None, spacing=None):
     """
     if phi_sol is None: phi_sol = solvent_obj.phi_sol
     if spacing is None: spacing = solvent_obj.grids.spacing
-    ngrids = solvent_obj.grids.ngrids
 
     L = solvent_obj.L
     rho_sol = L.dot(phi_sol) / 4.0e0 / PI / spacing**2
-
-    # # Zero out the boundary values
-    # rho_sol = rho_sol.reshape((ngrids,)*3)
-    # idx = numpy.array([-4, -3, -2, -1, 0, 1, 2, 3])
-    # rho_sol[idx,:,:] = 0.0e0
-    # rho_sol[:,idx,:] = 0.0e0
-    # rho_sol[:,:,idx] = 0.0e0
-    # rho_sol = rho_sol.flatten()
     return rho_sol
 
 def get_rho_ions(solvent_obj, phi_tot=None, cb=None, lambda_r=None, T=None):
@@ -632,11 +623,11 @@ class PBE(ddcosmo.DDCOSMO):
         coords = self.grids.coords
         bias = self.bias / HARTREE2EV # in eV --> a.u.
 
-        phi_sol = make_phi_sol(self, dm, coords)
+        phi_sol = self.make_phi_sol(dm, coords)
         self.phi_sol = phi_sol
-        rho_sol = make_rho_sol(self, phi_sol, spacing)
+        rho_sol = self.make_rho_sol(phi_sol, spacing)
         self.rho_sol = rho_sol
-        phi_tot, rho_ions, rho_pol = make_phi(self, bias, phi_sol, rho_sol)
+        phi_tot, rho_ions, rho_pol = self.make_phi(bias, phi_sol, rho_sol)
         self.phi_tot = phi_tot
         self.rho_pol = rho_pol
         self.rho_ions = rho_ions
@@ -794,6 +785,9 @@ class PBE(ddcosmo.DDCOSMO):
     make_sas = make_sas
     make_eps = make_eps
     make_grad_eps = make_grad_eps
+    make_phi_sol = make_phi_sol
+    make_rho_sol = make_rho_sol
+    make_phi = make_phi
 
 class Grids(cubegen.Cube):
     def __init__(self, mol, ngrids=97, length=20):
