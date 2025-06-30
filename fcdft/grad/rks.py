@@ -42,10 +42,10 @@ def grad_elec(mf_grad, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
     for k, ia in enumerate(atmlst):
         p0, p1 = aoslices [ia,2:]
         h1ao = hcore_deriv(ia)
-        de[k] += numpy.einsum('xij,ij->x', h1ao, dm0)
+        de[k] += numpy.tensordot(h1ao, dm0, axes=([1,2], [0,1]))
 # nabla was applied on bra in vhf, *2 for the contributions of nabla|ket>
-        de[k] += numpy.einsum('xij,ij->x', vhf[:,p0:p1], dm0[p0:p1]) * 2
-        de[k] -= numpy.einsum('xij,ij->x', s1[:,p0:p1], dme0[p0:p1]) * 2
+        de[k] += numpy.tensordot(vhf[:,p0:p1], dm0[p0:p1], axes=([1,2], [0,1])) * 2
+        de[k] -= numpy.tensordot(s1[:,p0:p1], dme0[p0:p1], axes=([1,2], [0,1])) * 2
 
         de[k] += mf_grad.extra_force(ia, locals())
 
