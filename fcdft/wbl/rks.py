@@ -46,7 +46,7 @@ def get_fock(mf, h1e=None, s1e=None, vhf=None, dm=None, cycle=-1, diis=None, dii
     if vhf is None: vhf = mf.get_veff(mf.mol, dm)
     return rhf.get_fock(mf, h1e, s1e, vhf, dm, cycle, diis, diis_start_cycle, level_shift_factor, damp_factor, fock_last)
 
-def get_sigmaR(mf, s1e=None):
+def get_sigmaR(mf, mol=None, s1e=None):
     """WBL-Molecule self-energy + Hamiltonian correction by bias voltage.
 
     Raises:
@@ -55,9 +55,9 @@ def get_sigmaR(mf, s1e=None):
     Returns:
         2D numpy.ndarray: Self-energy + voltage correction
     """
-    if s1e is None:
-        s1e = mf.get_ovlp()
-    ao_labels = mf.mol.ao_labels()
+    if s1e is None: s1e = mf.get_ovlp()
+    if mol is None: mol = mf.mol
+    ao_labels = mol.ao_labels()
     mf.bias = -(mf.fermi - mf.ref_pot) # Unit in eV
     logger.info(mf, 'Current bias: %.5f V', mf.bias) # Unit in eV
     idx = [i for i, basis in enumerate(ao_labels) if ('S 3p' in basis) or ('S 3s' in basis)]
@@ -119,7 +119,7 @@ def get_occ(mf, mo_energy=None, mo_coeff=None):
     logger.info(mf, 'chemical potential = %.15g eV', fermi * HARTREE2EV)
     return mo_occ
 
-def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fermi=None):
+def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fermi=None, verbose=None):
     """Calculates the Fermi level by the Newton-Raphson method.
 
     Args:
@@ -141,6 +141,7 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
     if broad is None: broad = mf.broad / HARTREE2EV
     if mo_energy is None: mo_energy = mf.mo_energy
     if fermi is None: fermi = mf.fermi / HARTREE2EV
+    if verbose is None: verbose = mf.verbose
 
     moe_energy = numpy.asarray(mo_energy.real, order='C')
     nbas = moe_energy.shape[0]
@@ -153,9 +154,12 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
 
     drv = libfcdft.fermi_level_drv
     c_moe_energy = moe_energy.ctypes.data_as(ctypes.c_void_p)
-    c_abscissas, c_weights = abscissas.ctypes.data_as(ctypes.c_void_p), weights.ctypes.data_as(ctypes.c_void_p)
-    c_broad, c_smear = ctypes.c_double(broad), ctypes.c_double(smear)
-    c_windows, c_quad_order = ctypes.c_double(window), ctypes.c_int(quad_order)
+    c_abscissas = abscissas.ctypes.data_as(ctypes.c_void_p)
+    c_weights = weights.ctypes.data_as(ctypes.c_void_p)
+    c_quad_order = ctypes.c_int(quad_order)
+    c_window = ctypes.c_double(window)
+    c_broad = ctypes.c_double(broad)
+    c_smear = ctypes.c_double(smear)
     c_nbas = ctypes.c_int(nbas)
 
     fermi_last = None
@@ -165,7 +169,7 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
         mo_occ = numpy.empty(nbas, order='C')
         mo_grad = ctypes.c_double(0.0)
         drv(c_moe_energy, c_abscissas, c_weights,
-            ctypes.c_double(fermi), c_broad, c_smear, c_windows, c_quad_order, c_nbas,
+            ctypes.c_double(fermi), c_broad, c_smear, c_window, c_quad_order, c_nbas,
             mo_occ.ctypes.data_as(ctypes.c_void_p), ctypes.byref(mo_grad))
         if numpy.any(mo_occ > 1.0e0):
             raise RuntimeError('Numerical integration failed. Integration window: %s eV' % window*HARTREE2EV)
@@ -182,10 +186,11 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
             raise RuntimeError('Infinity chemical potential detected. Adjust the damping factor.')
         elif abs(nelec_a - nelec_last) > 5.0e-1:
             fermi = pot_damp*fermi_last + (1.0e0-pot_damp)*fermi
-        if isinstance(mf, rks.RKS):
-            logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last*2)
-        else:
-            logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last)
+        if verbose >= logger.INFO:
+            if isinstance(mf, rks.RKS):
+                logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last*2)
+            else:
+                logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last)
         if abs(fermi - fermi_last) < 1e-11:
             break
         if cycle == pot_cycle-1:
@@ -321,13 +326,14 @@ class WBLBase:
     def eig(self, h, s):
         return self._eig(h, s)
     
-    def get_fermi_level(self, nelec=None, pot_cycle=None, broad=None, mo_energy=None, fermi=None):
+    def get_fermi_level(self, nelec=None, pot_cycle=None, broad=None, mo_energy=None, fermi=None, verbose=None):
         if pot_cycle is None: pot_cycle = self.pot_cycle
         if broad is None: broad = self.broad / HARTREE2EV
         if mo_energy is None: mo_energy = self.mo_energy
         if fermi is None: fermi = self.fermi / HARTREE2EV
         if nelec is None: nelec = self.nelectron / 2
-        return get_fermi_level(self, nelec, pot_cycle, broad, mo_energy, fermi)
+        if verbose is None: verbose = self.verbose
+        return get_fermi_level(self, nelec, pot_cycle, broad, mo_energy, fermi, verbose)
     
     def build(self, mol=None):
         super().build(mol)
@@ -358,9 +364,10 @@ class WBLMoleculeRKS(WBLBase, rks.RKS):
         rks.RKS.dump_flags(self, verbose)
         return WBLBase.dump_flags(self, verbose)
     
-    def get_sigmaR(self, s1e=None):
+    def get_sigmaR(self, mol=None, s1e=None):
+        if mol is None: mol = self.mol
         if s1e is None: s1e = self.get_ovlp()
-        return get_sigmaR(self, s1e)
+        return get_sigmaR(self, mol, s1e)
 
     def nuc_grad_method(self):
         from fcdft.grad import rks as wblrks_grad
