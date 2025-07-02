@@ -114,7 +114,9 @@ def get_jk(mf_grad, mol=None, dm=None, hermi=0, with_j=True, with_k=True,
     # dPiu C_uj -> dPij. *Not* symmetric i<->j: "i" has an occupancy
     # factor and "j" must not.
     max_memory = mf_grad.max_memory - lib.current_memory()[0]
-    blksize = int(min(max(max_memory * .5e6/8 / (nao*max (nocc)), 20), naux))
+    # blksize = int(min(max(max_memory * .5e6/8 / (nao*max (nocc)), 20), naux))
+    # In principe, all occupation numbers are non-zero for open quantum systems.
+    blksize = int(min(max(max_memory * .5e6/8 / (nao*nao), 20), naux))
     rhok_oo = []
     for i, j in product (range (nset), repeat=2):
         tmp = numpy.empty ((naux,nocc[i],nocc[j]), numpy.complex128)
