@@ -2,6 +2,7 @@ import numpy
 import scipy
 import pyamgcl
 import os
+import fcdft
 import fcdft.solvent.calculus_helper as ch
 
 from fcdft.solvent import _attach_solvent
@@ -187,12 +188,13 @@ def make_phi_sol(solvent_obj, dm=None, coords=None):
     MEP = Vnuc - Vele
     return lib.tag_array(MEP, Vnuc=Vnuc, Vele=-Vele)
 
-def make_rho_sol(solvent_obj, phi_sol=None, spacing=None):
+def make_rho_sol(solvent_obj, phi_sol=None, ngrids=None, spacing=None):
     """Solute charge density by solving the Poisson equation.
     
     Args:
         solvent_obj (:class:`PBE`): Solvent object.
         phi_sol (1D numpy.ndarray): Electrostatic potential of the solute molecule.
+        ngrids (int): Number of grid points along each axis.
         spacing (float): Grid spacing
 
     Returns:
@@ -200,9 +202,16 @@ def make_rho_sol(solvent_obj, phi_sol=None, spacing=None):
     """
     if phi_sol is None: phi_sol = solvent_obj.phi_sol
     if spacing is None: spacing = solvent_obj.grids.spacing
+    if ngrids is None: ngrids = solvent_obj.grids.ngrids
+    solver = solvent_obj.solver
+    nproc = lib.num_threads()
+    if isinstance(solver, fcdft.solvent.solver.fft2d):
+        phik = scipy.fft.fftn(phi_sol.reshape((ngrids,)*3), axes=(0,1), workers=nproc)
+    else:
+        phik = None
 
-    L = solvent_obj.L
-    rho_sol = L.dot(phi_sol) / 4.0e0 / PI / spacing**2
+    rho_sol = -solver.laplacian(phi_sol, phik) / 4.0e0 / PI
+
     return rho_sol
 
 def get_rho_ions(solvent_obj, phi_tot=None, cb=None, lambda_r=None, T=None):
@@ -487,6 +496,8 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
     grad_eps = _intermediates['grad_eps']
     sas = _intermediates['sas']
 
+    solver = solvent_obj.solver
+
     eta = 0.6e0
     kappa = 0.2e0
 
@@ -509,13 +520,11 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
     rho_iter_bc = 0.25e0 / PI * pbe_helper.product_vector_vector(grad_lneps, grad_bc)
 
     logger.info(solvent_obj, 'Bias vs. PZC = %.15f V', (bias - (ref_pot - pzc)) * HARTREE2EV)
-    logger.info(solvent_obj, ' -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*')
-    logger.info(solvent_obj, ' |  Poisson-Boltzmann Solver with the Multigrid Scheme  |')
-    logger.info(solvent_obj, ' -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*')
+    solver.whoareyou()
 
-    ml = solvent_obj.ml
     max_cycle = solvent_obj.max_cycle
     iter = 0
+    phik = None
     while iter < max_cycle:
         phi_old = phi_tot
         rho_iter_old = rho_iter
@@ -523,8 +532,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
         rho_pol_old = rho_pol
 
         phi_opt = phi_old - bc
-        dphi_opt = ch.vectorize_grad(ch.gradient(phi_opt.reshape((ngrids,)*3))) / spacing
-
+        dphi_opt = solver.gradient(phi_opt, phik, ngrids, spacing)
         rho_iter = 0.25e0 / PI * pbe_helper.product_vector_vector(grad_lneps, dphi_opt)
 
         rho_iter = eta * rho_iter + (1.0e0 - eta) * rho_iter_old
@@ -533,7 +541,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
         rho_pol = (1.0e0 - eps) / eps * rho_tot + rho_iter
 
         _rho = 4.0e0*PI*(rho_tot+rho_pol+rho_iter_bc) + lap_bc
-        phi_opt = ml(_rho*spacing**2)
+        phi_opt, phik = solver.solve(_rho, ngrids, spacing)
         phi_tot = phi_opt + bc
 
         rho_ions = solvent_obj.get_rho_ions(phi_tot, cb, lambda_r, T)
@@ -556,7 +564,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
                        'Decreasing grid size might help convergence.')
 
 class PBE(ddcosmo.DDCOSMO):
-    _keys = {'cb', 'T', 'bias', 'stern_sam', 'delta1', 'delta2', 'eps_sam', 'probe', 'kappa', 'stern_mol', 'cation_rad', 'anion_rad', 'cmax', 'rho_sol', 'rho_ions', 'rho_pol', 'phi_pol', 'phi_tot', 'phi_sol', 'L', 'ml', 'nelectron', 'phi_pol', 'thresh_pol', 'thresh_ions', 'thresh_amg', 'gpu_accel', 'cycle', 'atom_bottom', 'pzc', 'jump_coeff', 'ref_pot'}
+    _keys = {'cb', 'T', 'bias', 'stern_sam', 'delta1', 'delta2', 'eps_sam', 'probe', 'kappa', 'stern_mol', 'cation_rad', 'anion_rad', 'cmax', 'rho_sol', 'rho_ions', 'rho_pol', 'phi_pol', 'phi_tot', 'phi_sol', 'L', 'nelectron', 'phi_pol', 'thresh_pol', 'thresh_ions', 'thresh_amg', 'gpu_accel', 'cycle', 'atom_bottom', 'pzc', 'jump_coeff', 'ref_pot', 'solver'}
     def __init__(self, mol, cb=0.0, cation_rad=4.3, anion_rad=4.3, T=298.15, stern_mol=0.44, stern_sam=8.1, **kwargs):
         ddcosmo.DDCOSMO.__init__(self, mol)
         self.grids = Grids(mol, **kwargs)
@@ -587,13 +595,12 @@ class PBE(ddcosmo.DDCOSMO):
         self.nelectron = None # Placeholder <- WBLMolecule
         self.ref_pot = None # Placeholder <- WBLMolecule
         self.L = None
-        self.ml = None
         self.thresh_pol = 1.0e-5
         self.thresh_ions = 1.0e-6
         self.thresh_amg = 1.0e-8 # Determined through numerical test. Lower threshold loses symmetry
         self.gpu_accel = False
         self.atom_bottom = None
-        
+        self.solver = None
         
     def dump_flags(self, verbose=None):
         logger.info(self, '******** %s ********', self.__class__)
@@ -610,8 +617,6 @@ class PBE(ddcosmo.DDCOSMO):
         logger.info(self, 'Total grids = %d', self.grids.get_ngrids())
         logger.info(self, 'Polarization charge density threshold = %4.3e', self.thresh_pol)
         logger.info(self, 'Ion charge density threshold = %4.3e', self.thresh_ions)
-        logger.info(self, 'Multigrid convergence threshold = %4.3e', self.thresh_amg)
-
 
     def _get_vind(self, dm):
         if not self._intermediates or self.grids.coords is None:
@@ -621,11 +626,12 @@ class PBE(ddcosmo.DDCOSMO):
 
         spacing = self.grids.spacing
         coords = self.grids.coords
+        ngrids = self.grids.ngrids
         bias = self.bias / HARTREE2EV # in eV --> a.u.
 
         phi_sol = self.make_phi_sol(dm, coords)
         self.phi_sol = phi_sol
-        rho_sol = self.make_rho_sol(phi_sol, spacing)
+        rho_sol = self.make_rho_sol(phi_sol, ngrids, spacing)
         self.rho_sol = rho_sol
         phi_tot, rho_ions, rho_pol = self.make_phi(bias, phi_sol, rho_sol)
         self.phi_tot = phi_tot
@@ -721,6 +727,7 @@ class PBE(ddcosmo.DDCOSMO):
         mol = self.mol
         coords = self.grids.coords
         ngrids = self.grids.ngrids
+        spacing = self.grids.spacing
         probe = self.probe / BOHR # angstrom to a.u.
         stern_mol = self.stern_mol / BOHR # angstrom to a.u.
         stern_sam = self.stern_sam / BOHR # angstrom to a.u.
@@ -739,13 +746,8 @@ class PBE(ddcosmo.DDCOSMO):
         grad_eps = self.make_grad_eps(mol, coords, eps_sam, eps_bulk, probe, stern_sam, delta1, delta2, atomic_radii, sas)
         self.cmax = 0.74e0 / (4.0e0/3.0e0 * PI * (cation_rad**3 + anion_rad**3)) * 2.0e0 / M2HARTREE # in eV
 
-        prm_precond = {'coarsening': 'smoothed_aggregation', 'max_levels': 8, 'ncycle': 2}
-        prm_solver = {'type': 'cg', 'tol': self.thresh_amg, 'maxiter': 1000}
-
-        if self.L is None and self.ml is None:
+        if self.L is None:
             self.L = ch.poisson((ngrids,)*3, format='csr')
-            logger.info(self, 'Initializing the Smoothed Aggregation Solver...')
-            self.ml = pyamgcl.solver(pyamgcl.amgcl(self.L, prm=prm_precond), prm=prm_solver)
 
         self.kappa = numpy.sqrt(8.0e0 * PI * cb / self.eps / KB2HARTREE / self.T)
         self._intermediates = {
@@ -755,6 +757,13 @@ class PBE(ddcosmo.DDCOSMO):
             'grad_eps': grad_eps,
             'sas': sas
         }
+        if self.solver == 'fft2d':
+            from fcdft.solvent.solver import fft2d
+            self.solver = fft2d(ngrids=ngrids, spacing=spacing, verbose=self.verbose, stdout=self.stdout)
+        else:
+            from fcdft.solvent.solver import multigrid
+            self.solver = multigrid(ngrids=ngrids, spacing=spacing, verbose=self.verbose, stdout=self.stdout)
+        self.solver.build()
 
     def __setattr__(self, key, val):
         if key in ('radii_table', 'atom_radii', 'delta1', 'delta2', 'eps', 'stern', 'probe'):
@@ -858,5 +867,6 @@ H        1.3390319419     -0.0095801980     -0.2157234144''',
     cm = PBE(mol, cb=1.0, length=20, ngrids=49, stern_sam=8.1)
     cm._dm = dm
     cm.atom_bottom=12
+    cm.solver = 'multigrid'
     solmf = pbe_for_scf(wblmf, cm)
     solmf.kernel()
