@@ -13,6 +13,10 @@ from fcdft.dft import numint
 
 libfcdft = lib.load_library(os.path.join(fcdft.__path__[0], 'lib', 'libfcdft'))
 
+def _get_veff(mf, mol=None, dm=None, dm_last=0, vhf_last=0, *args, **kwargs):
+    """Call get_veff of the parant class."""
+    return rks.get_veff(mf, mol, dm, dm_last, vhf_last, *args, **kwargs)
+
 def get_veff(mf, mol=None, dm=None, dm_last=0, vhf_last=0, *args, **kwargs):
     """
     Construct the effective potential for the WBLMolecule Hamiltonian.
@@ -372,10 +376,6 @@ class WBLMoleculeRKS(WBLBase, rks.RKS):
     def nuc_grad_method(self):
         from fcdft.grad import rks as wblrks_grad
         return wblrks_grad.Gradients(self)
-    
-    def _get_veff(self, mol=None, dm=None, dm_last=0, vhf_last=0, *args, **kwargs):
-        """ A hooker to call get_veff of the parant class."""
-        return super().get_veff(mol, dm, dm_last, vhf_last, *args, **kwargs)
 
     def _finalize(self):
         super()._finalize()
@@ -390,6 +390,7 @@ class WBLMoleculeRKS(WBLBase, rks.RKS):
         import fcdft.df.df_jk
         return fcdft.df.df_jk.density_fit(self, auxbasis, with_df, only_dfj)
 
+    _get_veff = _get_veff
     get_veff = get_veff
     get_fock = get_fock
     get_occ = get_occ

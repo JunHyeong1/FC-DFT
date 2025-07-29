@@ -176,20 +176,16 @@ def esp_esp (mol, dm, coords, gpu_accel=False):
         logger.info(mol, 'Will utilize GPUs for computing the electrostatic potential.')
         import cupy
         nbatch = 256*256
-        ngrids = coords.shape[0]
-        fakemol = gto.fakemol_for_charges(coords[:nbatch])
-        from gpu4pyscf.gto.moleintor import intor, VHFOpt
+        tot_ngrids = coords.shape[0]
+        from gpu4pyscf.gto.int3c1e import int1e_grids
         _dm = cupy.asarray(dm.real)
-        _Vele = cupy.zeros(ngrids)
-        intopt = VHFOpt(mol)
-        intopt.build(cutoff=1e-14)
-        for ibatch in range(0, ngrids, nbatch):
-            max_grid = min(ibatch+nbatch, ngrids)
-            _Vele[ibatch:max_grid] += \
-                intor(mol, 'int1e_grids', coords[ibatch:max_grid], dm=_dm, intopt=intopt)
+        _Vele = cupy.zeros(tot_ngrids, order='C')
+        for ibatch in range(0, tot_ngrids, nbatch):
+            max_grid = min(ibatch+nbatch, tot_ngrids)
+            _Vele[ibatch:max_grid] += int1e_grids(mol, coords[ibatch:max_grid], dm=_dm, direct_scf_tol=1e-14)
         Vele = _Vele.get()
-        del _dm, _Vele, intopt, intor, VHFOpt
-        lib.num_threads(OMP_NUM_THREADS)
+        del _dm, _Vele,  cupy, int1e_grids # Release GPU memory
+        lib.num_threads(OMP_NUM_THREADS) # GPU4PySCF sets OMP_NUM_THREADS=4 when running.
 
     # Potential of electron density
     else:

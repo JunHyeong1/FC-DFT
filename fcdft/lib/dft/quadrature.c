@@ -46,16 +46,24 @@ void fermi_level_drv(double *moe_energy, double *abscissas, double *weights, dou
     int i, n;
     double sampling;
     double _mo_grad = 0.0;
+    double *window_weights = (double *)malloc(sizeof(double) * pts);
+
+    #pragma omp parallel for private(n)
+    for (n = 0; n < pts; n++) {
+        window_weights[n] = window * weights[n];
+    }
+
     #pragma omp parallel for private(n, sampling) reduction(+:_mo_grad)
     for (i = 0; i < nbas; i++) {
         mo_occ[i] = 0;
         for (n = 0; n < pts; n++) {
             sampling = abscissas[n] * window + moe_energy[i];
-            mo_occ[i] += window * weights[n] * occ_drv(sampling, moe_energy[i], fermi, broad, smear);
-            _mo_grad += window * weights[n] * occ_grad_drv(sampling, moe_energy[i], fermi, broad, smear);
+            mo_occ[i] += window_weights[n] * occ_drv(sampling, moe_energy[i], fermi, broad, smear);
+            _mo_grad += window_weights[n] * occ_grad_drv(sampling, moe_energy[i], fermi, broad, smear);
         }
     }
     *mo_grad = _mo_grad;
+    free(window_weights);
 }
 
 void occupation_drv(double *moe_energy, double *abscissas, double *weights, double fermi, double broad, double smear, double window, int pts, int nbas, double *mo_occ) {
