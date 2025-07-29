@@ -1,3 +1,4 @@
 build/
 fcdft.egg-info/
 dist/
+*xyz
