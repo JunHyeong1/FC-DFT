@@ -251,6 +251,46 @@ def get_rho_ions(solvent_obj, phi_tot=None, cb=None, lambda_r=None, T=None):
     rho_ions = (numpy.exp(lnA) - numpy.exp(lnB)) / (1.0e0 - cb/c12 + cb/c12 * (numpy.exp(lnC) + numpy.exp(lnD)))
     return rho_ions
 
+## UNDER DEVELOPMENT
+def jac_rho_ions(solvent_obj, phi_tot=None, cb=None, lambda_r=None, T=None):
+    """Size-modified ion charge density.
+
+    Args:
+        solvent_obj (:class:`PBE`): Solvent object
+        phi_tot (1D numpy.ndarray, optional): Total electrostatic potential. Defaults to None.
+        cb (float, optional): Ion concentration in atomic unit. Defaults to None.
+        lambda_r (1D numpy.ndarray, optional): Ion-exclusion function. Defaults to None.
+        T (float, optional): Temperature. Defaults to None.
+
+    Returns:
+        1D numpy.ndarray: Ion charge density
+    """
+    if phi_tot is None: phi_tot = solvent_obj.phi_tot
+    if cb is None: cb = solvent_obj.cb * M2HARTREE
+    if lambda_r is None: lambda_r = solvent_obj._intermediates['lambda_r']
+    if T is None: T = solvent_obj.T
+
+    cation_rad = solvent_obj.cation_rad / BOHR
+    anion_rad = solvent_obj.anion_rad / BOHR
+    c12 = 0.74e0 / (4.0e0/3.0e0 * PI * (cation_rad**3 + anion_rad**3))
+    _lambda_r = lambda_r.copy()
+    _lambda_r[lambda_r < 1.0e-100] = 1.0e-100
+    lnlambda = numpy.log(_lambda_r)
+    lnlambda[lambda_r < 1.0e-100] = -1.0e100
+    if cb == 0.0e0:
+        return numpy.zeros_like(phi_tot)
+    else:
+        lncb = numpy.log(cb)
+
+    lnA = lnlambda + lncb - phi_tot / (KB2HARTREE * T)
+    lnB = lnlambda + lncb + phi_tot / (KB2HARTREE * T)
+    lnC = numpy.log(0.5e0) + lnlambda - phi_tot / (KB2HARTREE * T)
+    lnD = numpy.log(0.5e0) + lnlambda + phi_tot / (KB2HARTREE * T)
+    jac_rho_ions1 = (numpy.exp(lnA) + numpy.exp(lnB)) / (1.0e0 - cb/c12 + cb/c12 * (numpy.exp(lnC) + numpy.exp(lnD)))
+    jac_rho_ions2 = -0.5 / c12 * ((numpy.exp(lnA) - numpy.exp(lnB)) / (1.0e0 - cb/c12 + cb/c12 * (numpy.exp(lnC) + numpy.exp(lnD))))**2
+    jac_rho_ions = -(jac_rho_ions1 + jac_rho_ions2) / (KB2HARTREE * T)
+    return jac_rho_ions
+
 def impose_bc(solvent_obj, ngrids=None, spacing=None, bias=None, stern_sam=None, T=None, 
               eps_sam=None, eps=None, sas=None, pzc=None, ref_pot=None, jump_coeff=None):
     """Boundary condition generator by the linearized Poisson-Boltzmann equation and the Gouy-Chapman-Stern model.
@@ -559,6 +599,99 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
                         drho_pol.max(), drho_ions.max())
             return phi_tot, rho_ions, rho_pol
         iter += 1
+    logger.info(solvent_obj, 'PBE failed to converge.')
+    raise RuntimeError('PBE solver failed to converge. ' \
+                       'Decreasing grid size might help convergence.')
+
+## UNDER DEVELOPMENT
+def make_phi2(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
+    """Non-linear Poisson-Boltzmann equation driver.
+
+    Args:
+        solvent_obj : An instance of :class:`PBE`
+        bias (float, optional): Bias potential in atomic unit. Defaults to None.
+        phi_sol (numpy.ndarray, optional): Solute potential in vacuum. Defaults to None.
+        rho_sol (numpy.ndarray, optional): Solute charge density in vacuum. Defaults to None.
+
+    Raises:
+        RuntimeError: Infinite ion charge density.
+        RuntimeError: PBE self-consistent cycle fails to converge.
+
+    Returns:
+        numpy.ndarray, numpy.ndarray, numpy.ndarray: Total potential, ion charge density, and polarization charge density.
+    """
+    if solvent_obj._intermediates is None: solvent_obj.build()
+    _intermediates = solvent_obj._intermediates
+
+    ngrids = solvent_obj.grids.ngrids
+    tot_ngrids = solvent_obj.grids.get_ngrids()
+    T = solvent_obj.T
+    spacing = solvent_obj.grids.spacing
+    stern_sam = solvent_obj.stern_sam / BOHR
+    cb = solvent_obj.cb * M2HARTREE
+    pzc = solvent_obj.pzc / HARTREE2EV
+    ref_pot = solvent_obj.ref_pot / HARTREE2EV
+    jump_coeff = solvent_obj.jump_coeff
+    
+    eps = _intermediates['eps']
+    lambda_r = _intermediates['lambda_r']
+    grad_eps = _intermediates['grad_eps']
+    sas = _intermediates['sas']
+
+    solver = solvent_obj.solver
+
+    phi_tot = numpy.zeros(tot_ngrids, order='C')
+    bc, phi_z, slope= impose_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, 
+                                solvent_obj.eps_sam, solvent_obj.eps, sas, pzc, ref_pot, jump_coeff)
+    grad_bc, grad_phi_z, grad_sas = bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas)
+    lap_bc = bc_laplacian(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, grad_sas)
+
+    phi_tot += bc + phi_sol
+
+    logger.info(solvent_obj, 'Bias vs. PZC = %.15f V', (bias - (ref_pot - pzc)) * HARTREE2EV)
+    solver.whoareyou()
+
+    max_cycle = solvent_obj.max_cycle
+    phik = None
+    F = numpy.zeros(ngrids**3)
+    for iter in range(max_cycle):
+        phi_old = phi_tot
+        phi_opt = phi_old - bc
+        if isinstance(solver, fcdft.solvent.solver.fft2d):
+            phik = scipy.fft.fftn(phi_opt.reshape((ngrids,)*3), axes=(0,1)).flatten()
+        dphi_opt = solver.gradient(phi_opt, phik, ngrids, spacing)
+        d2phi_opt = solver.laplacian(phi_opt, phik, ngrids, spacing)
+        rho_ions = solvent_obj.get_rho_ions(phi_tot, cb, lambda_r, T)
+        F = pbe_helper.product_vector_vector(grad_eps, dphi_opt+grad_bc) + eps*(d2phi_opt+lap_bc) + 4.0*PI*(rho_sol+rho_ions)
+        norm = numpy.linalg.norm(F)
+        if norm < 1e-5:
+            import ipdb
+            ipdb.set_trace()
+            return phi_tot, rho_ions, None
+        logger.info(solvent_obj, 'PBE Iteration %3d |F| = %4.3e', iter+1, norm)
+        delta = -1.0 / (pbe_helper.product_vector_vector(grad_eps, dphi_opt) + eps*d2phi_opt + 4.0*PI*jac_rho_ions(solvent_obj, phi_old, cb, lambda_r, T)) * F
+        phi_tot += 1e-5*delta
+
+    import ipdb
+    ipdb.set_trace()
+    # def cost_function(phi):
+    #     phi_opt = phi - bc
+    #     if isinstance(solver, fcdft.solvent.solver.fft2d):
+    #         phik = scipy.fft.fftn(phi_opt.reshape((ngrids,)*3), axes=(0,1)).flatten()
+    #     else:
+    #         phik = None
+    #     dphi_opt = solver.gradient(phi_opt, phik, ngrids, spacing)
+    #     d2phi_opt = solver.laplacian(phi_opt, phik, ngrids, spacing)
+    #     rho_ions = solvent_obj.get_rho_ions(phi, cb, lambda_r, T)
+    #     F = pbe_helper.product_vector_vector(grad_eps, dphi_opt+grad_bc) + eps*(d2phi_opt+lap_bc) + 4.0*PI*rho_sol + 4*PI*rho_ions
+    #     return F
+    
+    # import ipdb
+    # options = {'disp': True, 'maxiter': max_cycle, 'ftol': 1e-8, 'fatol': 1e-8, 'xtol': 1e-8, 'xatol': 1e-8, 'line_search': 'armijo', 'jac_options': {'reduction_method': 'simple'}}
+    # # options = {'disp': True, 'maxiter': max_cycle, 'fatol': 1e-5, 'line_search': 'armijo', 'jac_options': {'method': 'lgmres', 'inner_M': precond}}
+    # sol = scipy.optimize.root(cost_function, phi_tot, method='broyden2', options=options)
+    # ipdb.set_trace()
+
     logger.info(solvent_obj, 'PBE failed to converge.')
     raise RuntimeError('PBE solver failed to converge. ' \
                        'Decreasing grid size might help convergence.')

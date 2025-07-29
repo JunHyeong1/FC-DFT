@@ -184,6 +184,9 @@ class fft2d(lib.StreamObject):
         kpts = self.kpts
         lap = -L / spacing**2
 
+        if phik is None:
+            return numpy.zeros(ngrids**3, dtype=numpy.float64)
+
         drv = libpbe.laplacian_2d
         rhok = numpy.empty(ngrids**3, dtype=numpy.complex128, order='C')
         c_phik = phik.ctypes.data_as(ctypes.c_void_p)
