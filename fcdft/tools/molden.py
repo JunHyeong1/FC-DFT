@@ -1,6 +1,7 @@
 import numpy as np
 from pyscf.gto.mole import Mole
 from pyscf.scf.hf import SCF
+from pyscf.data.nist import BOHR
 
 def dump_freq(mf, freq_info, filename):
     """Dump the frequency information to a molden file.
@@ -40,5 +41,5 @@ def dump_freq(mf, freq_info, filename):
         for idx, mode in enumerate(norm_mode):
             f.write("vibration%5d\n" % (idx+1))
             for ia in range(mol.natm):
-                x, y, z = mode[ia]
+                x, y, z = mode[ia] / BOHR**2
                 f.write("%12.6f %12.6f %12.6f\n" % (x, y, z))
