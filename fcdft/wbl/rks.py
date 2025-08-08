@@ -69,7 +69,7 @@ def get_sigmaR(mf, mol=None, s1e=None):
         raise AttributeError('No sulfur atom detected.')
     S = numpy.zeros_like(s1e)
     S[idx,idx] = s1e[idx,idx]
-    return (-mf.bias * S - 0.5e0j * mf.broad * s1e) / HARTREE2EV # Unit in a.u.
+    return (mf.bias * S - 0.5e0j * mf.broad * s1e) / HARTREE2EV # Unit in a.u.
 
 def eig(h, s):
     """Eigensolver for nonhermitian Hamiltonian.
