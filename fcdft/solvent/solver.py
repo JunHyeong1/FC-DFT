@@ -13,7 +13,7 @@ nproc = lib.num_threads()
 libpbe = lib.load_library(os.path.join(fcdft.__path__[0], 'lib', 'libpbe'))
 
 def fft2d_solve(solver, rho, L, ngrids, spacing, kpts):
-    """Poisson equation solver using FFT
+    """Poisson equation solver using FFT. Under development.
 
     Args:
         solver (_type_): solver object
@@ -70,8 +70,8 @@ class multigrid(lib.StreamObject):
     def build(self, ngrids=None):
         if ngrids is None:
             ngrids = self.ngrids
-        prm_precond = {'coarsening': 'smoothed_aggregation', 'max_levels': 8, 'ncycle': 2}
-        prm_solver = {'type': 'cg', 'tol': 1.0e-8, 'maxiter': 1000}
+        prm_precond = {'coarsening': 'smoothed_aggregation', 'max_levels': 8, 'ncycle': 2, 'relax': 'spai0'}
+        prm_solver = {'type': 'cg', 'type.tol': 1.0e-8, 'type.maxiter': 1000}
         self.L= ch.poisson((ngrids,)*3, format='csr')
         import pyamgcl
         self.drv = pyamgcl.solver(pyamgcl.amgcl(self.L, prm=prm_precond), prm=prm_solver)
@@ -133,6 +133,7 @@ class fft2d(lib.StreamObject):
         self.kpts = numpy.fft.fftfreq(ngrids)
         self.drv = libpbe.poisson_fft_2d
         self.L = ch.poisson((ngrids,)).toarray()
+        logger.warn(self, '2DFFT Poisson solver is an experimental feature.')
         logger.info(self, 'cond(L) = %s', numpy.linalg.cond(self.L))
 
     def gradient(self, phi, phik, ngrids=None, spacing=None):
