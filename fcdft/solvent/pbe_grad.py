@@ -1,7 +1,8 @@
 import numpy
 import scipy
+import fcdft
 import fcdft.solvent.calculus_helper as ch
-from fcdft.solvent.pbe import M2HARTREE, KB2HARTREE, impose_bc, bc_grad
+from fcdft.solvent.pbe import M2HARTREE, KB2HARTREE
 from fcdft.lib import pbe_helper
 from pyscf.solvent._attach_solvent import _Solvation
 from pyscf.grad import rhf as rhf_grad
@@ -65,49 +66,49 @@ class WithSolventGrad:
         pass
 
 
-def kernel(pbeobj, dm, verbose=None):
+def kernel(solvent_obj, dm, verbose=None):
     if not (isinstance(dm, numpy.ndarray) and dm.ndim == 2):
         dm = dm[0] + dm[1]
 
-    Frf = rf_force(pbeobj, dm) # Reaction field force
-    Fdb = db_force(pbeobj, dm) # Dielectric boundary force
-    Fib = ib_force(pbeobj, dm) # Ion boundary force
-    if pbeobj.verbose >= logger.NOTE:
-        logger.note(pbeobj, '------------------ Reaction field force -----------------')
-        rhf_grad._write(pbeobj, pbeobj.mol, Frf, range(pbeobj.mol.natm))
-        logger.note(pbeobj, '---------------------------------------------------------')
-        logger.note(pbeobj, '--------------- Dielectric boundary force ---------------')
-        rhf_grad._write(pbeobj, pbeobj.mol, Fdb, range(pbeobj.mol.natm))
-        logger.note(pbeobj, '---------------------------------------------------------')
-        logger.note(pbeobj, '------------------ Ionic boundary force -----------------')
-        rhf_grad._write(pbeobj, pbeobj.mol, Fib, range(pbeobj.mol.natm))
-        logger.note(pbeobj, '---------------------------------------------------------')
+    Frf = rf_force(solvent_obj, dm) # Reaction field force
+    Fdb = db_force(solvent_obj, dm) # Dielectric boundary force
+    Fib = ib_force(solvent_obj, dm) # Ion boundary force
+    if solvent_obj.verbose >= logger.NOTE:
+        logger.note(solvent_obj, '------------------ Reaction field force -----------------')
+        rhf_grad._write(solvent_obj, solvent_obj.mol, Frf, range(solvent_obj.mol.natm))
+        logger.note(solvent_obj, '---------------------------------------------------------')
+        logger.note(solvent_obj, '--------------- Dielectric boundary force ---------------')
+        rhf_grad._write(solvent_obj, solvent_obj.mol, Fdb, range(solvent_obj.mol.natm))
+        logger.note(solvent_obj, '---------------------------------------------------------')
+        logger.note(solvent_obj, '------------------ Ionic boundary force -----------------')
+        rhf_grad._write(solvent_obj, solvent_obj.mol, Fib, range(solvent_obj.mol.natm))
+        logger.note(solvent_obj, '---------------------------------------------------------')
     de = -Frf - Fdb - Fib # Sign convention
     return de
 
-def rf_force(pbeobj, dm):
-    mol = pbeobj.mol
-    phi_tot = pbeobj.phi_tot
-    phi_sol = pbeobj.phi_sol
+def rf_force(solvent_obj, dm):
+    mol = solvent_obj.mol
+    phi_tot = solvent_obj.phi_tot
+    phi_sol = solvent_obj.phi_sol
 
-    coords = pbeobj.grids.coords
-    spacing = pbeobj.grids.spacing
-    ngrids = pbeobj.grids.ngrids
+    coords = solvent_obj.grids.coords
+    spacing = solvent_obj.grids.spacing
+    ngrids = solvent_obj.grids.ngrids
 
     atom_coords = mol.atom_coords()
 
     # RESP Section
     esp_mol = mol.copy()
-    esp_mol.charge = mol.charge + (mol.nelectron - pbeobj.nelectron) # Inject fractional charge
+    esp_mol.charge = mol.charge + (mol.nelectron - solvent_obj.nelectron) # Inject fractional charge
     from fcdft.solvent.esp import esp_atomic_charges
     options_dict = {'RESP_MAXITER': 100, 'RESP_TOLERANCE': 1.0e-10}
-    qesp = esp_atomic_charges(esp_mol, dm.real, options_dict=options_dict, gpu_accel=pbeobj.gpu_accel)
+    qesp = esp_atomic_charges(esp_mol, dm.real, options_dict=options_dict, gpu_accel=solvent_obj.gpu_accel)
 
     atmlst = range(mol.natm)
-    logger.info(pbeobj, '-------------- RESP Atomic Charge ------------')
+    logger.info(solvent_obj, '-------------- RESP Atomic Charge ------------')
     for k, ia in enumerate(atmlst):
-        logger.info(pbeobj, '%d %s  %15.10f', ia, mol.atom_symbol(ia), qesp[k])
-    logger.note(pbeobj, '----------------------------------------------')
+        logger.info(solvent_obj, '%d %s  %15.10f', ia, mol.atom_symbol(ia), qesp[k])
+    logger.note(solvent_obj, '----------------------------------------------')
     phi_pol = phi_tot - phi_sol
     atom_coords = mol.atom_coords()
 
@@ -174,38 +175,44 @@ def rf_force(pbeobj, dm):
     Frf = -Frf
     return Frf
 
-def db_force(pbeobj, dm):
-    mol = pbeobj.mol
-    phi_tot = pbeobj.phi_tot
-    delta1 = pbeobj.delta1 / BOHR
-    delta2 = pbeobj.delta2 / BOHR
-    r_vdw = pbeobj.get_atomic_radii()
-    coords = pbeobj.grids.coords
-    spacing = pbeobj.grids.spacing
-    ngrids = pbeobj.grids.ngrids
-    eps_bulk = pbeobj.eps
-    eps_sam = pbeobj.eps_sam
-    probe = pbeobj.probe / BOHR
-    stern_sam = pbeobj.stern_sam / BOHR
-    T = pbeobj.T
+def db_force(solvent_obj, dm):
+    mol = solvent_obj.mol
+    phi_tot = solvent_obj.phi_tot
+    delta1 = solvent_obj.delta1 / BOHR
+    delta2 = solvent_obj.delta2 / BOHR
+    r_vdw = solvent_obj.get_atomic_radii()
+    coords = solvent_obj.grids.coords
+    spacing = solvent_obj.grids.spacing
+    ngrids = solvent_obj.grids.ngrids
+    eps_bulk = solvent_obj.eps
+    eps_sam = solvent_obj.eps_sam
+    probe = solvent_obj.probe / BOHR
+    stern_sam = solvent_obj.stern_sam / BOHR
+    T = solvent_obj.T
     atom_coords = mol.atom_coords()
 
-    _intermediates = pbeobj._intermediates
+    _intermediates = solvent_obj._intermediates
     sas = _intermediates['sas']
     eps = _intermediates['eps']
     grad_eps = _intermediates['grad_eps']
-    bias = pbeobj.bias / HARTREE2EV
-    stern_sam = pbeobj.stern_sam / BOHR
-    rho_tot = pbeobj.rho_sol + pbeobj.rho_ions
-    rho_pol = pbeobj.rho_pol
-    pzc = pbeobj.pzc / HARTREE2EV
-    ref_pot = pbeobj.ref_pot / HARTREE2EV
-    jump_coeff = pbeobj.jump_coeff
+    bias = solvent_obj.bias / HARTREE2EV
+    stern_sam = solvent_obj.stern_sam / BOHR
+    rho_tot = solvent_obj.rho_sol + solvent_obj.rho_ions
+    rho_pol = solvent_obj.rho_pol
+    pzc = solvent_obj.pzc / HARTREE2EV
+    ref_pot = solvent_obj.ref_pot / HARTREE2EV
+    jump_coeff = solvent_obj.jump_coeff
 
-    bc, phi_z, slope = impose_bc(pbeobj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps_bulk, sas, pzc, ref_pot, jump_coeff)
-    grad_bc, _, _ = bc_grad(pbeobj, ngrids, spacing, T, slope, phi_z, sas)
+    impose_bc, bc_grad, _ = solvent_obj._gen_boundary_conditions()
+    bc, phi_z, slope = impose_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps_bulk, sas, pzc, ref_pot, jump_coeff)
+    grad_bc, _, _ = bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas)
     phi_opt = phi_tot - bc
-    dphi_opt = ch.vectorize_grad(ch.gradient(phi_opt.reshape((ngrids,)*3))) / spacing
+    solver = solvent_obj.solver
+    nproc = lib.num_threads()
+    phi_optk = None
+    if isinstance(solver, fcdft.solvent.solver.fft2d):
+        phi_optk = scipy.fft.fftn(phi_opt.reshape((ngrids,)*3), axes=(0,1), workers=nproc)
+    dphi_opt = solver.gradient(phi_opt, phi_optk, ngrids, spacing)
 
     grad_lneps = pbe_helper.product_vector_scalar(grad_eps, 1.0e0/eps)
     rho_iter_bc = 0.25e0 / PI * pbe_helper.product_vector_vector(grad_lneps, grad_bc)
@@ -214,24 +221,24 @@ def db_force(pbeobj, dm):
 
     return Fdb
 
-def ib_force(pbeobj, dm):
-    mol = pbeobj.mol
-    phi_tot = pbeobj.phi_tot
-    delta1 = pbeobj.delta1 / BOHR
-    delta2 = pbeobj.delta2 / BOHR
-    cb = pbeobj.cb * M2HARTREE
-    stern_mol = pbeobj.stern_mol / BOHR
-    stern_sam = pbeobj.stern_sam / BOHR
-    T = pbeobj.T
-    probe = pbeobj.probe / BOHR
+def ib_force(solvent_obj, dm):
+    mol = solvent_obj.mol
+    phi_tot = solvent_obj.phi_tot
+    delta1 = solvent_obj.delta1 / BOHR
+    delta2 = solvent_obj.delta2 / BOHR
+    cb = solvent_obj.cb * M2HARTREE
+    stern_mol = solvent_obj.stern_mol / BOHR
+    stern_sam = solvent_obj.stern_sam / BOHR
+    T = solvent_obj.T
+    probe = solvent_obj.probe / BOHR
 
-    lambda_r = pbeobj._intermediates['lambda_r']
-    r_vdw = pbeobj.get_atomic_radii()
+    lambda_r = solvent_obj._intermediates['lambda_r']
+    r_vdw = solvent_obj.get_atomic_radii()
 
-    cmax = pbeobj.cmax * M2HARTREE
-    coords = pbeobj.grids.coords
+    cmax = solvent_obj.cmax * M2HARTREE
+    coords = solvent_obj.grids.coords
     zmin = coords[:,2].min()
-    spacing = pbeobj.grids.spacing
+    spacing = solvent_obj.grids.spacing
 
     x = (coords[:,2] - zmin - stern_sam - stern_mol) / delta1
     _erf = scipy.special.erf(x)

@@ -382,8 +382,8 @@ class WBLMoleculeRKS(WBLBase, rks.RKS):
         dm = self.make_rdm1(self.mo_coeff, self.mo_occ)
         s1e = self.get_ovlp()
         nelectron = numpy.trace(numpy.dot(dm, s1e)).real
-        logger.info(self, 'number of electrons = %.15g', nelectron)
-        logger.info(self, 'optimized chemical potential = %.15g eV', self.fermi) # Unit in eV
+        logger.note(self, 'number of electrons = %.15g', nelectron)
+        logger.note(self, 'optimized chemical potential = %.15g eV', self.fermi) # Unit in eV
         return self
     
     def density_fit(self, auxbasis=None, with_df=None, only_dfj=False):

@@ -4,6 +4,8 @@
 #include <omp.h>
 #include <stdio.h>
 
+double const TWO_PI = 2.0 * M_PI;
+
 void roots_legendre(int n, double *abscissas, double *weights){
     double z, z1, pp, p1, p2, p3;
     int m = (n + 1) / 2;
@@ -34,12 +36,12 @@ void roots_legendre(int n, double *abscissas, double *weights){
 
 double occ_drv(double sampling, double moe_energy, double fermi, double broad, double smear) {
     double dist = 1 / (exp((sampling - fermi)/smear) + 1);
-    return dist * broad / (pow(sampling - moe_energy, 2) + pow(broad / 2, 2)) / 2.0 / M_PI;
+    return dist * broad / (pow(sampling - moe_energy, 2) + pow(broad / 2, 2)) / TWO_PI;
 }
 
 double occ_grad_drv(double sampling, double moe_energy, double fermi, double broad, double smear) {
     double dist = 1 / (exp((sampling - fermi)/smear) + 1);
-    return dist * (1 - dist) * broad / (pow(sampling - moe_energy, 2) + pow(broad / 2, 2)) / 2.0 / M_PI / smear;
+    return dist * (1 - dist) * broad / (pow(sampling - moe_energy, 2) + pow(broad / 2, 2)) / TWO_PI / smear;
 }
 
 void fermi_level_drv(double *moe_energy, double *abscissas, double *weights, double fermi, double broad, double smear, double window, int pts, int nbas, double *mo_occ, double *mo_grad) {
