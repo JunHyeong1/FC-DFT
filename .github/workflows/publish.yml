@@ -9,8 +9,9 @@
 name: Upload Python Package to PyPI
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+#  release:
+#    types: [published]
 
 jobs:
   release-build:
@@ -26,7 +27,7 @@ jobs:
           python-version: "3.x"
 
       - name: Install dependencies
-        run: pip install wheel twine
+        run: pip install wheel twine setuptools
        
       - name: Build release distributions
         run: python setup.py sdist bdist_wheel
