@@ -54,7 +54,7 @@ def make_lap_sas(solvent_obj):
 
 def phi_a_finder(cost_func, jac, bottom):
     # Bisection method for a good initial guess
-    phi_a = scipy.optimize.bisect(cost_func, 0.0, bottom, xtol=1e-15, maxiter=50, 
+    phi_a = scipy.optimize.bisect(cost_func, 0.0, bottom, xtol=1e-15, maxiter=20, 
                                   full_output=False, disp=False)
     # Newton method for an accurate result
     phi_a = scipy.optimize.newton(cost_func, phi_a, fprime=jac, tol=1e-15, 
@@ -97,12 +97,10 @@ def one_to_one_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps
 
     # Continuous potential condition
     slope = (phi_a - bottom) / stern_sam
-    idx = numpy.array(range(phi_z.shape[2]))
-    z = numpy.asarray(idx*spacing, dtype=numpy.float64)
-    idx1 = numpy.argwhere(z<=stern_sam)
-    idx2 = numpy.argwhere(z>stern_sam)
-    phi_z[:,:,idx1] = slope*z[idx1]+bottom
-    phi_z[:,:,idx2] = -4.0e0*KB2HARTREE*T*numpy.arctanh(numpy.exp(-kappa*(z[idx2]-stern_sam))
+    z = numpy.arange(ngrids, dtype=numpy.float64) * spacing
+    idx = z <= stern_sam
+    phi_z[:,:,idx] = slope*z[idx]+bottom
+    phi_z[:,:,~idx] = -4.0e0*KB2HARTREE*T*numpy.arctanh(numpy.exp(-kappa*(z[~idx]-stern_sam))
                                                          *numpy.tanh(-phi_a/4.0e0/KB2HARTREE/T))
     phi_z = phi_z.ravel()
 
@@ -130,12 +128,10 @@ def one_to_one_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas):
     stern_sam = solvent_obj.stern_sam / BOHR
 
     kappa = solvent_obj.kappa
-    idx = numpy.array(range(dphidz.shape[2]))
-    z = numpy.asarray(idx*spacing, dtype=numpy.float64)
-    idx1 = numpy.argwhere(z<=stern_sam)
-    idx2 = numpy.argwhere(z>stern_sam)
-    dphidz[:,:,idx1] = slope
-    dphidz[:,:,idx2] = 2.0e0*KB2HARTREE*T*kappa*numpy.sinh(-_phi_z[:,:,idx2]/2.0e0/KB2HARTREE/T)
+    z = numpy.arange(ngrids, dtype=numpy.float64) * spacing
+    idx = z <= stern_sam
+    dphidz[:,:,idx] = slope
+    dphidz[:,:,~idx] = 2.0e0*KB2HARTREE*T*kappa*numpy.sinh(-_phi_z[:,:,~idx]/2.0e0/KB2HARTREE/T)
     dphidz = dphidz.ravel()
 
     grad_phi_z = numpy.zeros((ngrids**3,3), dtype=numpy.float64)
@@ -169,10 +165,9 @@ def one_to_one_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, g
     # Laplacian of phi(z)
     stern_sam = solvent_obj.stern_sam / BOHR
     kappa = solvent_obj.kappa
-    idx = numpy.array(range(d2phidz2.shape[2]))
-    z = numpy.asarray(idx*spacing, dtype=numpy.float64)
-    idx2 = numpy.argwhere(z>stern_sam)
-    d2phidz2[:,:,idx2] = -kappa*numpy.cosh(-_phi_z[:,:,idx2]/2.0e0/KB2HARTREE/T)*_grad_phi_z[:,:,idx2]
+    z = numpy.arange(ngrids, dtype=numpy.float64) * spacing
+    idx = z > stern_sam
+    d2phidz2[:,:,idx] = -kappa*numpy.cosh(-_phi_z[:,:,idx]/2.0e0/KB2HARTREE/T)*_grad_phi_z[:,:,idx]
     d2phidz2 = d2phidz2.ravel()
     lap_sas = make_lap_sas(solvent_obj)
     lap_bc = d2phidz2*sas + phi_z*lap_sas + 2.0e0 * pbe_helper.product_vector_vector(grad_phi_z, grad_sas)
@@ -201,7 +196,7 @@ def two_to_one_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps
         dsdt = kappa**2 / s
         dtdx = -t / KB2HARTREE / T
         dsdx = dsdt * dtdx
-        grad = (1/((s - SQRT3*kappa))**2 - 1/(s+SQRT3*kappa)**2)*dsdx*eps_sam*((x-bottom)/stern_sam)
+        grad = -(1/((s - SQRT3*kappa))**2 - 1/(s+SQRT3*kappa)**2)*dsdx*eps_sam*((x-bottom)/stern_sam)
         grad += (1/(s-SQRT3*kappa) - 1/(s+SQRT3*kappa))*eps_sam/stern_sam
         grad -= eps*((SQRT3*KB2HARTREE*T)/(kappa*t))*dsdx
         grad += eps*((SQRT3*s*KB2HARTREE*T)/(kappa*t**2))*dtdx
@@ -212,21 +207,18 @@ def two_to_one_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps
 
     # Continuous potential condition
     slope = (phi_a - bottom) / stern_sam
-    idx = numpy.array(range(phi_z.shape[2]))
-    z = numpy.asarray(idx*spacing, dtype=numpy.float64)
-    idx1 = numpy.where(z<=stern_sam)
-    idx2 = numpy.where(z>stern_sam)
+    z = numpy.arange(ngrids, dtype=numpy.float64) * spacing
+    idx = z <= stern_sam
     ta = numpy.exp(-phi_a/KB2HARTREE/T)
     sa = kappa*numpy.sqrt(2*ta + 1)
-    phi_z[:,:,idx1] = slope*z[idx1]+bottom
+    phi_z[:,:,idx] = slope*z[idx]+bottom
+    C = numpy.log(abs(sa - SQRT3*kappa)/(sa + SQRT3*kappa))
     if bottom < 0:
-        C = numpy.log((sa - SQRT3*kappa)/(sa + SQRT3*kappa))
-        s = SQRT3*kappa*((1+numpy.exp(-SQRT3*kappa*z[idx2]+C))/(1-numpy.exp(-SQRT3*kappa*z[idx2]+C)))
+        s = SQRT3*kappa*((1+numpy.exp(-SQRT3*kappa*(z[~idx]-stern_sam)+C))/(1-numpy.exp(-SQRT3*kappa*(z[~idx]-stern_sam)+C)))
     else:
-        C = numpy.log((SQRT3*kappa - sa)/(sa + SQRT3*kappa))
-        s = SQRT3*kappa*((1-numpy.exp(-SQRT3*kappa*z[idx2]+C))/(1+numpy.exp(-SQRT3*kappa*z[idx2]+C)))
+        s = SQRT3*kappa*((1-numpy.exp(-SQRT3*kappa*(z[~idx]-stern_sam)+C))/(1+numpy.exp(-SQRT3*kappa*(z[~idx]-stern_sam)+C)))
     t = 0.5*((s/kappa)**2 - 1)
-    phi_z[:,:,idx2] = -KB2HARTREE*T*numpy.log(t)
+    phi_z[:,:,~idx] = -KB2HARTREE*T*numpy.log(t)
     phi_z = phi_z.ravel()
     return phi_z*sas, phi_z, slope
 
@@ -236,14 +228,12 @@ def two_to_one_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas):
     stern_sam = solvent_obj.stern_sam / BOHR
 
     kappa = solvent_obj.kappa
-    idx = numpy.array(range(dphidz.shape[2]))
-    z = numpy.asarray(idx*spacing, dtype=numpy.float64)
-    idx1 = numpy.where(z<=stern_sam)
-    idx2 = numpy.where(z>stern_sam)
-    dphidz[:,:,idx1] = slope
-    t = numpy.exp(-_phi_z[:,:,idx2] / KB2HARTREE / T)
+    z = numpy.arange(ngrids, dtype=numpy.float64) * spacing
+    idx = z <= stern_sam
+    dphidz[:,:,idx] = slope
+    t = numpy.exp(-_phi_z[:,:,~idx] / KB2HARTREE / T)
     s = kappa*numpy.sqrt(2*t + 1)
-    dphidz[:,:,idx2] = SQRT3*s*KB2HARTREE*T/kappa/t/((s - SQRT3*kappa)**-1 - (s + SQRT3*kappa)**-1)
+    dphidz[:,:,~idx] = SQRT3*s*KB2HARTREE*T/kappa/t/((s - SQRT3*kappa)**-1 - (s + SQRT3*kappa)**-1)
     dphidz = dphidz.ravel()
 
     grad_phi_z = numpy.zeros((ngrids**3, 3), dtype=numpy.float64)
@@ -277,9 +267,8 @@ def two_to_one_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, g
     # Laplacian of phi(z)
     stern_sam = solvent_obj.stern_sam / BOHR
     kappa = solvent_obj.kappa
-    idx = numpy.array(range(d2phidz2.shape[2]))
-    z = numpy.asarray(idx*spacing, dtype=numpy.float64)
-    idx = numpy.where(z>stern_sam)
+    z = numpy.arange(ngrids, dtype=numpy.float64) * spacing
+    idx = z > stern_sam
     t = numpy.exp(-_phi_z[:,:,idx] / KB2HARTREE / T)
     s = kappa*numpy.sqrt(2*t + 1)
     dsdt = kappa**2 / s
@@ -289,6 +278,103 @@ def two_to_one_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, g
     dtdz = dtdx * dxdz
     
     d2phidz2[:,:,idx] = SQRT3*KB2HARTREE*T/kappa*(dsdz/t-dtdz*s/t**2)/(1/(s-SQRT3*kappa)-1/(s+SQRT3*kappa))
+    d2phidz2[:,:,idx] += (1/(s-SQRT3*kappa)+1/(s+SQRT3*kappa))*dsdz*dxdz
+
+    d2phidz2 = d2phidz2.flatten()
+    lap_sas = make_lap_sas(solvent_obj)
+    lap_bc = d2phidz2*sas + phi_z*lap_sas + 2.0e0 * pbe_helper.product_vector_vector(grad_phi_z, grad_sas)
+
+    return lap_bc
+
+def one_to_two_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps, sas, pzc, ref_pot, jump_coeff):
+    bottom = jump_coeff * (bias - (ref_pot - pzc))
+    phi_z = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
+    kappa = solvent_obj.kappa
+    if bottom == 0.0e0:
+        return phi_z.ravel()*sas, phi_z.ravel(), 0.0e0
+
+    def cost_func(x):
+        t = numpy.exp(x/KB2HARTREE/T)
+        s = kappa * numpy.sqrt(2*t + 1)
+        if x == 0:
+            return -1e100
+        func = (1/(s - SQRT3*kappa) - 1/(s + SQRT3*kappa))*eps_sam*((x - bottom)/stern_sam)
+        func += eps*((SQRT3*s*KB2HARTREE*T)/(kappa*t))
+        return func
+
+    def jac(x):
+        t = numpy.exp(x/KB2HARTREE/T)
+        s = kappa * numpy.sqrt(2*t + 1)
+        dsdt = kappa**2 / s
+        dtdx = t / KB2HARTREE / T
+        dsdx = dsdt * dtdx
+        grad = -(1/((s - SQRT3*kappa))**2 - 1/(s+SQRT3*kappa)**2)*dsdx*eps_sam*((x-bottom)/stern_sam)
+        grad += (1/(s-SQRT3*kappa) - 1/(s+SQRT3*kappa))*eps_sam/stern_sam
+        grad += eps*((SQRT3*KB2HARTREE*T)/(kappa*t))*dsdx
+        grad -= eps*((SQRT3*s*KB2HARTREE*T)/(kappa*t**2))*dtdx
+        return grad
+    
+    # Jump boundary condition
+    phi_a = phi_a_finder(cost_func, jac, bottom)
+
+    # Continuous potential condition
+    slope = (phi_a - bottom) / stern_sam
+    z = numpy.arange(ngrids, dtype=numpy.float64) * spacing
+    idx = z <= stern_sam
+    ta = numpy.exp(phi_a/KB2HARTREE/T)
+    sa = kappa*numpy.sqrt(2*ta + 1)
+    phi_z[:,:,idx] = slope*z[idx]+bottom
+    C = numpy.log(abs(sa - SQRT3*kappa)/(sa + SQRT3*kappa))
+    if bottom < 0:
+        s = SQRT3*kappa*((1-numpy.exp(-SQRT3*kappa*(z[~idx]-stern_sam)+C))/(1+numpy.exp(-SQRT3*kappa*(z[~idx]-stern_sam)+C)))
+    else:
+        s = SQRT3*kappa*((1+numpy.exp(-SQRT3*kappa*(z[~idx]-stern_sam)+C))/(1-numpy.exp(-SQRT3*kappa*(z[~idx]-stern_sam)+C)))
+    t = 0.5*((s/kappa)**2 - 1)
+    phi_z[:,:,~idx] = KB2HARTREE*T*numpy.log(t)
+    phi_z = phi_z.ravel()
+    return phi_z*sas, phi_z, slope
+
+def one_to_two_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas):
+    dphidz = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
+    _phi_z = phi_z.reshape((ngrids,)*3)
+    stern_sam = solvent_obj.stern_sam / BOHR
+
+    kappa = solvent_obj.kappa
+    z = numpy.arange(ngrids, dtype=numpy.float64) * spacing
+    idx = z <= stern_sam
+    dphidz[:,:,idx] = slope
+    t = numpy.exp(_phi_z[:,:,~idx] / KB2HARTREE / T)
+    s = kappa*numpy.sqrt(2*t + 1)
+    dphidz[:,:,~idx] = -SQRT3*s*KB2HARTREE*T/kappa/t/((s - SQRT3*kappa)**-1 - (s + SQRT3*kappa)**-1)
+    dphidz = dphidz.ravel()
+
+    grad_phi_z = numpy.zeros((ngrids**3, 3), dtype=numpy.float64)
+    grad_phi_z[:,2] = dphidz
+
+    grad_sas = make_grad_sas(solvent_obj)
+
+    grad_bc = pbe_helper.product_vector_scalar(grad_phi_z, sas) + pbe_helper.product_vector_scalar(grad_sas, phi_z)
+    return grad_bc, grad_phi_z, grad_sas
+
+def one_to_two_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, grad_sas):
+    d2phidz2 = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
+    _phi_z = phi_z.reshape((ngrids,)*3)
+    _grad_phi_z = grad_phi_z[:,2].reshape((ngrids,)*3)
+
+    # Laplacian of phi(z)
+    stern_sam = solvent_obj.stern_sam / BOHR
+    kappa = solvent_obj.kappa
+    z = numpy.arange(ngrids, dtype=numpy.float64) * spacing
+    idx = z > stern_sam
+    t = numpy.exp(_phi_z[:,:,idx] / KB2HARTREE / T)
+    s = kappa*numpy.sqrt(2*t + 1)
+    dsdt = kappa**2 / s
+    dtdx = t / KB2HARTREE / T
+    dxdz = _grad_phi_z[:,:,idx]
+    dsdz = dsdt * dtdx * dxdz
+    dtdz = dtdx * dxdz
+    
+    d2phidz2[:,:,idx] = -SQRT3*KB2HARTREE*T/kappa*(dsdz/t-dtdz*s/t**2)/(1/(s-SQRT3*kappa)-1/(s+SQRT3*kappa))
     d2phidz2[:,:,idx] += (1/(s-SQRT3*kappa)+1/(s+SQRT3*kappa))*dsdz*dxdz
 
     d2phidz2 = d2phidz2.flatten()

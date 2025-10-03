@@ -1,7 +1,6 @@
 import numpy
 import scipy
 import fcdft
-import fcdft.solvent.calculus_helper as ch
 from fcdft.solvent.pbe import M2HARTREE, KB2HARTREE
 from fcdft.lib import pbe_helper
 from pyscf.solvent._attach_solvent import _Solvation
@@ -235,11 +234,30 @@ def ib_force(solvent_obj, dm):
     lambda_r = solvent_obj._intermediates['lambda_r']
     r_vdw = solvent_obj.get_atomic_radii()
 
-    cmax = solvent_obj.cmax * M2HARTREE
+    cation_rad = solvent_obj.cation_rad / BOHR
+    anion_rad = solvent_obj.anion_rad / BOHR
+
     coords = solvent_obj.grids.coords
-    zmin = coords[:,2].min()
     spacing = solvent_obj.grids.spacing
 
+    if cb == 0.0e0:
+        return Fib
+
+    equiv = solvent_obj.equiv
+    if equiv == 11:
+        Fib = one_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, delta2,
+                                  stern_sam, stern_mol, T, probe, r_vdw, cation_rad, anion_rad)
+    elif equiv == 21:
+        Fib = two_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, delta2,
+                                  stern_sam, stern_mol, T, probe, r_vdw, cation_rad, anion_rad)
+    else:
+        raise NotImplementedError
+
+    return Fib
+
+def one_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, delta2,
+                        stern_sam, stern_mol, T, probe, r_vdw, cation_rad, anion_rad):
+    zmin = coords[:,2].min()
     x = (coords[:,2] - zmin - stern_sam - stern_mol) / delta1
     _erf = scipy.special.erf(x)
     erf_z = 0.5e0 * (1.0e0 + _erf) # given in ngrids
@@ -255,23 +273,100 @@ def ib_force(solvent_obj, dm):
     erf_list = 0.5e0 * (1.0e0 + _erf)
     gauss_list = numpy.exp(-x**2)
 
+    c12 = 0.74e0 / (4.0e0/3.0e0 * PI * (cation_rad**3 + anion_rad**3))
+    lnexp = phi_tot / KB2HARTREE / T
+    idx = abs(lnexp) < 230.96
+    t = numpy.ones_like(lnexp) * 1.0e100
+    t[idx] = numpy.cosh(lnexp[idx])
+    
     for i in range(mol.natm):
         r = atom_coords[i]
         rp = coords - r
         er = pbe_helper.product_vector_scalar(rp, 1.0e0/dist[i])
-        mask = numpy.ones(mol.natm, dtype=bool)
-        mask[i] = False
+        mask = [False if j == i else True for j in range(mol.natm)]
         erf = numpy.prod(erf_list[mask], axis=0)
         gauss_A = gauss_list[i]
         gauss_A[x[i] < -8.0e0*delta2] = 0.0e0 # To ensure zero contribution inside the cavity.
         dl = -1.0e0 / delta2 / numpy.sqrt(PI) * pbe_helper.product_vector_scalar(er, erf_z*gauss_A*erf)
-        idx = numpy.where(abs(-phi_tot / KB2HARTREE / T) < 230.96)
-        _cosh = numpy.ones_like(phi_tot) * 1.0e100
-        _cosh[idx] = numpy.cosh(-phi_tot[idx] / KB2HARTREE / T)
-        Fib[i] = numpy.dot(1.0e0 / ((cmax / 2.0e0 / cb - 1.0e0) / _cosh + lambda_r), dl)
+        Fib[i] = numpy.dot(1.0e0 / ((c12 / cb - 1.0e0) / t + lambda_r), dl)    
 
-    Fib = cmax*KB2HARTREE*T*Fib*spacing**3
+    Fib = 2.0*c12*KB2HARTREE*T*Fib*spacing**3
     return Fib
+
+def two_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, delta2,
+                        stern_sam, stern_mol, T, probe, r_vdw, cation_rad, anion_rad):
+    zmin = coords[:,2].min()
+    x = (coords[:,2] - zmin - stern_sam - stern_mol) / delta1
+    _erf = scipy.special.erf(x)
+    erf_z = 0.5e0 * (1.0e0 + _erf) # given in ngrids
+
+    atom_coords = mol.atom_coords()
+    Fib = numpy.zeros((mol.natm, 3))
+    if cb == 0.0e0:
+        return Fib
+    
+    dist = pbe_helper.distance_calculator(coords, atom_coords)
+    x = (dist - r_vdw[:,None] - probe - stern_mol) / delta2
+    _erf = scipy.special.erf(x)
+    erf_list = 0.5e0 * (1.0e0 + _erf)
+    gauss_list = numpy.exp(-x**2)
+
+    c12 = 0.74e0 / (4.0e0/3.0e0 * PI * (2*cation_rad**3 + anion_rad**3))
+    lnexp = phi_tot / KB2HARTREE / T
+    idx = abs(1.5*lnexp) < 230.96
+    t = numpy.ones_like(lnexp) * 1.0e100
+    t[idx] = numpy.exp(0.5*lnexp[idx]) * (2*numpy.exp(-1.5*lnexp[idx]) + numpy.exp(1.5*lnexp[idx])) / 3
+
+    for i in range(mol.natm):
+        r = atom_coords[i]
+        rp = coords - r
+        er = pbe_helper.product_vector_scalar(rp, 1.0e0/dist[i])
+        mask = [False if j == i else True for j in range(mol.natm)]
+        erf = numpy.prod(erf_list[mask], axis=0)
+        gauss_A = gauss_list[i]
+        gauss_A[x[i] < -8.0e0*delta2] = 0.0e0 # To ensure zero contribution inside the cavity.
+        dl = -1.0e0 / delta2 / numpy.sqrt(PI) * pbe_helper.product_vector_scalar(er, erf_z*gauss_A*erf)
+        Fib[i] = numpy.dot(1.0e0 / ((c12 / cb - 1.0e0) / t + lambda_r), dl)
+
+    Fib = 3.0*c12*KB2HARTREE*T*Fib*spacing**3
+    return Fib
+
+def one_to_two_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, delta2,
+                        stern_sam, stern_mol, T, probe, r_vdw, cation_rad, anion_rad):
+    zmin = coords[:,2].min()
+    x = (coords[:,2] - zmin - stern_sam - stern_mol) / delta1
+    _erf = scipy.special.erf(x)
+    erf_z = 0.5e0 * (1.0e0 + _erf) # given in ngrids
+
+    atom_coords = mol.atom_coords()
+    Fib = numpy.zeros((mol.natm, 3))
+    if cb == 0.0e0:
+        return Fib
+    
+    dist = pbe_helper.distance_calculator(coords, atom_coords)
+    x = (dist - r_vdw[:,None] - probe - stern_mol) / delta2
+    _erf = scipy.special.erf(x)
+    erf_list = 0.5e0 * (1.0e0 + _erf)
+    gauss_list = numpy.exp(-x**2)
+
+    c12 = 0.74e0 / (4.0e0/3.0e0 * PI * (cation_rad**3 + 2*anion_rad**3))
+    lnexp = phi_tot / KB2HARTREE / T
+    idx = abs(1.5*lnexp) < 230.96
+    t = numpy.ones_like(lnexp) * 1.0e100
+    t[idx] = numpy.exp(-0.5*lnexp[idx]) * (numpy.exp(-1.5*lnexp[idx]) + 2*numpy.exp(1.5*lnexp[idx])) / 3
+
+    for i in range(mol.natm):
+        r = atom_coords[i]
+        rp = coords - r
+        er = pbe_helper.product_vector_scalar(rp, 1.0e0/dist[i])
+        mask = [False if j == i else True for j in range(mol.natm)]
+        erf = numpy.prod(erf_list[mask], axis=0)
+        gauss_A = gauss_list[i]
+        gauss_A[x[i] < -8.0e0*delta2] = 0.0e0 # To ensure zero contribution inside the cavity.
+        dl = -1.0e0 / delta2 / numpy.sqrt(PI) * pbe_helper.product_vector_scalar(er, erf_z*gauss_A*erf)
+        Fib[i] = numpy.dot(1.0e0 / ((c12 / cb - 1.0e0) / t + lambda_r), dl)
+
+    Fib = 3.0*c12*KB2HARTREE*T*Fib*spacing**3
 
 if __name__ == '__main__':
     from pyscf import gto
