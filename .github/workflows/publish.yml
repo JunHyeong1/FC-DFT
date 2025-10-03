@@ -27,7 +27,7 @@ jobs:
           python-version: "3.x"
 
       - name: Install dependencies
-        run: pip install wheel twine setuptools
+        run: pip install wheel twine setuptools Cython
        
       - name: Build release distributions
         run: python setup.py sdist bdist_wheel
