@@ -317,7 +317,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
                        'Decreasing grid size might help convergence.')
 
 class PBE(ddcosmo.DDCOSMO):
-    _keys = {'cb', 'T', 'bias', 'stern_sam', 'delta1', 'delta2', 'eps_sam', 'probe', 'kappa', 'stern_mol', 'cation_rad', 'anion_rad', 'cmax', 'rho_sol', 'rho_ions', 'rho_pol', 'phi_pol', 'phi_tot', 'phi_sol', 'L', 'nelectron', 'phi_pol', 'thresh_pol', 'thresh_ions', 'thresh_amg', 'gpu_accel', 'cycle', 'atom_bottom', 'pzc', 'jump_coeff', 'ref_pot', 'solver', 'equiv'}
+    _keys = {'cb', 'T', 'bias', 'stern_sam', 'delta1', 'delta2', 'eps_sam', 'probe', 'kappa', 'stern_mol', 'cation_rad', 'anion_rad', 'rho_sol', 'rho_ions', 'rho_pol', 'phi_pol', 'phi_tot', 'phi_sol', 'L', 'nelectron', 'phi_pol', 'thresh_pol', 'thresh_ions', 'thresh_amg', 'gpu_accel', 'cycle', 'atom_bottom', 'pzc', 'jump_coeff', 'ref_pot', 'solver', 'equiv'}
     def __init__(self, mol, cb=0.0, cation_rad=4.3, anion_rad=4.3, T=298.15, stern_mol=0.44, stern_sam=8.1, equiv=11, **kwargs):
         ddcosmo.DDCOSMO.__init__(self, mol)
         self.grids = Grids(mol, **kwargs)
@@ -344,7 +344,6 @@ class PBE(ddcosmo.DDCOSMO):
         self.rho_sol = None
         self.rho_ions = None
         self.rho_pol = None
-        self.cmax = None
         self.bias = None # Placeholder <- WBLMolecule
         self.nelectron = None # Placeholder <- WBLMolecule
         self.ref_pot = None # Placeholder <- WBLMolecule
@@ -395,13 +394,6 @@ class PBE(ddcosmo.DDCOSMO):
 
         phi_pol = phi_tot - phi_sol
         self.phi_pol = phi_pol
-        
-        lambda_r = self._intermediates['lambda_r']
-
-        _lambda_r = lambda_r.copy()
-        _lambda_r[lambda_r < 1.0e-100] = 1.0e-100 # Machine precision
-        lnlambda = numpy.log(_lambda_r)
-        lnlambda[lambda_r < 1.0e-100] = -1.0e100
 
         # Zero out the boundary values to eliminate error
         ngrids = self.grids.ngrids
@@ -412,8 +404,6 @@ class PBE(ddcosmo.DDCOSMO):
         rho_sol[:,:,idx] = 0.0e0
         rho_sol = rho_sol.flatten()
 
-        lnA = numpy.log(0.5) + lnlambda - phi_tot / KB2HARTREE / self.T
-        lnB = numpy.log(0.5) + lnlambda + phi_tot / KB2HARTREE / self.T
         # Reaction field contribution
         Gsolv_elst = numpy.dot(rho_sol, phi_pol)*spacing**3
 
@@ -422,14 +412,13 @@ class PBE(ddcosmo.DDCOSMO):
                            + numpy.dot(rho_ions, phi_tot))*spacing**3
 
         # Osmotic pressure contribution
-        # TODO: osmotic pressure contribution by 2:1 electrolytes
-        cmax = self.cmax * M2HARTREE
         cb = self.cb * M2HARTREE
-
+        lambda_r = self._intermediates['lambda_r']
+        T = self.T
         if self.cb == 0.0e0:
             Gsolv_osm = 0.0e0
         else:
-            Gsolv_osm = -cmax * KB2HARTREE * self.T * (numpy.log(1.0e0 + 2.0e0 * cb / cmax * (numpy.exp(lnA) + numpy.exp(lnB) - 1.0e0))).sum() * spacing**3
+            Gsolv_osm = self.energy_osm(phi_tot, cb, lambda_r, T, spacing)
 
         logger.info(self, "E_es= %.15g, E_diel= %.15g, E_osm= %.15g", Gsolv_elst, Gsolv_diel, Gsolv_osm)
 
@@ -492,15 +481,12 @@ class PBE(ddcosmo.DDCOSMO):
         atomic_radii = self.get_atomic_radii()
         eps_sam = self.eps_sam
         eps_bulk = self.eps
-        cation_rad = self.cation_rad / BOHR # angstrom to a.u.
-        anion_rad = self.anion_rad / BOHR # angstrom to a.u.
         cb = self.cb * M2HARTREE # mol/L to a.u.
 
         lambda_r = self.make_lambda(mol, probe, stern_mol, stern_sam, coords, delta1, delta2, atomic_radii)
         sas = self.make_sas(mol, probe, coords, delta2, atomic_radii)
         eps = self.make_eps(coords, eps_sam, eps_bulk, stern_sam, delta1, sas)
         grad_eps = self.make_grad_eps(mol, coords, eps_sam, eps_bulk, probe, stern_sam, delta1, delta2, atomic_radii, sas)
-        self.cmax = 0.74e0 / (4.0e0/3.0e0 * PI * (cation_rad**3 + anion_rad**3)) * 2.0e0 / M2HARTREE # in eV
 
         if self.L is None:
             self.L = ch.poisson((ngrids,)*3, format='csr')
@@ -530,7 +516,8 @@ class PBE(ddcosmo.DDCOSMO):
             from fcdft.solvent.ions import _two_to_one
             return _two_to_one
         elif equiv == 12:
-            raise NotImplementedError
+            from fcdft.solvent.ions import _one_to_two
+            return _one_to_two
         else:
             raise NotImplementedError
 
@@ -541,9 +528,28 @@ class PBE(ddcosmo.DDCOSMO):
             return boundary.one_to_one_bc, boundary.one_to_one_bc_grad, boundary.one_to_one_bc_lap
         elif equiv == 21:
             return boundary.two_to_one_bc, boundary.two_to_one_bc_grad, boundary.two_to_one_bc_lap
+        elif equiv == 12:
+            return boundary.one_to_two_bc, boundary.one_to_two_bc_grad, boundary.one_to_two_bc_lap
         else:
             raise NotImplementedError
 
+    def energy_osm(self, phi_tot=None, cb=None, lambda_r=None, T=None, spacing=None, equiv=None):
+        if phi_tot is None: phi_tot = self.phi_tot
+        if cb is None: cb = self.cb * M2HARTREE
+        if lambda_r is None: lambda_r = self._intermediates['lambda_r']
+        if T is None: T = self.T
+        if spacing is None: spacing = self.grids.spacing
+        if equiv is None: equiv = self.equiv
+        from fcdft.solvent import ions
+        if equiv == 11:
+            return ions.one_to_one_energy_osm(self, phi_tot, cb, lambda_r, T, spacing)
+        elif equiv == 21:
+            return ions.two_to_one_energy_osm(self, phi_tot, cb, lambda_r, T, spacing)
+        elif equiv == 12:
+            return ions.one_to_two_energy_osm(self, phi_tot, cb, lambda_r, T, spacing)
+        else:
+            raise NotImplementedError
+        
     def __setattr__(self, key, val):
         if key in ('radii_table', 'atom_radii', 'delta1', 'delta2', 'eps', 'stern', 'probe'):
             self.reset()
@@ -563,8 +569,8 @@ class PBE(ddcosmo.DDCOSMO):
                                  'pyscf.solvent._ddcosmo_tdscf_grad instead.')
         
     def grad(self, dm):
-        from fcdft.solvent import pbe_grad
-        return pbe_grad.kernel(self, dm, self.verbose)
+        from fcdft.solvent.grad import pbe
+        return pbe.kernel(self, dm, self.verbose)
 
     def to_gpu(self):
         self.gpu_accel = True
