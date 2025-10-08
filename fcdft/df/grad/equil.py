@@ -1,5 +1,5 @@
 from fcdft.df.grad import rks as rks_grad
-from fcdft.grad import equil as eq_grad
+from fcdft.equil.grad import equil as eq_grad
 
 class Gradients(eq_grad.Gradients):
     auxbasis_response = True
