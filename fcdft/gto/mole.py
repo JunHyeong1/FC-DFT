@@ -1,32 +1,31 @@
-import numpy
 from pyscf.gto.mole import Mole
-from pyscf.gto.mole import PTR_COORD, PTR_ZETA, ATOM_OF, \
-                           PTR_EXP, PTR_COEFF, PTR_ENV_START
 from pyscf.lib import logger
 
-def split_env(mol, atm, bas, env, atom_id):
-    symbols = [mol.atom_symbol(i) for i in range(mol.natm)]
-    sym1 = symbols[:atom_id]
-    from pyscf.gto.mole import make_bas_env
+# def split_env(mol, atm, bas, env, atom_id):
+#     symbols = [mol.atom_symbol(i) for i in range(mol.natm)]
+#     sym1 = symbols[:atom_id]
+#     from pyscf.gto.mole import make_bas_env
+#     len_env = 0
+#     for symb, basis_add in mol._basis.items():
+#         if symb in sym1:
+#             _, env0 = make_bas_env(basis_add, 0, 0)
+#             len_env += len(env0)
 
-    len_env = PTR_ENV_START + 4*atom_id
-    for symb, basis_add in mol._basis.items():
-        if symb in sym1:
-            _, env0 = make_bas_env(basis_add, 0, 0)
-            len_env += len(env0)
-
-    env1, env2 = env[:len_env], env[len_env:]
-    idx = numpy.where(bas[:,0] == atom_id)[0][0]
-    bas1, bas2 = bas[:idx].copy(), bas[idx:].copy()
-    off = len(env1)
-    natm_off = atom_id
-    atm1, atm2 = atm[:atom_id].copy(), atm[atom_id:].copy()
-    atm2[:,PTR_COORD] -= off
-    atm2[:,PTR_ZETA ] -= off
-    bas2[:,ATOM_OF  ] -= natm_off
-    bas2[:,PTR_EXP  ] -= off
-    bas2[:,PTR_COEFF] -= off
-    return atm1, bas1, env1, atm2, bas2, env2
+#     env1, env2 = [numpy.zeros(PTR_ENV_START)], [numpy.zeros(PTR_ENV_START)]
+#     env1.append(env[PTR_ENV_START:PTR_ENV_START+4*atom_id])
+#     env2.append(env[PTR_ENV_START+4*atom_id:PTR_ENV_START+4*len(atm)])
+#     env1, env2 = env[:len_env], env[len_env:]
+#     idx = numpy.where(bas[:,0] == atom_id)[0][0]
+#     bas1, bas2 = bas[:idx].copy(), bas[idx:].copy()
+#     off = len(env1)
+#     natm_off = atom_id
+#     atm1, atm2 = atm[:atom_id].copy(), atm[atom_id:].copy()
+#     atm2[:,PTR_COORD] -= off
+#     atm2[:,PTR_ZETA ] -= off
+#     bas2[:,ATOM_OF  ] -= natm_off
+#     bas2[:,PTR_EXP  ] -= off
+#     bas2[:,PTR_COEFF] -= off
+#     return atm1, bas1, env1, atm2, bas2, env2
 
 def conc_mol(mol1, mol2):
     from pyscf.gto import mole
@@ -44,48 +43,20 @@ def split_mol(mol, atom_id):
                     mol, mol)
         mol.build()
 
+    # TODO: mol.stdout for logger
     mol1, mol2 = Mole(), Mole()
-    mol1._built, mol2._built = True, True
-    mol1._atm, mol1._bas, mol1._env, mol2._atm, mol2._bas, mol2._env = \
-        split_env(mol, mol._atm, mol._bas, mol._env, atom_id)
-
+    mol1.basis = mol2.basis = mol.basis
     mol1.verbose = mol2.verbose = mol.verbose
     mol1.output = mol2.output = mol.output
-    # TODO: mol.stdout for logger
     mol1.max_memory = mol2.max_memory = mol.max_memory
     mol1.spin = mol2.spin = 0
     mol1.symmetry = mol2.symmetry = False
     mol1.symmetry_subgroup = mol2.symmetry_subgroup = None
     mol1.cart = mol2.cart = mol.cart
-    mol1.basis = mol2.basis = mol.basis
-
     mol1._atom = mol._atom[:atom_id]
     mol2._atom = mol._atom[atom_id:]
-    mol1.atom = mol1._atom
-    mol2.atom = mol2._atom
     mol1.unit = mol2.unit = 'Bohr'
-
-    mol1_symb = []
-    mol2_symb = []
-    for atm in range(mol1.natm):
-        mol1_symb = mol1.atom_symbol(atm)
-    for atm in range(mol2.natm):
-        mol2_symb = mol2.atom_symbol(atm)
-    mol1_symb = set(mol1_symb)
-    mol2_symb = set(mol2_symb)
-    _basis = mol._basis
-    mol1_basis = {}
-    mol2_basis = {}
-    for atom, basis in _basis.items():
-        for atom1 in mol1_symb:
-            if atom == atom1:
-                mol1_basis[atom] = basis
-        for atom2 in mol2_symb:
-            if atom == atom2:
-                mol2_basis[atom] = basis
-
-    mol1._basis.update(mol1_basis)
-    mol2._basis.update(mol2_basis)
+    mol1.build(), mol2.build()
 
     return mol1, mol2
 
