@@ -47,6 +47,7 @@ def split_mol(mol, atom_id):
     mol1, mol2 = Mole(), Mole()
     mol1.basis = mol2.basis = mol.basis
     mol1.verbose = mol2.verbose = mol.verbose
+    mol1.stdout = mol2.stdout = mol.stdout
     mol1.output = mol2.output = mol.output
     mol1.max_memory = mol2.max_memory = mol.max_memory
     mol1.spin = mol2.spin = 0
