@@ -129,6 +129,7 @@ def get_j(dfobj, dm, hermi=0, direct_scf_tol=1e-13):
     logger.timer(dfobj, 'df-vj', *t0)
     return numpy.asarray(vj).reshape(dm_shape)
 
+# numpy.einsum replaced by numpy.tensordot for computational efficiency. 
 def get_jk(dfobj, dm, hermi=0, with_j=True, with_k=True, direct_scf_tol=1e-13):
     assert (with_j or with_k)
     if (not with_k and not dfobj.mol.incore_anyway and
@@ -184,7 +185,7 @@ class _DFHF(df_jk._DFHF):
         if not with_k:
             return get_j(self.with_df, dm, hermi, self.direct_scf_tol), None
         else:
-            return get_jk(self.with_df, mol, dm, hermi, with_j, with_k, omega)
+            return get_jk(self.with_df, dm, hermi, with_j, with_k, self.direct_scf_tol)
 
     def nuc_grad_method(self):
         from fcdft.df.grad import rks, uks
