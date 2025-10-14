@@ -57,9 +57,7 @@ def grad_elec(mf_grad, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
             _de[k] += mf_grad.extra_force(ia, locals()) ### Needs to be fixed
         de.append(_de)
     
-    cover = mf.cover
-    # E = (1 - c)*E_A + c*E_B
-    de = numpy.concatenate(((1 - cover) * de[0], cover * de[1]), axis=0)
+    de = numpy.concatenate((de[0], de[1]), axis=0)
     atmlst = range(mol.natm)
     if log.verbose >= logger.DEBUG:
         log.debug('gradients of electronic part')
@@ -95,11 +93,9 @@ class Gradients(wblrks_grad.Gradients):
     
     def grad_nuc(self, mol=None, atmlst=None):
         mol1, mol2 = self.base.mol1, self.base.mol2
-        cover = self.base.cover
         grad_nuc1 = super().grad_nuc(mol1, atmlst=atmlst) # atmlst <- None
         grad_nuc2 = super().grad_nuc(mol2, atmlst=atmlst) # atmlst <- None
-        # E = (1 - c)*E_A + c*E_B
-        return numpy.concatenate(((1 - cover) * grad_nuc1, cover * grad_nuc2), axis=0)
+        return numpy.concatenate((grad_nuc1, grad_nuc2), axis=0)
     
     def extra_force(self, atom_id, envs):
         if self.grid_response:
