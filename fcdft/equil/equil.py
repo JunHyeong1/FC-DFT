@@ -327,8 +327,18 @@ class Equilibrium(_Equilibrium):
         _mol = [self.mol1, self.mol2]
         _grids = [self.grids1, self.grids2]
         _dm = list(decompose_block_diagonal(self, dm))
-        _mo_coeff = list(decompose_block_diagonal(self, dm.mo_coeff))
-        _mo_occ = list(decompose_block_column(self, dm.mo_occ))
+
+        if hasattr(dm, 'init_slice'):
+            init_slice = dm.init_slice
+            mo_coeff = dm.mo_coeff
+            mo_coeff1 = mo_coeff[:self._nao,:init_slice[0]]
+            mo_coeff2 = mo_coeff[self._nao:,init_slice[0]:]
+            _mo_coeff = [mo_coeff1, mo_coeff2]
+            mo_occ1, mo_occ2 = dm.mo_occ[:init_slice[0]], dm.mo_occ[init_slice[0]:]
+            _mo_occ = [mo_occ1, mo_occ2]
+        else:
+            _mo_coeff = list(decompose_block_diagonal(self, dm.mo_coeff))
+            _mo_occ = list(decompose_block_column(self, dm.mo_occ))
 
         ni = self._numint
         omega, _, _ = ni.rsh_and_hybrid_coeff(self.xc)
@@ -397,7 +407,8 @@ class Equilibrium(_Equilibrium):
         dm = scipy.linalg.block_diag(dm1, dm2)
         mo_coeff = scipy.linalg.block_diag(dm1.mo_coeff, dm2.mo_coeff)
         mo_occ = numpy.concatenate((dm1.mo_occ, dm2.mo_occ))
-        return lib.tag_array(dm, mo_coeff=mo_coeff, mo_occ=mo_occ)
+        return lib.tag_array(dm, mo_coeff=mo_coeff, mo_occ=mo_occ,
+                             init_slice=numpy.array([dm1.mo_coeff.shape[1], dm2.mo_coeff.shape[1]]))
     
     def reset(self, mol=None):
         if mol is not None:
