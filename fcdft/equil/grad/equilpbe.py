@@ -33,8 +33,11 @@ class WithSolventGrad(pbe.WithSolventGrad):
 
         cover = self.base.cover
         dm1, dm2 = decompose_block_diagonal(self.base, dm)
-        de_solvent1 = pbe.kernel(self.base.with_solvent[0], dm1)
-        de_solvent2 = pbe.kernel(self.base.with_solvent[1], dm2)
+        with_solvent = self.base.with_solvent
+        with_solvent[0].nelectron = self.base.nelectron1
+        with_solvent[1].nelectron = self.base.nelectron2
+        de_solvent1 = pbe.kernel(with_solvent[0], dm1)
+        de_solvent2 = pbe.kernel(with_solvent[1], dm2)
         self.de_solvent = numpy.concatenate(((1 - cover) * de_solvent1, cover * de_solvent2))
         self.de_solute = super(pbe.WithSolventGrad, self).kernel(*args, **kwargs)
         self.de = self.de_solute + self.de_solvent
