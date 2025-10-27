@@ -49,9 +49,11 @@ void poisson_fft_2d(double complex *rhok, double *lap, int ngrids, double spacin
     double alpha = 1.0;
     double beta = 0.0;
     double spacing2 = spacing * spacing;
-    for (i = 0; i < ngrids2; i++) {
-        V[i] = lap[i];
-    }
+
+    cblas_dcopy(ngrids2, lap, 1, V, 1);
+    // for (i = 0; i < ngrids2; i++) {
+    //     V[i] = lap[i];
+    // }
     *info = LAPACKE_dsyev(LAPACK_ROW_MAJOR, 'V', 'U', ngrids, V, ngrids, D);
 
     // x = V(D+cI)^-1 V^T b
@@ -59,6 +61,7 @@ void poisson_fft_2d(double complex *rhok, double *lap, int ngrids, double spacin
     double *rhokim = malloc(sizeof(double) * ngrids3);
     double *phikre = malloc(sizeof(double) * ngrids3);
     double *phikim = malloc(sizeof(double) * ngrids3);
+    #pragma omp parallel for
     for (i = 0; i < ngrids3; i++) {
         rhokre[i] = creal(rhok[i]);
         rhokim[i] = cimag(rhok[i]);
@@ -88,6 +91,7 @@ void poisson_fft_2d(double complex *rhok, double *lap, int ngrids, double spacin
     }
     free(D);
     free(V);
+    #pragma omp parallel for
     for (i = 0; i < ngrids3; i++) {
         phik[i] = phikre[i] + I * phikim[i];
     }
