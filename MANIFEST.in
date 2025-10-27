@@ -2,3 +2,4 @@ include MANIFEST.in
 
 recursive-include fcdft/lib *.so *.c *.pyx *.h CMakeLists.txt dft
 recursive-include fcdft/wbl *.npy
+recursive-include fcdft/solvent *.json

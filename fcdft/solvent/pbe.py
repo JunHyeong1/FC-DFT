@@ -273,7 +273,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
     rho_iter_bc = 0.25e0 / PI * pbe_helper.product_vector_vector(grad_lneps, grad_bc)
 
     logger.info(solvent_obj, 'Bias vs. PZC = %.15f V', (bias - (ref_pot - pzc)) * HARTREE2EV)
-    solver.whoareyou()
+    solver._initialize()
 
     max_cycle = solvent_obj.max_cycle
     iter = 0
@@ -310,6 +310,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
         if numpy.all(drho_pol < solvent_obj.thresh_pol) and numpy.all(drho_ions < solvent_obj.thresh_ions) and iter > 0:
             logger.info(solvent_obj, 'PBE Converged, max|drho(pol)| = %4.3e, max|drho(ions)| = %4.3e',
                         drho_pol.max(), drho_ions.max())
+            solver._finalize()
             return phi_tot, rho_ions, rho_pol
         iter += 1
     logger.info(solvent_obj, 'PBE failed to converge.')
@@ -503,8 +504,12 @@ class PBE(ddcosmo.DDCOSMO):
             from fcdft.solvent.solver import fft2d
             self.solver = fft2d(ngrids=ngrids, spacing=spacing, verbose=self.verbose, stdout=self.stdout)
         else:
-            from fcdft.solvent.solver import multigrid
-            self.solver = multigrid(ngrids=ngrids, spacing=spacing, verbose=self.verbose, stdout=self.stdout)
+            if self.gpu_accel:
+                from fcdft.solvent.solver import multigridGPU
+                self.solver = multigridGPU(ngrids=ngrids, spacing=spacing, verbose=self.verbose, stdout=self.stdout)
+            else:
+                from fcdft.solvent.solver import multigrid
+                self.solver = multigrid(ngrids=ngrids, spacing=spacing, verbose=self.verbose, stdout=self.stdout)
         self.solver.build()
     
     def _gen_get_rho_ions(self):
@@ -650,7 +655,7 @@ H        1.3390319419     -0.0095801980     -0.2157234144''',
     wblmf.conv_tol=1e-7
     wblmf.kernel()
     dm = wblmf.make_rdm1()
-    cm = PBE(mol, cb=1.0, length=20, ngrids=41, stern_sam=8.1, equiv=21)
+    cm = PBE(mol, cb=1.0, length=20, ngrids=41, stern_sam=8.1, equiv=11)
     cm._dm = dm
     cm.atom_bottom=12
     cm.solver = 'multigrid'
