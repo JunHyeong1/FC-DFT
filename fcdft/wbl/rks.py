@@ -377,6 +377,10 @@ class WBLMoleculeRKS(WBLBase, rks.RKS):
         from fcdft.grad import rks as wblrks_grad
         return wblrks_grad.Gradients(self)
 
+    def Gradients(self):
+        # Override scf.hf.Gradients method
+        return self.nuc_grad_method()
+
     def _finalize(self):
         super()._finalize()
         dm = self.make_rdm1(self.mo_coeff, self.mo_occ)
