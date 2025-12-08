@@ -396,14 +396,14 @@ class PBE(ddcosmo.DDCOSMO):
         phi_pol = phi_tot - phi_sol
         self.phi_pol = phi_pol
 
-        # Zero out the boundary values to eliminate error
-        ngrids = self.grids.ngrids
-        rho_sol = rho_sol.reshape((ngrids,)*3)
-        idx = numpy.array([-4, -3, -2, -1, 0, 1, 2, 3])
-        rho_sol[idx,:,:] = 0.0e0
-        rho_sol[:,idx,:] = 0.0e0
-        rho_sol[:,:,idx] = 0.0e0
-        rho_sol = rho_sol.flatten()
+        # # Zero out the boundary values to eliminate error
+        # ngrids = self.grids.ngrids
+        # rho_sol = rho_sol.reshape((ngrids,)*3)
+        # idx = numpy.array([-4, -3, -2, -1, 0, 1, 2, 3])
+        # rho_sol[idx,:,:] = 0.0e0
+        # rho_sol[:,idx,:] = 0.0e0
+        # rho_sol[:,:,idx] = 0.0e0
+        # rho_sol = rho_sol.flatten()
 
         # Reaction field contribution
         Gsolv_elst = numpy.dot(rho_sol, phi_pol)*spacing**3
