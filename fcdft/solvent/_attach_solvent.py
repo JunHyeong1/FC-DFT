@@ -49,3 +49,7 @@ class SCFWithSolvent(_attach_solvent.SCFWithSolvent):
         with_solvent.e, with_solvent.v = e_solvent, v_solvent
 
         return lib.tag_array(vhf, e_solvent=e_solvent, v_solvent=v_solvent)
+    
+    def nuc_grad_method(self):
+        from fcdft.solvent.grad.pbe import make_grad_object
+        return make_grad_object(self)
