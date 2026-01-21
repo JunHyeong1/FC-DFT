@@ -95,8 +95,7 @@ def get_jk(mf_grad, mol=None, dm=None, hermi=0, with_j=True, with_k=True,
             tmp = tmpRe + 1.0j * tmpIm
             t2 = logger.timer_debug1 (mf_grad, "df grad einsum (P|mn') u_mi = dg_Pin", *t2)
             rhok = get_rhok (i, p0, p1)
-            # vk[i] += lib.einsum('xpoi,pok->xik', tmp, rhok)
-            vk[i] += numpy.tensordot(tmp, rhok, axes=([1,2], [0,1]))
+            vk[i] += lib.einsum('xpoi,pok->xik', tmp, rhok)
             t2 = logger.timer_debug1 (mf_grad, "df grad einsum D_Pim dg_Pin = v_ij", *t2)
             rhok = tmp = None
         int3c = None
@@ -185,8 +184,7 @@ def get_jk(mf_grad, mol=None, dm=None, hermi=0, with_j=True, with_k=True,
     for i, j in product (range (nset), repeat=2):
         k = (i*nset) + j
         l = (j*nset) + i
-        # tmp = lib.einsum('pij,qji->pq', rhok_oo[k], rhok_oo[l])
-        tmp = numpy.tensordot(rhok_oo[k], rhok_oo[l], axes=([1,2], [2,1]))
+        tmp = lib.einsum('pij,qji->pq', rhok_oo[k], rhok_oo[l])
         vkaux[i,j] -= lib.einsum('xpq,pq->xp', int2c_e1, tmp)
     t1 = logger.timer_debug1 (mf_grad, "df grad vj and vk aux (P'|Q) eval", *t1)
 
@@ -241,8 +239,7 @@ def get_j(mf_grad, mol=None, dm=None, hermi=0):
     for shl0, shl1, nL in ao_ranges:
         int3c = get_int3c_s1((0, nbas, 0, nbas, shl0, shl1))  # (i,j|P)
         p0, p1 = aux_loc[shl0], aux_loc[shl1]
-        # rhoj[:,p0:p1] = lib.einsum('ijp,aij->ap', int3c, dms)
-        rhoj[:,p0:p1] = numpy.tensordot(dms, int3c, axes=([1,2], [0,1]))
+        rhoj[:,p0:p1] = lib.einsum('ijp,aij->ap', int3c, dms)
         int3c = None
 
     # (P|Q), (naux, naux)
@@ -255,8 +252,7 @@ def get_j(mf_grad, mol=None, dm=None, hermi=0):
     for shl0, shl1, nL in ao_ranges:
         int3c = get_int3c_ip1((0, nbas, 0, nbas, shl0, shl1))
         p0, p1 = aux_loc[shl0], aux_loc[shl1]
-        # vj += lib.einsum('xijp,ap->axij', int3c, rhoj[:,p0:p1])
-        vj += numpy.tensordot(rhoj[:,p0:p1], int3c, axes=([1], [3]))
+        vj += lib.einsum('xijp,ap->axij', int3c, rhoj[:,p0:p1])
         int3c = None
     
     if mf_grad.auxbasis_response:
