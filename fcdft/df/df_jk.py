@@ -158,17 +158,18 @@ def get_jk(dfobj, dm, hermi=0, with_j=True, with_k=True, direct_scf_tol=1e-13):
         for eri1 in dfobj.loop(blksize):
             naux, nao_pair = eri1.shape
             eri1 = lib.unpack_tril(eri1, out=buf)
+            eri1T = eri1.transpose(1,0,2)
             if with_j:
-                tmp = lib.einsum('pij,nji->pn', eri1, dms.real)
-                vj.real += lib.einsum('pn,pij->nij', tmp, eri1)
-                tmp = lib.einsum('pij,nji->pn', eri1, dms.imag)
-                vj.imag += lib.einsum('pn,pij->nij', tmp, eri1)
+                tmp = numpy.tensordot(eri1, dms.real, axes=([1,2],[2,1]))
+                vj.real += numpy.tensordot(tmp.T, eri1, axes=([1],[0]))
+                tmp = numpy.tensordot(eri1, dms.imag, axes=([1,2],[2,1]))
+                vj.imag += numpy.tensordot(tmp.T, eri1, axes=([1],[0]))
             buf2 = numpy.ndarray((nao,naux,nao), buffer=buf1)
             for k in range(nset):
-                buf2[:] = lib.einsum('pij,jk->ipk', eri1, dms[k].real)
-                vk[k].real += lib.einsum('ipk,pkj->ij', buf2, eri1)
-                buf2[:] = lib.einsum('pij,jk->ipk', eri1, dms[k].imag)
-                vk[k].imag += lib.einsum('ipk,pkj->ij', buf2, eri1)
+                buf2[:] = numpy.tensordot(eri1T, dms[k].real, axes=([2],[0]))
+                vk[k].real += numpy.tensordot(buf2, eri1, axes=([1,2],[0,1]))
+                buf2[:] = numpy.tensordot(eri1T, dms[k].imag, axes=([2],[0]))
+                vk[k].imag += numpy.tensordot(buf2, eri1, axes=([1,2],[0,1]))
             t1 = log.timer_debug1('jk', *t1)
         if with_j: vj = vj.reshape(dm_shape)
         if with_k: vk = vk.reshape(dm_shape)
