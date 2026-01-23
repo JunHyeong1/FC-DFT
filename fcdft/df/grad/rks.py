@@ -57,7 +57,7 @@ def get_jk(mf_grad, mol=None, dm=None, hermi=0, with_j=True, with_k=True,
     vk = numpy.zeros((nset,3,nao,nao), dtype=numpy.complex128)
     get_int3c_ip1 = df_rhf_grad._int3c_wrapper(mol, auxmol, 'int3c2e_ip1', 's1')
     max_memory = mf_grad.max_memory - lib.current_memory()[0]
-    blksize = int(min(max(max_memory * .5e6/8 / (nao**2*3), 20), naux, 240))
+    blksize = int(min(max(max_memory * .5e6/8 / (nao**2*3), 20), naux, 120)) # 240 -> 120 for handling complex128
     ao_ranges = df_rhf_grad.balance_partition(aux_loc, blksize)
     fmmm = _ao2mo.libao2mo.AO2MOmmm_bra_nr_s1 # MO output index slower than AO output index; input AOs are asymmetric
     fdrv = _ao2mo.libao2mo.AO2MOnr_e2_drv # comp and aux indices are slower
@@ -77,7 +77,7 @@ def get_jk(mf_grad, mol=None, dm=None, hermi=0, with_j=True, with_k=True,
             tmpRe = numpy.empty ((3,p1-p0,nocc[i],nao), dtype=numpy.float64)
             tmpIm = numpy.empty ((3,p1-p0,nocc[i],nao), dtype=numpy.float64)
             orbolRe = numpy.asarray(orbol[i].real, order='F')
-            orbolIm = numpy.asarray(orbol[i].imag, order='F')            
+            orbolIm = numpy.asarray(orbol[i].imag, order='F')
             fdrv(ftrans, fmmm, # lib.einsum ('xpmn,mi->xpin', int3c, orbol[i])
                  tmpRe.ctypes.data_as(ctypes.c_void_p),
                  int3c.ctypes.data_as(ctypes.c_void_p),
@@ -294,7 +294,7 @@ def _cho_solve_rhojk (mf_grad, mol, auxmol, orbol, orbor,
     f_rhok = lib.H5TmpFile()
     t1 = (logger.process_clock (), logger.perf_counter ())
     max_memory = mf_grad.max_memory - lib.current_memory()[0]
-    blksize = max_memory * .5e6/8 / (naux*nao)
+    blksize = max_memory * .5e6/8 / (naux*nao) / 2 # Divided by 2 for handling complex128
     mol_ao_ranges = df_rhf_grad.balance_partition(ao_loc, blksize)
     nsteps = len(mol_ao_ranges)
     t2 = t1
@@ -305,6 +305,7 @@ def _cho_solve_rhojk (mf_grad, mol, auxmol, orbol, orbor,
         for i in range(nset):
             # MRH 05/21/2020: De-vectorize this because array contiguity -> multithread efficiency
             v = lib.dot(int3c.reshape (nao, -1, order='F').T, orbor[i]).reshape (naux, (p1-p0)*nocc[i])
+            int3c = None
             t2 = logger.timer_debug1 (mf_grad, 'df grad einsum (P|mn) u_ni N_i = v_Pmi', *t2)
             rhoj[i] += numpy.dot (v, orbol[i][p0:p1].ravel ())
             t2 = logger.timer_debug1 (mf_grad, 'df grad einsum v_Pmi u_mi = rho_P', *t2)
