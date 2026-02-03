@@ -13,11 +13,12 @@ from fcdft.dft import numint
 
 libfcdft = lib.load_library(os.path.join(fcdft.__path__[0], 'lib', 'libfcdft'))
 
-def _get_veff(mf, mol=None, dm=None, dm_last=0, vhf_last=0, *args, **kwargs):
+def _get_veff(mf, mol=None, dm=None, dm_last=0, vhf_last=0, hermi=0, *args, **kwargs):
     """Call get_veff of the parant class."""
-    return rks.get_veff(mf, mol, dm, dm_last, vhf_last, *args, **kwargs)
+    # vhf_last is set to None to turn off incremental_jk
+    return rks.get_veff(mf, mol, dm, dm_last, None, hermi, *args, **kwargs)
 
-def get_veff(mf, mol=None, dm=None, dm_last=0, vhf_last=0, *args, **kwargs):
+def get_veff(mf, mol=None, dm=None, dm_last=0, vhf_last=0, hermi=0, *args, **kwargs):
     """
     Construct the effective potential for the WBLMolecule Hamiltonian.
 
@@ -40,10 +41,9 @@ def get_veff(mf, mol=None, dm=None, dm_last=0, vhf_last=0, *args, **kwargs):
     if dm is not None: dm = dm
     if dm_last is not None: dm_last = dm_last
     sigmaR= mf.get_sigmaR()
-    _vhf = mf._get_veff(mol, dm, dm_last, vhf_last, *args, **kwargs)
-    vhf = lib.tag_array(_vhf.real+sigmaR, ecoul=_vhf.ecoul, exc=_vhf.exc, vj=_vhf.vj.real, vk=_vhf.vk)
-    if vhf.vk is not None:
-        vhf.vk = vhf.vk.real
+    _vhf = mf._get_veff(mol, dm, dm_last, vhf_last, hermi, *args, **kwargs)
+    vhf = lib.tag_array(_vhf.real+sigmaR, ecoul=_vhf.ecoul, exc=_vhf.exc,
+                        vj=_vhf.vj, vk=_vhf.vk)
     return vhf
 
 def get_fock(mf, h1e=None, s1e=None, vhf=None, dm=None, cycle=-1, diis=None, diis_start_cycle=None, level_shift_factor=None, damp_factor=None, fock_last=None):
@@ -376,6 +376,10 @@ class WBLMoleculeRKS(WBLBase, rks.RKS):
     def nuc_grad_method(self):
         from fcdft.grad import rks as wblrks_grad
         return wblrks_grad.Gradients(self)
+
+    def Gradients(self):
+        # Override scf.hf.Gradients method
+        return self.nuc_grad_method()
 
     def _finalize(self):
         super()._finalize()

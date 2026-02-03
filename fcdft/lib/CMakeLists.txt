@@ -102,6 +102,7 @@ endif()
 #add_subdirectory(vhf)
 add_subdirectory(dft)
 add_subdirectory(pbe)
+add_subdirectory(df)
 #configure_file(
 #  "${PYSCF_LIB_PATH}/config.h.in"
 #  "${PYSCF_LIB_PATH}/config.h")

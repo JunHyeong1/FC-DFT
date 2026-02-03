@@ -93,6 +93,45 @@ def gradient(f, *varargs):
         return outvals[0]
     else:
         return outvals
+    
+def dirichlet_gradient(f, *varargs):
+    """Optimized Gradient Calculator"""
+    N = len(f.shape)  # number of dimensions
+    n = len(varargs)
+    if n == 0:
+        dx = [1.0]*N
+    elif n == 1:
+        dx = [varargs[0]]*N
+    elif n == N:
+        dx = list(varargs)
+    else:
+        raise SyntaxError("invalid number of arguments")
+
+    outvals = []
+    weights = np.array([3, -32, 168, -672, 672, -168, 32, -3])
+    for axis in range(N):
+        pad_width = [(0, 0)] * N
+        pad_width[axis] = (4, 4)
+        fpad = np.pad(f, pad_width, mode='constant', constant_values=0)
+        outpad = np.zeros_like(fpad)
+        slices = [slice(None)] * N
+        slices[axis] = slice(4, -4)
+        outpad[tuple(slices)] = (weights[0] * fpad[(slice(None),) * axis + (slice(None, -8),)] +
+                    weights[1] * fpad[(slice(None),) * axis + (slice(1, -7),)] +
+                    weights[2] * fpad[(slice(None),) * axis + (slice(2, -6),)] +
+                    weights[3] * fpad[(slice(None),) * axis + (slice(3, -5),)] +
+                    weights[4] * fpad[(slice(None),) * axis + (slice(5, -3),)] +
+                    weights[5] * fpad[(slice(None),) * axis + (slice(6, -2),)] +
+                    weights[6] * fpad[(slice(None),) * axis + (slice(7, -1),)] +
+                    weights[7] * fpad[(slice(None),) * axis + (slice(8, None),)]
+                    ) / 840.0
+
+        outvals.append(outpad[tuple(slices)] / dx[axis])
+
+    if N == 1:
+        return outvals[0]
+    else:
+        return outvals
 
 def vectorize_grad(grad_object):
     grad = np.column_stack((grad_object[0].ravel(), grad_object[1].ravel(), grad_object[2].ravel()))

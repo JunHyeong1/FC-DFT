@@ -5,6 +5,11 @@ from pyscf import lib
 from pyscf.lib import logger
 from fcdft import wbl
 import ctypes
+import os
+import fcdft
+from pyscf.lib.numpy_helper import _dgemm
+
+libdf = lib.load_library(os.path.join(fcdft.__path__[0], 'lib', 'libdf'))
 
 def density_fit(mf, auxbasis=None, with_df=None, only_dfj=False):
     from pyscf import df
@@ -129,6 +134,7 @@ def get_j(dfobj, dm, hermi=0, direct_scf_tol=1e-13):
     logger.timer(dfobj, 'df-vj', *t0)
     return numpy.asarray(vj).reshape(dm_shape)
 
+# numpy.einsum replaced by custom dgemm for computational efficiency. 
 def get_jk(dfobj, dm, hermi=0, with_j=True, with_k=True, direct_scf_tol=1e-13):
     assert (with_j or with_k)
     if (not with_k and not dfobj.mol.incore_anyway and
@@ -147,28 +153,36 @@ def get_jk(dfobj, dm, hermi=0, with_j=True, with_k=True, direct_scf_tol=1e-13):
     vj = 0
     vk = numpy.zeros_like(dms)
 
+    fdrv = libdf.nr_mapdm1
+
     if numpy.iscomplexobj(dms):
         if with_j:
             vj = numpy.zeros_like(dms)
         max_memory = dfobj.max_memory - lib.current_memory()[0]
         blksize = max(4, int(min(dfobj.blockdim, max_memory*.22e6/8/nao**2)))
         buf = numpy.empty((blksize,nao,nao))
-        buf1 = numpy.empty((nao,blksize,nao))
         for eri1 in dfobj.loop(blksize):
             naux, nao_pair = eri1.shape
             eri1 = lib.unpack_tril(eri1, out=buf)
-            eri1T = eri1.transpose(1,0,2)
             if with_j:
                 tmp = numpy.tensordot(eri1, dms.real, axes=([1,2],[2,1]))
                 vj.real += numpy.tensordot(tmp.T, eri1, axes=([1],[0]))
                 tmp = numpy.tensordot(eri1, dms.imag, axes=([1,2],[2,1]))
                 vj.imag += numpy.tensordot(tmp.T, eri1, axes=([1],[0]))
-            buf2 = numpy.ndarray((nao,naux,nao), buffer=buf1)
+            buf2 = numpy.empty((naux,nao,nao), dtype=numpy.float64, order='C')
             for k in range(nset):
-                buf2[:] = numpy.tensordot(eri1T, dms[k].real, axes=([2],[0]))
-                vk[k].real += numpy.tensordot(buf2, eri1, axes=([1,2],[0,1]))
-                buf2[:] = numpy.tensordot(eri1T, dms[k].imag, axes=([2],[0]))
-                vk[k].imag += numpy.tensordot(buf2, eri1, axes=([1,2],[0,1]))
+                dmsRe = numpy.asarray(dms[k].real, dtype=numpy.float64, order='C')
+                dmsIm = numpy.asarray(dms[k].imag, dtype=numpy.float64, order='C')
+                fdrv(buf2.ctypes.data_as(ctypes.c_void_p),
+                     eri1.ctypes.data_as(ctypes.c_void_p),
+                     dmsRe.ctypes.data_as(ctypes.c_void_p),
+                     ctypes.c_int(nao), ctypes.c_int(naux))
+                vk[k].real += numpy.tensordot(buf2, eri1, axes=([0,2],[0,1]))
+                fdrv(buf2.ctypes.data_as(ctypes.c_void_p),
+                     eri1.ctypes.data_as(ctypes.c_void_p),
+                     dmsIm.ctypes.data_as(ctypes.c_void_p),
+                     ctypes.c_int(nao), ctypes.c_int(naux))
+                vk[k].imag += numpy.tensordot(buf2, eri1, axes=([0,2],[0,1]))
             t1 = log.timer_debug1('jk', *t1)
         if with_j: vj = vj.reshape(dm_shape)
         if with_k: vk = vk.reshape(dm_shape)
@@ -184,7 +198,7 @@ class _DFHF(df_jk._DFHF):
         if not with_k:
             return get_j(self.with_df, dm, hermi, self.direct_scf_tol), None
         else:
-            return get_jk(self.with_df, mol, dm, hermi, with_j, with_k, omega)
+            return get_jk(self.with_df, dm, hermi, with_j, with_k, self.direct_scf_tol)
 
     def nuc_grad_method(self):
         from fcdft.df.grad import rks, uks
@@ -202,4 +216,3 @@ class _DFHF(df_jk._DFHF):
     
     def to_gpu(self):
         raise NotImplementedError
-

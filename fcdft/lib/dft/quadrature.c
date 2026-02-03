@@ -36,12 +36,16 @@ void roots_legendre(int n, double *abscissas, double *weights){
 
 double occ_drv(double sampling, double moe_energy, double fermi, double broad, double smear) {
     double dist = 1 / (exp((sampling - fermi)/smear) + 1);
-    return dist * broad / (pow(sampling - moe_energy, 2) + pow(broad / 2, 2)) / TWO_PI;
+    double a = sampling - moe_energy;
+    double b = broad / 2.0;
+    return dist * broad / (a*a + b*b) / TWO_PI;
 }
 
 double occ_grad_drv(double sampling, double moe_energy, double fermi, double broad, double smear) {
     double dist = 1 / (exp((sampling - fermi)/smear) + 1);
-    return dist * (1 - dist) * broad / (pow(sampling - moe_energy, 2) + pow(broad / 2, 2)) / TWO_PI / smear;
+    double a = sampling - moe_energy;
+    double b = broad / 2.0;
+    return dist * (1 - dist) * broad / (a*a + b*b) / TWO_PI / smear;
 }
 
 void fermi_level_drv(double *moe_energy, double *abscissas, double *weights, double fermi, double broad, double smear, double window, int pts, int nbas, double *mo_occ, double *mo_grad) {

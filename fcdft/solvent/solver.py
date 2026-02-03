@@ -112,10 +112,71 @@ class multigrid(lib.StreamObject):
         phi = self.drv(rho*spacing**2)
         return phi, phi 
     
-    def whoareyou(self):
+    def _initialize(self):
         logger.info(self, ' -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*')
         logger.info(self, ' |  Poisson-Boltzmann Solver with the Multigrid Scheme  |')
         logger.info(self, ' -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*')
+
+    def _finalize(self):
+        pass
+
+class multigridGPU(multigrid):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.A = None
+        self.b = None
+        self.x = None
+        self.cfg = None
+        self.rsc = None
+
+    def build(self, ngrids=None):
+        if ngrids is None:
+            ngrids = self.ngrids
+        self.L= ch.poisson((ngrids,)*3, format='csr')
+
+    def solve(self, rho, ngrids=None, spacing=None):
+        if ngrids is None:
+            ngrids = self.ngrids
+        if spacing is None:
+            spacing = self.spacing
+        self.b.upload(rho*spacing**2)
+        phi = numpy.zeros(ngrids**3, dtype=numpy.float64)
+        self.x.upload(phi)
+        self.drv.solve(self.b, self.x)
+        self.x.download(phi)
+        return phi, phi
+    
+    def _initialize(self):
+        if self.drv is None:
+            import pyamgx
+            pyamgx.initialize()
+            cfg = pyamgx.Config()
+            cfg.create_from_file(os.path.join(fcdft.__path__[0], 'solvent', 'AMGX.json'))
+            rsc = pyamgx.Resources().create_simple(cfg)
+            A = pyamgx.Matrix().create(rsc)
+            b = pyamgx.Vector().create(rsc)
+            x = pyamgx.Vector().create(rsc)
+            drv = pyamgx.Solver().create(rsc, cfg)
+            A.upload_CSR(self.L)
+            drv.setup(A)
+            self.A = A
+            self.b = b
+            self.x = x
+            self.cfg = cfg
+            self.rsc = rsc
+            self.drv = drv
+        return super()._initialize()
+    
+    def _finalize(self):
+        import pyamgx
+        self.A.destroy()
+        self.x.destroy()
+        self.b.destroy()
+        self.drv.destroy()
+        self.rsc.destroy()
+        self.cfg.destroy()
+        pyamgx.finalize()
+        self.drv = None
 
 class fft2d(lib.StreamObject):
     def __init__(self, ngrids, spacing, verbose, stdout=None):
@@ -211,7 +272,10 @@ class fft2d(lib.StreamObject):
         L = self.L
         return fft2d_solve(self, rho, L, ngrids, spacing, kpts)
     
-    def whoareyou(self):
+    def _initialize(self):
         logger.info(self, ' -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-')
         logger.info(self, ' |  Poisson-Boltzmann Solver with the 2D-FFT Scheme  |')
         logger.info(self, ' -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-')
+    
+    def _finalize(self):
+        pass
