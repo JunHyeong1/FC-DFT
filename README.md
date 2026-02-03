@@ -6,16 +6,34 @@ This code computes single-point energies, optimized structures, vibrational freq
 - [PySCF](https://pyscf.org/)
 - [PyAMG](https://github.com/pyamg/pyamg)
 - [PyAMGCL](https://github.com/ddemidov/amgcl)
+- [GPU4PySCF](https://github.com/pyscf/gpu4pyscf) (optional for GPU-accelerated PBE solver)
+- [AMGX](https://github.com/NVIDIA/AMGX) (optional for GPU-accelerated PBE solver)
   
 ## Installation
-  - Clone the repository.
-  - `cd FC-DFT`
-  - `pip install .`
-  - Change directory to `$PYTHONPATH/fcdft/lib` and create `build` directory.
-  - Go into `build` and compile the C shared libraries by `cmake ..` and `make`.
+  * Option 1: Install stable release via PyPI:
 
+        pip install fcdft
+
+  * Option 2: Clone the repository:
+
+        git clone https://github.com/Yang-Laboratory/FC-DFT.git
+        cd FC-DFT
+        pip install .
+
+  * Once one of the options is completed, change Change directory to:
+  
+        $PYTHONPATH/fcdft/lib
+        
+  * Create `build` directory and go into it:
+
+        mkdir build && cd build
+
+  * Compile C libraries:
+
+        cmake .. && make
+  
 ## Features
-  - FC-DFT calculations for all density functional approximations supported by LibXC library.
+  - FC-DFT calculations for all density functional approximations supported by PySCF.
   - Wide-band limit calculations, namely WBL-Molecule.
   - Non-linear Poisson-Boltzmann solver in real space and its analytic nuclear gradients.
   - Numerical Hessian calculations.
