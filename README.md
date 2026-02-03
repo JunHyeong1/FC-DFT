@@ -20,7 +20,7 @@ This code computes single-point energies, optimized structures, vibrational freq
         cd FC-DFT
         pip install .
 
-  * Once one of the options is completed, change Change directory to:
+  * Once one of the options is completed, change directory to:
   
         $PYTHONPATH/fcdft/lib
         
