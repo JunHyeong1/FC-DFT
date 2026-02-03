@@ -174,14 +174,14 @@ def get_jk(dfobj, dm, hermi=0, with_j=True, with_k=True, direct_scf_tol=1e-13):
                 dmsRe = numpy.asarray(dms[k].real, dtype=numpy.float64, order='C')
                 dmsIm = numpy.asarray(dms[k].imag, dtype=numpy.float64, order='C')
                 fdrv(buf2.ctypes.data_as(ctypes.c_void_p),
-                      eri1.ctypes.data_as(ctypes.c_void_p), 
-                      dmsRe.ctypes.data_as(ctypes.c_void_p),
-                      ctypes.c_int(nao), ctypes.c_int(naux))
+                     eri1.ctypes.data_as(ctypes.c_void_p),
+                     dmsRe.ctypes.data_as(ctypes.c_void_p),
+                     ctypes.c_int(nao), ctypes.c_int(naux))
                 vk[k].real += numpy.tensordot(buf2, eri1, axes=([0,2],[0,1]))
                 fdrv(buf2.ctypes.data_as(ctypes.c_void_p),
-                      eri1.ctypes.data_as(ctypes.c_void_p),
-                      dmsIm.ctypes.data_as(ctypes.c_void_p),
-                      ctypes.c_int(nao), ctypes.c_int(naux))
+                     eri1.ctypes.data_as(ctypes.c_void_p),
+                     dmsIm.ctypes.data_as(ctypes.c_void_p),
+                     ctypes.c_int(nao), ctypes.c_int(naux))
                 vk[k].imag += numpy.tensordot(buf2, eri1, axes=([0,2],[0,1]))
             t1 = log.timer_debug1('jk', *t1)
         if with_j: vj = vj.reshape(dm_shape)
@@ -216,30 +216,3 @@ class _DFHF(df_jk._DFHF):
     
     def to_gpu(self):
         raise NotImplementedError
-
-# if __name__ == '__main__':
-#     from pyscf import gto
-#     mol = gto.M(atom='''
-# C          -1.13057391        0.11048286        2.48801067
-# C          -1.13325311        0.17232945        3.87703787
-# C           0.08346291        0.07894515        1.77925722
-# H          -2.07346467        0.19641146        4.41802479
-# C           0.08067667        0.20391860        4.58699638
-# C           1.29549217        0.11054297        2.48916306
-# H           2.24298846        0.08696152        1.95956454
-# C           1.29484698        0.17243545        3.87924252
-# H           2.23441589        0.19657684        4.42149864
-# H          -2.07520521        0.08665269        1.95286388
-# C           0.08027189        0.26759663        6.01851135
-# N           0.08032411        0.31931599        7.18169743
-# S           0.00340534       -0.00016674        0.00339452
-# H           1.33135167       -0.01007300       -0.22081314'''
-#                 , basis='6-31g**', verbose=5)
-#     from fcdft.wbl.rks import WBLMoleculeRKS
-#     wblmf = WBLMoleculeRKS(mol, xc='B3LYP-D3Zero', broad=0.08, smear=0.2, nelectron=70, ref_pot=5.51)
-#     wblmf.conv_tol=1e-2
-#     wblmf = wblmf.density_fit()
-#     wblmf.kernel()
-#     with_df = wblmf.with_df
-#     dm = wblmf.make_rdm1()
-#     vj1, vk1 = get_jk(with_df, dm, with_j=True, with_k=True)
