@@ -286,6 +286,28 @@ def get_grad(mo_coeff, mo_occ, fock_ao):
                            mo_coeff[:,occidx]))
     return g.ravel()
 
+def energy_elec(mf, dm=None, h1e=None, vhf=None):
+    if dm is None: dm = mf.make_rdm1()
+    if h1e is None: h1e = mf.get_hcore()
+    if vhf is None or getattr(vhf, 'ecoul', None) is None:
+        vhf = mf.get_veff(mf.mol, dm)
+
+    sigmaR = mf.get_sigmaR()
+
+    e1 = numpy.einsum('ij,ji->', h1e, dm).real
+    # self-energy + voltage contribution
+    e1 += numpy.einsum('ij,ji->', sigmaR, dm).real
+
+    ecoul = vhf.ecoul.real
+    exc = vhf.exc.real
+    e2 = ecoul + exc
+
+    mf.scf_summary['e1'] = e1
+    mf.scf_summary['coul'] = ecoul
+    mf.scf_summary['exc'] = exc
+    logger.debug(mf, 'E1 = %s  Ecoul = %s  Exc = %s', e1, ecoul, exc)
+    return e1+e2, e2    
+
 class WBLBase:
     _keys = {'broad', 'fermi', 'pot_cycle', 'smear', 'nelectron', 'inner_cycle', 
              'pot_damp', 'bias', 'ref_pot', 'window', 'quad_order', 'abscissas', 'weights'}
@@ -399,6 +421,7 @@ class WBLMoleculeRKS(WBLBase, rks.RKS):
     get_fock = get_fock
     get_occ = get_occ
     make_rdm1 = lib.module_method(make_rdm1, absences=['mo_coeff', 'mo_occ'])
+    energy_elec = energy_elec
 
 if __name__ == '__main__':
     from pyscf import gto
