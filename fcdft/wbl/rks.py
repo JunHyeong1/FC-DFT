@@ -364,11 +364,11 @@ class WBLBase:
     def build(self, mol=None):
         super().build(mol)
         quad_order = self.quad_order
-        if quad_order == 20001:
+        try:
             path = os.path.join(fcdft.__path__[0], 'wbl')
-            self.abscissas = numpy.load(os.path.join(path, 'abscissas.npy'))
-            self.weights = numpy.load(os.path.join(path, 'weights.npy'))
-        else:
+            self.abscissas = numpy.load(os.path.join(path, 'abscissas', '%s.npy' % quad_order))
+            self.weights = numpy.load(os.path.join(path, 'weights', '%s.npy' % quad_order))
+        except FileNotFoundError:
             drv = libfcdft.roots_legendre
             c_quad_order = ctypes.c_int(quad_order)
             abscissas, weights = numpy.empty(quad_order, order='C'), numpy.empty(quad_order, order='C')
