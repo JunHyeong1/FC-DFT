@@ -54,7 +54,6 @@ void fermi_level_drv(double *moe_energy, double *abscissas, double *weights, dou
     double _mo_grad = 0.0;
     double *window_weights = (double *)malloc(sizeof(double) * pts);
 
-    #pragma omp parallel for private(n)
     for (n = 0; n < pts; n++) {
         window_weights[n] = window * weights[n];
     }
