@@ -325,7 +325,7 @@ class WBLBase:
         self.pot_damp = 0.5e0
         self.bias = None
         self.window = 2000e0
-        self.quad_order = 40001
+        self.quad_order = 80001
         self._numint = numint.NumInt()
 
     def dump_flags(self, verbose=None):
