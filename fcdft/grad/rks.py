@@ -50,71 +50,25 @@ def grad_elec(mf_grad, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
     for k, ia in enumerate(atmlst):
         p0, p1 = aoslices [ia,2:]
         h1ao = hcore_deriv(ia)
-        ### Hellmann-Feynmann force
-        ### Kohn-Sham Hamiltonian part
+        # Hellmann-Feynmann force
+        # Kohn-Sham Hamiltonian part
         # One-electron contribution
-        de[k] += numpy.tensordot(h1ao, dm0, axes=([1,2], [0,1]))
+        de[k] += numpy.einsum('xij,ij->x', h1ao, dm0)
         # Coulomb, exchange, and xc potential contribution
-        de[k] += numpy.tensordot(vhf[:,p0:p1], dm0[p0:p1], axes=([1,2], [0,1])) * 2
+        de[k] += numpy.einsum('xij,ij->x', vhf[:,p0:p1], dm0[p0:p1])*2
         # Self-energy contribution
-        de[k] -= 0.5j*broad*numpy.tensordot(s1[:,p0:p1], dm0[p0:p1], axes=([1,2], [0,1]))
+        de[k] -= 0.5j*broad*numpy.einsum('xij,ij->x', s1[:,p0:p1], dm0[p0:p1])*2
         # Voltage contribution
-        de[k] += bias*numpy.tensordot(S[:,p0:p1], dm0[p0:p1], axes=([1,2], [0,1]))
-        ### Pulay force
-        de[k] -= numpy.tensordot(s1[:,p0:p1], dme0[p0:p1], axes=([1,2], [0,1])) * 2
-        ### Extra force contribution
+        de[k] += bias*numpy.einsum('xij,ij->x',S[:,p0:p1], dm0[p0:p1])*2
+        # Pulay force
+        de[k] -= numpy.einsum('xij,ij->x',s1[:,p0:p1], dme0[p0:p1])*2
+        # Extra force contribution
         de[k] += mf_grad.extra_force(ia, locals())   
 
     if log.verbose >= logger.DEBUG:
         log.debug('gradients of electronic part')
         _write(log, mol, de.real, atmlst)
     return de.real
-
-# def grad_elec(mf_grad, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
-#     '''
-#     Electronic part of RHF/RKS gradients
-
-#     Args:
-#         mf_grad : grad.rhf.Gradients or grad.rks.Gradients object
-#     '''
-#     mf = mf_grad.base
-#     mol = mf_grad.mol
-#     if mo_energy is None: mo_energy = mf.mo_energy
-#     if mo_occ is None:    mo_occ = mf.mo_occ
-#     if mo_coeff is None:  mo_coeff = mf.mo_coeff
-#     log = logger.Logger(mf_grad.stdout, mf_grad.verbose)
-#     hcore_deriv = mf_grad.hcore_generator(mol)
-#     s1 = mf_grad.get_ovlp(mol)
-#     dm0 = mf.make_rdm1(mo_coeff, mo_occ)
-#     dm0 = mf_grad._tag_rdm1 (dm0, mo_coeff, mo_occ)
-
-#     t0 = (logger.process_clock(), logger.perf_counter())
-#     log.debug('Computing Gradients of NR-HF Coulomb repulsion')
-#     vhf = mf_grad.get_veff(mol, dm0)
-
-#     log.timer('gradients of 2e part', *t0)
-
-#     dme0 = mf_grad.make_rdm1e(mo_energy, mo_coeff, mo_occ)
-
-#     if atmlst is None:
-#         atmlst = range(mol.natm)
-#     aoslices = mol.aoslice_by_atom()
-
-#     de = numpy.zeros((len(atmlst),3), dtype=numpy.complex128)
-#     for k, ia in enumerate(atmlst):
-#         p0, p1 = aoslices [ia,2:]
-#         h1ao = hcore_deriv(ia)
-#         de[k] += numpy.tensordot(h1ao, dm0, axes=([1,2], [0,1]))
-# # nabla was applied on bra in vhf, *2 for the contributions of nabla|ket>
-#         de[k] += numpy.tensordot(vhf[:,p0:p1], dm0[p0:p1], axes=([1,2], [0,1])) * 2
-#         de[k] -= numpy.tensordot(s1[:,p0:p1], dme0[p0:p1], axes=([1,2], [0,1])) * 2
-
-#         de[k] += mf_grad.extra_force(ia, locals())
-
-#     if log.verbose >= logger.DEBUG:
-#         log.debug('gradients of electronic part')
-#         _write(log, mol, de.real, atmlst)
-#     return de.real
 
 def get_veff(ks_grad, mol=None, dm=None):
     '''
@@ -385,14 +339,9 @@ class Gradients(rks_grad.Gradients, GradientsBase):
         if self.base.do_disp():
             self.de += self.get_dispersion()
 
-        # Testing... Set zero gradient on sulfur atoms
-        mol = self.mol
-        atom_charges = mol.atom_charges()
-        self.de[atom_charges == 16] = numpy.array([0, 0, 0], dtype=numpy.float64)
         logger.timer(self, 'SCF gradients', *cput0)
         self._finalize()
         return self.de
-
 
     get_veff = get_veff
     grad_elec = grad_elec
