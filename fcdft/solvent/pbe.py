@@ -318,7 +318,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
                        'Decreasing grid size might help convergence.')
 
 class PBE(ddcosmo.DDCOSMO):
-    _keys = {'cb', 'T', 'bias', 'stern_sam', 'delta1', 'delta2', 'eps_sam', 'probe', 'kappa', 'stern_mol', 'cation_rad', 'anion_rad', 'rho_sol', 'rho_ions', 'rho_pol', 'phi_pol', 'phi_tot', 'phi_sol', 'L', 'nelectron', 'phi_pol', 'thresh_pol', 'thresh_ions', 'thresh_amg', 'gpu_accel', 'cycle', 'atom_bottom', 'pzc', 'jump_coeff', 'ref_pot', 'solver', 'equiv'}
+    _keys = {'cb', 'T', 'bias', 'stern_sam', 'delta1', 'delta2', 'eps_sam', 'probe', 'kappa', 'stern_mol', 'cation_rad', 'anion_rad', 'rho_sol', 'rho_ions', 'rho_pol', 'phi_pol', 'phi_tot', 'phi_sol', 'L', 'nelectron', 'phi_pol', 'thresh_pol', 'thresh_ions', 'thresh_amg', 'gpu_accel', 'cycle', 'atom_bottom', 'pzc', 'jump_coeff', 'ref_pot', 'solver', 'equiv', 'custom_shift'}
     def __init__(self, mol, cb=0.0, cation_rad=4.3, anion_rad=4.3, T=298.15, stern_mol=0.44, stern_sam=8.1, equiv=11, **kwargs):
         ddcosmo.DDCOSMO.__init__(self, mol)
         self.grids = Grids(mol, **kwargs)
@@ -355,6 +355,7 @@ class PBE(ddcosmo.DDCOSMO):
         self.gpu_accel = False
         self.atom_bottom = None
         self.solver = None
+        self.custom_shift = None
         
     def dump_flags(self, verbose=None):
         logger.info(self, '******** %s ********', self.__class__)
@@ -467,6 +468,9 @@ class PBE(ddcosmo.DDCOSMO):
                 shift = r - bottom_center
                 coords += shift - numpy.array([0.0e0, 0.0e0, r_atom_bottom])
                 self.grids.coords = coords
+
+        if self.custom_shift is not None:
+            self.grids.coords += numpy.asarray(self.custom_shift) * BOHR
 
         logger.info(self, 'Grid spacing = %.5f Angstrom', self.grids.spacing * BOHR)
 
