@@ -355,7 +355,7 @@ class PBE(ddcosmo.DDCOSMO):
         self.gpu_accel = False
         self.atom_bottom = None
         self.solver = None
-        self.custom_shift = None
+        self.custom_shift = None # Should be given in angs
         
     def dump_flags(self, verbose=None):
         logger.info(self, '******** %s ********', self.__class__)
@@ -470,7 +470,7 @@ class PBE(ddcosmo.DDCOSMO):
                 self.grids.coords = coords
 
         if self.custom_shift is not None:
-            self.grids.coords += numpy.asarray(self.custom_shift) * BOHR
+            self.grids.coords += numpy.asarray(self.custom_shift) / BOHR
 
         logger.info(self, 'Grid spacing = %.5f Angstrom', self.grids.spacing * BOHR)
 
