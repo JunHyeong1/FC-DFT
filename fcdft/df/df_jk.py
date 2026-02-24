@@ -161,10 +161,10 @@ def get_jk(dfobj, dm, hermi=0, with_j=True, with_k=True, direct_scf_tol=1e-13):
         max_memory = dfobj.max_memory - lib.current_memory()[0]
         blksize = max(4, int(min(dfobj.blockdim, max_memory*.22e6/8/nao**2)))
         buf = numpy.empty((blksize,nao,nao))
-        buf2 = numpy.empty((naux,nao,nao), dtype=numpy.float64, order='C')
         for eri1 in dfobj.loop(blksize):
             naux, nao_pair = eri1.shape
             eri1 = lib.unpack_tril(eri1, out=buf)
+            buf2 = numpy.empty((naux,nao,nao), dtype=numpy.float64, order='C')
             if with_j:
                 tmp = numpy.tensordot(eri1, dms.real, axes=([1,2],[2,1]))
                 vj.real += numpy.tensordot(tmp.T, eri1, axes=([1],[0]))
