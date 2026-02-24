@@ -151,9 +151,9 @@ def get_jk(dfobj, dm, hermi=0, with_j=True, with_k=True, direct_scf_tol=1e-13):
     dms = dms.reshape(-1,nao,nao)
     nset = dms.shape[0]
     vj = 0
-    vk = numpy.zeros_like(dms)
-
-    fdrv = libdf.nr_mapdm1
+    vk = numpy.zeros((2,) + dms.shape)
+    dmsReIm = numpy.array([dms.real, dms.imag], dtype=numpy.float64, order='C')
+    fdrv = libdf.nr_df_contract_k
 
     if numpy.iscomplexobj(dms):
         if with_j:
@@ -161,6 +161,7 @@ def get_jk(dfobj, dm, hermi=0, with_j=True, with_k=True, direct_scf_tol=1e-13):
         max_memory = dfobj.max_memory - lib.current_memory()[0]
         blksize = max(4, int(min(dfobj.blockdim, max_memory*.22e6/8/nao**2)))
         buf = numpy.empty((blksize,nao,nao))
+        buf2 = numpy.empty((naux,nao,nao), dtype=numpy.float64, order='C')
         for eri1 in dfobj.loop(blksize):
             naux, nao_pair = eri1.shape
             eri1 = lib.unpack_tril(eri1, out=buf)
@@ -169,21 +170,14 @@ def get_jk(dfobj, dm, hermi=0, with_j=True, with_k=True, direct_scf_tol=1e-13):
                 vj.real += numpy.tensordot(tmp.T, eri1, axes=([1],[0]))
                 tmp = numpy.tensordot(eri1, dms.imag, axes=([1,2],[2,1]))
                 vj.imag += numpy.tensordot(tmp.T, eri1, axes=([1],[0]))
-            buf2 = numpy.empty((naux,nao,nao), dtype=numpy.float64, order='C')
             for k in range(nset):
-                dmsRe = numpy.asarray(dms[k].real, dtype=numpy.float64, order='C')
-                dmsIm = numpy.asarray(dms[k].imag, dtype=numpy.float64, order='C')
-                fdrv(buf2.ctypes.data_as(ctypes.c_void_p),
+                fdrv(vk[:,k].ctypes.data_as(ctypes.c_void_p),
+                     buf2.ctypes.data_as(ctypes.c_void_p),
                      eri1.ctypes.data_as(ctypes.c_void_p),
-                     dmsRe.ctypes.data_as(ctypes.c_void_p),
+                     dmsReIm[:,k].ctypes.data_as(ctypes.c_void_p),
                      ctypes.c_int(nao), ctypes.c_int(naux))
-                vk[k].real += numpy.tensordot(buf2, eri1, axes=([0,2],[0,1]))
-                fdrv(buf2.ctypes.data_as(ctypes.c_void_p),
-                     eri1.ctypes.data_as(ctypes.c_void_p),
-                     dmsIm.ctypes.data_as(ctypes.c_void_p),
-                     ctypes.c_int(nao), ctypes.c_int(naux))
-                vk[k].imag += numpy.tensordot(buf2, eri1, axes=([0,2],[0,1]))
             t1 = log.timer_debug1('jk', *t1)
+        vk = vk[0] + 1.0j*vk[1]
         if with_j: vj = vj.reshape(dm_shape)
         if with_k: vk = vk.reshape(dm_shape)
         logger.timer(dfobj, 'df vj and vk', *t0)
@@ -191,6 +185,58 @@ def get_jk(dfobj, dm, hermi=0, with_j=True, with_k=True, direct_scf_tol=1e-13):
 
     else:
         return df_jk.get_jk(dfobj, dm, hermi, with_j, with_k, direct_scf_tol)
+
+# def test_get_jk(dfobj, dm, hermi=0, with_j=True, with_k=True, direct_scf_tol=1e-13):
+#     assert (with_j or with_k)
+#     if (not with_k and not dfobj.mol.incore_anyway and
+#         # 3-center integral tensor is not initialized
+#         dfobj._cderi is None):
+#         return get_j(dfobj, dm, hermi, direct_scf_tol), None
+
+#     t0 = t1 = (logger.process_clock(), logger.perf_counter())
+#     log = logger.Logger(dfobj.stdout, dfobj.verbose)
+
+#     dms = numpy.asarray(dm)
+#     dm_shape = dms.shape
+#     nao = dm_shape[-1]
+#     dms = dms.reshape(-1,nao,nao)
+#     nset = dms.shape[0]
+#     vj = 0
+#     vk = numpy.zeros_like(dms)
+
+#     fdrv = libdf.nr_mapdm1
+
+#     if numpy.iscomplexobj(dms):
+#         for k in range(nset):
+#             assert (scipy.linalg.issymeetric(dms[k], rtol=1e-10))
+#         if with_j:
+#             idx = numpy.arange(nao)
+#             # Different orthogonality condition
+#             dmtril = lib.pack_tril(dms + dms.transpose(0,2,1))
+#             dmtril[:,idx*(idx+1)//2+idx] *= .5
+        
+#         if not with_k:
+#             for eri1 in dfobj.loop():
+#                 vj += dmtril.dot(eri1.T).dot(eri1)
+
+#         elif getattr(dm, 'mo_coeff', None) is not None:
+#             mo_coeff = numpy.asarray(dm.mo_coeff, order='F')
+#             mo_occ   = numpy.asarray(dm.mo_occ)
+#             nmo = mo_occ.shape[-1]
+#             mo_coeff = mo_coeff.reshape(-1,nao,nmo)
+#             mo_occ   = mo_occ.reshape(-1,nmo)
+#             if mo_occ.shape[0] * 2 == nset: # handle ROHF DM
+#                 raise NotImplementedError('ROHF not supported.')
+
+#             orbo = []
+#             for k in range(nset):
+#                 c = numpy.einsum('pi,i->pi', mo_coeff[k], numpy.sqrt(mo_occ[k]))
+#                 orbo.append(numpy.asarray(c, order='C'))
+
+#         return vj, vk
+
+#     else:
+#         return df_jk.get_jk(dfobj, dm, hermi, with_j, with_k, direct_scf_tol)    
 
 class _DFHF(df_jk._DFHF):
     def get_jk(self, mol=None, dm=None, hermi=0, with_j=True, with_k=True, omega=None):
@@ -216,3 +262,55 @@ class _DFHF(df_jk._DFHF):
     
     def to_gpu(self):
         raise NotImplementedError
+
+if __name__ == '__main__':
+    from pyscf import gto
+    mol = gto.M(atom='''
+    C       -1.130409485      0.110509105      2.487624324
+    C       -1.133152455      0.172317410      3.876550456
+    C        0.083208438      0.079010195      1.779347136
+    H       -2.073077371      0.196405844      4.417984513
+    C        0.080765072      0.203892233      4.586608119
+    C        1.294918790      0.110563494      2.488622797
+    H        2.242144342      0.086971817      1.958502899
+    C        1.294972435      0.172423808      3.878759077
+    H        2.234575318      0.196549301      4.420961499
+    H       -2.074264979      0.086638346      1.951309936
+    C        0.080417450      0.267549014      6.018388645
+    N        0.080518923      0.319251712      7.181712450
+    S        0.002877593     -0.000010379      0.004499969
+    H        1.331118166     -0.009827639     -0.217185412
+    C        3.634787838      3.729719574      1.046675071
+    C        4.921304115      3.816141915      1.598818260
+    C        2.525002270      3.824067407      1.897656464
+    H        5.795404410      3.734570605      0.958740568
+    H        1.517466732      3.771555033      1.494543863
+    C        5.087886010      3.992640160      2.971026952
+    C        2.703287147      4.000397050      3.269460579
+    H        6.094436491      4.031213032      3.377171707
+    H        1.826960115      4.095521496      3.904127827
+    C        3.985308746      4.088859641      3.838437268
+    C        4.168269362      4.276749528      5.300566278
+    C        5.176071782      5.121260505      5.801087081
+    C        3.338892534      3.615132798      6.224581373
+    C        5.349757682      5.296463944      7.175273989
+    C        3.509250264      3.792830513      7.598862256
+    C        4.516356822      4.633894445      8.081264553
+    H        5.812406721      5.663617748      5.107628032
+    H        2.570932282      2.936880306      5.863729374
+    H        6.130250569      5.959719714      7.537834346
+    H        2.861223112      3.265171072      8.293257477
+    H        4.650275861      4.771150299      9.150374259
+    S        3.492564144      3.506912708     -0.719087092
+    H        4.820818581      3.497095346     -0.940774787'''
+                , basis='6-31++g**', verbose=9, max_memory=8000)
+    from fcdft.wbl.rks import WBLMoleculeRKS
+    wblmf = WBLMoleculeRKS(mol, xc='b3lyp-d3zero', nelectron=168, broad=0.08)
+    wblmf.max_cycle=1
+    wblmf = wblmf.density_fit()
+    wblmf.kernel()
+
+    with_df = wblmf.with_df
+    dm = wblmf.make_rdm1()
+    import ipdb
+    ipdb.set_trace()
