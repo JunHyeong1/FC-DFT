@@ -470,7 +470,7 @@ class PBE(ddcosmo.DDCOSMO):
                 self.grids.coords = coords
 
             if self.custom_shift is not None:
-                self.grids.coords += numpy.asarray(self.custom_shift) / BOHR
+                self.grids.coords -= numpy.asarray(self.custom_shift)
 
         logger.info(self, 'Grid spacing = %.5f Angstrom', self.grids.spacing * BOHR)
 
