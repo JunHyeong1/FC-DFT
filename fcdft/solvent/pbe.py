@@ -144,6 +144,7 @@ def make_phi_sol(solvent_obj, dm=None, coords=None):
     tot_ngrids = solvent_obj.grids.get_ngrids()
     
     logger.info(solvent_obj, 'Generating the solute electrostatic potential...')
+    t0 = (logger.process_clock(), logger.perf_counter())
     mol = solvent_obj.mol
 
     atom_coords = mol.atom_coords()
@@ -185,6 +186,7 @@ def make_phi_sol(solvent_obj, dm=None, coords=None):
             del ints
 
     MEP = Vnuc - Vele
+    t0 = logger.timer(solvent_obj, 'phi_sol', *t0)
     return lib.tag_array(MEP, Vnuc=Vnuc, Vele=-Vele)
 
 def make_rho_sol(solvent_obj, phi_sol=None, ngrids=None, spacing=None):
@@ -252,6 +254,8 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
     eta = 0.6e0
     kappa = 0.2e0
 
+    t0 = (logger.process_clock(), logger.perf_counter())
+
     phi_tot = numpy.zeros(tot_ngrids, dtype=numpy.float64)
     impose_bc, bc_grad, bc_lap = solvent_obj._gen_boundary_conditions()
     bc, phi_z, slope= impose_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, 
@@ -260,6 +264,8 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
     lap_bc = bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, grad_sas)
 
     phi_tot += bc
+
+    t0 = logger.timer(solvent_obj, 'bc', *t0)
 
     grad_lneps = pbe_helper.product_vector_scalar(grad_eps, 1.0e0/eps)
     get_rho_ions = solvent_obj._gen_get_rho_ions()
@@ -311,6 +317,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
             logger.info(solvent_obj, 'PBE Converged, max|drho(pol)| = %4.3e, max|drho(ions)| = %4.3e',
                         drho_pol.max(), drho_ions.max())
             solver._finalize()
+            t0 = logger.timer(solvent_obj, 'phi_tot', *t0)
             return phi_tot, rho_ions, rho_pol
         iter += 1
     logger.info(solvent_obj, 'PBE failed to converge.')
