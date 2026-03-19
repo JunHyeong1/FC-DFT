@@ -20,18 +20,22 @@ This code computes single-point energies, optimized structures, vibrational freq
         cd FC-DFT
         pip install .
 
-  * Once one of the options is completed, change directory to:
+  * (Deprecated) Once one of the options is completed, change directory to:
   
         $PYTHONPATH/fcdft/lib
         
-  * Create `build` directory and go into it:
+  * (Deprecated) Create `build` directory and go into it:
 
         mkdir build && cd build
 
-  * Compile C libraries:
+  * (Deprecated) Compile C libraries:
 
         cmake .. && make
-  
+
+### Tips for compilation
+  * When linking Intel MKL, make sure to link the sequential one by `cmake -DBLA_VENDOR=Intel10_64lp_seq ..`. The performance of Intel MKL over OpenBLAS has not been tested. One may want to link OpenBLAS instead by `cmake -DBLA_VENDOR=OpenBLAS ..` for easier installation.
+  * If CMake fails to find either `lapacke.h` or `cblas.h`, set `C_INCLUDE_PATH` manually.
+
 ## Features
   - FC-DFT calculations for all density functional approximations supported by PySCF.
   - Wide-band limit calculations, namely WBL-Molecule.
