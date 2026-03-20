@@ -9,6 +9,7 @@ from pyscf.solvent import ddcosmo
 from pyscf.tools import cubegen
 from pyscf import lib
 from pyscf.lib import logger
+from pyscf.lib import pack_tril
 from pyscf.data.nist import *
 from pyscf.data.radii import VDW
 from pyscf import df
@@ -156,6 +157,7 @@ def make_phi_sol(solvent_obj, dm=None, coords=None):
     if dm.ndim == 3: # Spin-unrestricted
         dm = dm[0] + dm[1]
 
+    dms = numpy.asarray(dm.real)
     gpu_accel = solvent_obj.gpu_accel
 
     if gpu_accel:
@@ -164,7 +166,7 @@ def make_phi_sol(solvent_obj, dm=None, coords=None):
         nbatch = 256*256
         tot_ngrids = coords.shape[0]
         from gpu4pyscf.gto.int3c1e import int1e_grids
-        _dm = cupy.asarray(dm.real)
+        _dm = cupy.asarray(dms)
         _Vele = cupy.zeros(tot_ngrids, order='C')
         for ibatch in range(0, tot_ngrids, nbatch):
             max_grid = min(ibatch+nbatch, tot_ngrids)
@@ -176,13 +178,17 @@ def make_phi_sol(solvent_obj, dm=None, coords=None):
     else:
         Vele = numpy.empty(tot_ngrids, order='C')
         nao = mol.nao
+        dm_tril = pack_tril(dms + dms.T)
+        idx = numpy.arange(nao)
+        idx = idx * (idx + 1) // 2 + idx
+        dm_tril[idx] *= 0.5
         max_memory = solvent_obj.max_memory - lib.current_memory()[0] - Vele.nbytes*1e-6
-        blksize = int(max(max_memory*.9e6/8/nao**2, 400))
+        blksize = int(max(max_memory*.9e6/8/idx[-1], 400))
         cintopt = gto.moleintor.make_cintopt(mol._atm, mol._bas, mol._env, 'int3c2e')
         for p0, p1 in lib.prange(0, tot_ngrids, blksize):
             fakemol = gto.fakemol_for_charges(coords[p0:p1])
-            ints = df.incore.aux_e2(mol, fakemol, cintopt=cintopt)
-            Vele[p0:p1] = numpy.tensordot(ints, dm.real, axes=([1,0], [0,1]))
+            ints = df.incore.aux_e2(mol, fakemol, aosym='s2ij', cintopt=cintopt)
+            Vele[p0:p1] = dm_tril.dot(ints)
             del ints
 
     MEP = Vnuc - Vele
@@ -666,7 +672,7 @@ H        1.3390319419     -0.0095801980     -0.2157234144''',
     wblmf.conv_tol=1e-7
     wblmf.kernel()
     dm = wblmf.make_rdm1()
-    cm = PBE(mol, cb=1.0, length=20, ngrids=41, stern_sam=8.1, equiv=11)
+    cm = PBE(mol, cb=1.0, length=20, ngrids=65, stern_sam=8.1, equiv=11)
     cm._dm = dm
     cm.atom_bottom=12
     cm.solver = 'multigrid'
