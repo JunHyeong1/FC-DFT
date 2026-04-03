@@ -156,50 +156,97 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
     abscissas, weights = mf.abscissas, mf.weights
     quad_order = mf.quad_order
 
-    drv = libfcdft.fermi_level_drv
-    c_moe_energy = moe_energy.ctypes.data_as(ctypes.c_void_p)
-    c_abscissas = abscissas.ctypes.data_as(ctypes.c_void_p)
-    c_weights = weights.ctypes.data_as(ctypes.c_void_p)
-    c_quad_order = ctypes.c_int(quad_order)
-    c_window = ctypes.c_double(window)
-    c_broad = ctypes.c_double(broad)
-    c_smear = ctypes.c_double(smear)
-    c_nbas = ctypes.c_int(nbas)
+    if mf.quad_method.upper() == 'GAUSS':
+        drv = libfcdft.fermi_level_drv
+        c_moe_energy = moe_energy.ctypes.data_as(ctypes.c_void_p)
+        c_abscissas = abscissas.ctypes.data_as(ctypes.c_void_p)
+        c_weights = weights.ctypes.data_as(ctypes.c_void_p)
+        c_quad_order = ctypes.c_int(quad_order)
+        c_window = ctypes.c_double(window)
+        c_broad = ctypes.c_double(broad)
+        c_smear = ctypes.c_double(smear)
+        c_nbas = ctypes.c_int(nbas)
 
-    fermi_last = None
+        fermi_last = None
 
-    for cycle in range(pot_cycle):
-        fermi_last = fermi
-        mo_occ = numpy.empty(nbas, order='C')
-        mo_grad = ctypes.c_double(0.0)
-        drv(c_moe_energy, c_abscissas, c_weights,
-            ctypes.c_double(fermi), c_broad, c_smear, c_window, c_quad_order, c_nbas,
-            mo_occ.ctypes.data_as(ctypes.c_void_p), ctypes.byref(mo_grad))
-        if numpy.any(mo_occ > 1.0e0):
-            raise RuntimeError('Numerical integration failed. Integration window: %s eV' % window*HARTREE2EV)
-        nelec_last = mo_occ.sum()
-        
-        delta = (nelec_a - nelec_last) / mo_grad.value
-        if delta > 1.0e0:
-            fermi += 10**(numpy.log10(delta) - int(numpy.log10(delta)) - 1)
-        elif delta < -1.0e0:
-            fermi -= 10**(numpy.log10(-delta) - int(numpy.log10(-delta)) - 1)
-        else:
-            fermi = fermi_last + delta
-        if abs(fermi) == numpy.inf:
-            raise RuntimeError('Infinity chemical potential detected. Adjust the damping factor.')
-        elif abs(nelec_a - nelec_last) > 5.0e-1:
-            fermi = pot_damp*fermi_last + (1.0e0-pot_damp)*fermi
-        if verbose >= logger.INFO:
-            if isinstance(mf, rks.RKS):
-                logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last*2)
+        for cycle in range(pot_cycle):
+            fermi_last = fermi
+            mo_occ = numpy.empty(nbas, order='C')
+            mo_grad = ctypes.c_double(0.0)
+            drv(c_moe_energy, c_abscissas, c_weights,
+                ctypes.c_double(fermi), c_broad, c_smear, c_window, c_quad_order, c_nbas,
+                mo_occ.ctypes.data_as(ctypes.c_void_p), ctypes.byref(mo_grad))
+            if numpy.any(mo_occ > 1.0e0):
+                raise RuntimeError('Numerical integration failed. Integration window: %s eV' % window*HARTREE2EV)
+            nelec_last = mo_occ.sum()
+            
+            delta = (nelec_a - nelec_last) / mo_grad.value
+            if delta > 1.0e0:
+                fermi += 10**(numpy.log10(delta) - int(numpy.log10(delta)) - 1)
+            elif delta < -1.0e0:
+                fermi -= 10**(numpy.log10(-delta) - int(numpy.log10(-delta)) - 1)
             else:
-                logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last)
-        if abs(fermi - fermi_last) < 1e-11:
-            break
-        if cycle == pot_cycle-1:
-            raise RuntimeError('Chemical potential failed to converge. Adjust the damping factor.')
-    return fermi, mo_occ
+                fermi = fermi_last + delta
+            if abs(fermi) == numpy.inf:
+                raise RuntimeError('Infinity chemical potential detected. Adjust the damping factor.')
+            elif abs(nelec_a - nelec_last) > 5.0e-1:
+                fermi = pot_damp*fermi_last + (1.0e0-pot_damp)*fermi
+            if verbose >= logger.INFO:
+                if isinstance(mf, rks.RKS):
+                    logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last*2)
+                else:
+                    logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last)
+            if abs(fermi - fermi_last) < 1e-11:
+                break
+            if cycle == pot_cycle-1:
+                raise RuntimeError('Chemical potential failed to converge. Adjust the damping factor.')
+        return fermi, mo_occ
+    
+    elif mf.quad_method.upper() == 'QUADPACK':
+        drv = libfcdft.gsl_fermi_level_drv
+        c_moe_energy = moe_energy.ctypes.data_as(ctypes.c_void_p)
+        c_abscissas = abscissas.ctypes.data_as(ctypes.c_void_p)
+        c_weights = weights.ctypes.data_as(ctypes.c_void_p)
+        c_quad_order = ctypes.c_int(quad_order)
+        c_window = ctypes.c_double(window)
+        c_broad = ctypes.c_double(broad)
+        c_smear = ctypes.c_double(smear)
+        c_nbas = ctypes.c_int(nbas)
+
+        fermi_last = None
+
+        for cycle in range(pot_cycle):
+            fermi_last = fermi
+            mo_occ = numpy.empty(nbas, order='C')
+            mo_grad = numpy.empty(nbas, order='C')
+
+            drv(c_moe_energy, ctypes.c_double(fermi), c_broad, c_smear, c_nbas,
+                mo_occ.ctypes.data_as(ctypes.c_void_p), mo_grad.ctypes.data_as(ctypes.c_void_p))
+            if numpy.any(mo_occ > 1.0e0):
+                raise RuntimeError('Numerical integration failed. Integration window: %s eV' % window*HARTREE2EV)
+            nelec_last = mo_occ.sum()
+            
+            delta = (nelec_a - nelec_last) / mo_grad.sum()
+            if delta > 1.0e0:
+                fermi += 10**(numpy.log10(delta) - int(numpy.log10(delta)) - 1)
+            elif delta < -1.0e0:
+                fermi -= 10**(numpy.log10(-delta) - int(numpy.log10(-delta)) - 1)
+            else:
+                fermi = fermi_last + delta
+            if abs(fermi) == numpy.inf:
+                raise RuntimeError('Infinity chemical potential detected. Adjust the damping factor.')
+            elif abs(nelec_a - nelec_last) > 5.0e-1:
+                fermi = pot_damp*fermi_last + (1.0e0-pot_damp)*fermi
+            if verbose >= logger.INFO:
+                if isinstance(mf, rks.RKS):
+                    logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last*2)
+                else:
+                    logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last)
+            if abs(fermi - fermi_last) < 1e-11:
+                break
+            if cycle == pot_cycle-1:
+                raise RuntimeError('Chemical potential failed to converge. Adjust the damping factor.')
+        return fermi, mo_occ
 
 def make_rdm1(mo_coeff, mo_occ, **kwargs):
     """Reduced density matrix of non-hermitian Hamiltonian
@@ -310,7 +357,7 @@ def energy_elec(mf, dm=None, h1e=None, vhf=None):
 
 class WBLBase:
     _keys = {'broad', 'fermi', 'pot_cycle', 'smear', 'nelectron', 'inner_cycle', 
-             'pot_damp', 'bias', 'ref_pot', 'window', 'quad_order', 'abscissas', 'weights'}
+             'pot_damp', 'bias', 'ref_pot', 'window', 'quad_order', 'abscissas', 'weights', 'quad_method'}
     
     def __init__(self, broad=0.0, smear=0.2, inner_cycle=1, ref_pot=5.51, nelectron=None):
         self.broad = broad # Unit in eV
@@ -327,6 +374,7 @@ class WBLBase:
         self.window = 2000e0
         self.quad_order = 80001
         self._numint = numint.NumInt()
+        self.quad_method = 'GAUSS'
 
     def dump_flags(self, verbose=None):
         logger.info(self, '******** %s ********', self.__class__)
@@ -364,6 +412,8 @@ class WBLBase:
     def build(self, mol=None):
         super().build(mol)
         quad_order = self.quad_order
+        if self.quad_method.upper() == 'GAUSS':
+            logger.warn(self, 'Gauss-Legendre quadrature method will be deprecated.')
         try:
             if self.verbose > logger.NOTE:
                 logger.info(self, 'Load precomputed Legendre quadrature info for %s points', quad_order)
@@ -448,4 +498,5 @@ H        1.3390319419     -0.0095801980     -0.2157234144''',
         charge=0, basis='6-31g**', verbose=5)
     wblmf = WBLMoleculeRKS(mol, xc='b3lyp', broad=0.01, smear=0.2, nelectron=70.00)
     wblmf.conv_tol = 1e-8
+    wblmf.quad_method='GAUSS'
     wblmf.kernel()
