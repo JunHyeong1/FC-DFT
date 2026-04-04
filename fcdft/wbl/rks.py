@@ -168,6 +168,8 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
         c_nbas = ctypes.c_int(nbas)
 
         fermi_last = None
+        delta_last = None
+        damp = pot_damp
 
         for cycle in range(pot_cycle):
             fermi_last = fermi
@@ -177,10 +179,19 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
                 ctypes.c_double(fermi), c_broad, c_smear, c_window, c_quad_order, c_nbas,
                 mo_occ.ctypes.data_as(ctypes.c_void_p), ctypes.byref(mo_grad))
             if numpy.any(mo_occ > 1.0e0):
-                raise RuntimeError('Numerical integration failed. Integration window: %s eV' % window*HARTREE2EV)
+                raise RuntimeError('Numerical integration failed. Integration window: %s eV' % (window*HARTREE2EV))
             nelec_last = mo_occ.sum()
             
             delta = (nelec_a - nelec_last) / mo_grad.value
+
+            if delta_last is not None:
+                if delta * delta_last < 0:
+                    damp = min(0.95, damp + 0.1)
+                elif abs(delta) < abs(delta_last):
+                    damp = max(0.0, damp - 0.05)
+
+            delta_last = delta
+
             if delta > 1.0e0:
                 fermi += 10**(numpy.log10(delta) - int(numpy.log10(delta)) - 1)
             elif delta < -1.0e0:
@@ -189,8 +200,9 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
                 fermi = fermi_last + delta
             if abs(fermi) == numpy.inf:
                 raise RuntimeError('Infinity chemical potential detected. Adjust the damping factor.')
-            elif abs(nelec_a - nelec_last) > 5.0e-1:
-                fermi = pot_damp*fermi_last + (1.0e0-pot_damp)*fermi
+            # elif abs(nelec_a - nelec_last) > 5.0e-1:
+            #     fermi = pot_damp*fermi_last + (1.0e0-pot_damp)*fermi
+            fermi = damp * fermi_last + (1 - damp) * fermi
             if verbose >= logger.INFO:
                 if isinstance(mf, rks.RKS):
                     logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last*2)
@@ -214,6 +226,8 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
         c_nbas = ctypes.c_int(nbas)
 
         fermi_last = None
+        delta_last = None
+        damp = pot_damp
 
         for cycle in range(pot_cycle):
             fermi_last = fermi
@@ -223,20 +237,34 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
             drv(c_moe_energy, ctypes.c_double(fermi), c_broad, c_smear, c_nbas,
                 mo_occ.ctypes.data_as(ctypes.c_void_p), mo_grad.ctypes.data_as(ctypes.c_void_p))
             if numpy.any(mo_occ > 1.0e0):
-                raise RuntimeError('Numerical integration failed. Integration window: %s eV' % window*HARTREE2EV)
+                raise RuntimeError('Numerical integration failed. Integration window: %s eV' % (window*HARTREE2EV))
             nelec_last = mo_occ.sum()
             
             delta = (nelec_a - nelec_last) / mo_grad.sum()
+
+            # Adaptive Damping
+            if delta_last is not None:
+                if delta * delta_last < 0:
+                    damp = min(0.9, damp + 0.1)
+                elif abs(delta) < abs(delta_last):
+                    damp = max(0.0, damp - 0.05)
+
+            delta_last = delta
+
+            # Step Clamping
             if delta > 1.0e0:
                 fermi += 10**(numpy.log10(delta) - int(numpy.log10(delta)) - 1)
             elif delta < -1.0e0:
                 fermi -= 10**(numpy.log10(-delta) - int(numpy.log10(-delta)) - 1)
             else:
                 fermi = fermi_last + delta
+
+            # Divergence Test
             if abs(fermi) == numpy.inf:
                 raise RuntimeError('Infinity chemical potential detected. Adjust the damping factor.')
-            elif abs(nelec_a - nelec_last) > 5.0e-1:
-                fermi = pot_damp*fermi_last + (1.0e0-pot_damp)*fermi
+
+            fermi = damp * fermi_last + (1 - damp) * fermi
+
             if verbose >= logger.INFO:
                 if isinstance(mf, rks.RKS):
                     logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last*2)
@@ -498,5 +526,5 @@ H        1.3390319419     -0.0095801980     -0.2157234144''',
         charge=0, basis='6-31g**', verbose=5)
     wblmf = WBLMoleculeRKS(mol, xc='b3lyp', broad=0.01, smear=0.2, nelectron=70.00)
     wblmf.conv_tol = 1e-8
-    wblmf.quad_method='GAUSS'
+    wblmf.quad_method='QUADPACK'
     wblmf.kernel()
