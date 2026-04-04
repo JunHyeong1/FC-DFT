@@ -148,6 +148,7 @@ void gsl_occupation_drv(double *moe_energy, double fermi, double broad, double s
     F.function = &gsl_occ_drv;
     F.params = &params;
 
+    // offset for avoiding singulartity
     double smear_offset = 2000*smear;
     double broad_offset = 2000*broad;
     double *pts = malloc(sizeof(double)*4);
@@ -159,20 +160,12 @@ void gsl_occupation_drv(double *moe_energy, double fermi, double broad, double s
             pts[1] = fermi;
             pts[2] = moe_energy[i];
             pts[3] = moe_energy[i] + broad_offset;
-            // gsl_integration_qagil(&F, fermi-smear_offset, 0, 1e-10, 1000, w, &result1, &error1);
-            // gsl_integration_qagiu(&F, moe_energy[i]+broad_offset, 0, 1e-10, 1000, w, &result2, &error2);
-            // gsl_integration_qagp(&F, pts, 4, 0, 1e-10, 1000, w, &result3, &error3);
-            // gsl_integration_qags(&F, fermi, moe_energy[i], 0, 1e-10, 1000, w, &result3, &error3);
         }
         else {
             pts[0] = moe_energy[i] - broad_offset;
             pts[1] = moe_energy[i];
             pts[2] = fermi;
             pts[3] = fermi + smear_offset;
-            // gsl_integration_qagil(&F, moe_energy[i]-broad_offset, 0, 1e-10, 1000, w, &result1, &error1);
-            // gsl_integration_qagiu(&F, fermi+smear_offset, 0, 1e-10, 1000, w, &result2, &error2);
-            // gsl_integration_qagp(&F, pts, 4, 0, 1e-10, 1000, w, &result3, &error3);
-            // gsl_integration_qags(&F, moe_energy[i], fermi, 0, 1e-10, 1000, w, &result3, &error3);
         }
         gsl_integration_qagil(&F, pts[0], 1e-12, 1e-11, quad_order, w, &result1, &error1);
         gsl_integration_qagiu(&F, pts[3], 1e-12, 1e-11, quad_order, w, &result2, &error2);
@@ -200,6 +193,7 @@ void gsl_occupation_grad_drv(double *moe_energy, double fermi, double broad, dou
     F.function = &gsl_occ_grad_drv;
     F.params = &params;
 
+    // offset for avoiding singulartity
     double smear_offset = 2000*smear;
     double broad_offset = 2000*broad;
     double *pts = malloc(sizeof(double)*4);
@@ -211,18 +205,12 @@ void gsl_occupation_grad_drv(double *moe_energy, double fermi, double broad, dou
             pts[1] = fermi;
             pts[2] = moe_energy[i];
             pts[3] = moe_energy[i] + broad_offset;
-            // gsl_integration_qagil(&F, fermi, 1e-12, 1e-8, 1000, w, &result1, &error1);
-            // gsl_integration_qagiu(&F, moe_energy[i], 1e-12, 1e-8, 1000, w, &result2, &error2);
-            // gsl_integration_qags(&F, fermi, moe_energy[i], 1e-12, 1e-8, 1000, w, &result3, &error3);
         }
         else {
             pts[0] = moe_energy[i] - broad_offset;
             pts[1] = moe_energy[i];
             pts[2] = fermi;
             pts[3] = fermi + smear_offset;
-            // gsl_integration_qagil(&F, moe_energy[i], 1e-12, 1e-8, 1000, w, &result1, &error1);
-            // gsl_integration_qagiu(&F, fermi, 1e-12, 1e-8, 1000, w, &result2, &error2);
-            // gsl_integration_qags(&F, moe_energy[i], fermi, 1e-12, 1e-8, 1000, w, &result3, &error3);
         }
         gsl_integration_qagil(&F, pts[0], 1e-12, 1e-11, quad_order, w, &result1, &error1);
         gsl_integration_qagiu(&F, pts[3], 1e-12, 1e-11, quad_order, w, &result2, &error2);
