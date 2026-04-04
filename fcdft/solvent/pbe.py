@@ -14,7 +14,8 @@ from pyscf.data.nist import *
 from pyscf.data.radii import VDW
 from pyscf import df
 from pyscf import gto
-from fcdft.lib import pbe_helper
+
+libpbe = lib.load_library(os.path.join(fcdft.__path__[0], 'lib', 'libpbe'))
 
 try:
     OMP_NUM_THREADS = os.environ['OMP_NUM_THREADS']
@@ -50,7 +51,7 @@ def make_lambda(solvent_obj, mol, probe, stern_mol, stern_sam, coords, delta1, d
     """
     atom_coords = mol.atom_coords()
     # Molecular Stern Layer
-    dist = pbe_helper.distance_calculator(coords, atom_coords)
+    dist = scipy.spatial.distance.cdist(atom_coords, coords, metric='euclidean')
     x = (dist - atomic_radii[:,None] - probe - stern_mol) / delta2
     erf_list = 0.5e0*(1.0e0 + scipy.special.erf(x))
     erf_list[x < -8.0e0*delta2] = 0.0e0
@@ -79,7 +80,7 @@ def make_sas(solvent_obj, mol, probe, coords, delta2, atomic_radii):
         1D numpy.ndarray: Solvent-accessible surface
     """
     atom_coords = mol.atom_coords()
-    dist = pbe_helper.distance_calculator(coords, atom_coords)
+    dist = scipy.spatial.distance.cdist(atom_coords, coords, metric='euclidean')
     x = (dist - atomic_radii[:,None] - probe) / delta2
     _erf = scipy.special.erf(x)
     erf_list = 0.5e0 * (1.0e0 + _erf)
@@ -125,8 +126,49 @@ def make_grad_eps(solvent_obj, mol, coords, eps_sam, eps, probe, stern_sam, delt
     Returns:
         2D numpy.ndarray: Gradient of the dielectric function.
     """
+    ngrids = solvent_obj.grids.ngrids
+    natm = mol.natm
     atom_coords = mol.atom_coords()
-    return pbe_helper.grad_eps(atom_coords, coords, eps_sam, eps, probe, stern_sam, delta1, delta2, atomic_radii, sas)
+    zmin = coords[:,2].min()
+    x = (coords[:,2] - zmin - stern_sam) / delta1
+    _erf = scipy.special.erf(x)
+    eps_z = eps_sam + 0.5e0 * (eps - eps_sam) * (1.0e0 + _erf)
+    exp_z = numpy.exp(-x**2)
+
+    dist = scipy.spatial.distance.cdist(atom_coords, coords, metric='euclidean')
+    x = (dist - atomic_radii[:,None] - probe) / delta2
+    _erf = scipy.special.erf(x)
+    erf_list = 0.5e0 * (1.0e0 + _erf)
+
+    r = atom_coords[:,None,:]
+    rp = coords - r
+    x = (dist - atomic_radii[:,None] - probe) / delta2
+    _erf = scipy.special.erf(x)
+    erf_list = 0.5e0 * (1.0e0 + _erf)
+    er = rp / dist[:,:,None]
+    gauss = numpy.exp(-x**2)
+    grad_list = numpy.multiply(er, gauss[:,:,None], out=er) / (delta2 * numpy.sqrt(PI))
+
+    grad_eps = numpy.empty((ngrids**3, 3), dtype=numpy.float64, order='C')
+
+    drv = libpbe.grad_eps_drv
+    c_erf_list = erf_list.ctypes.data_as(ctypes.c_void_p)
+    c_grad_list = grad_list.ctypes.data_as(ctypes.c_void_p)
+    c_x = x.ctypes.data_as(ctypes.c_void_p)
+    c_exp_z = exp_z.ctypes.data_as(ctypes.c_void_p)
+    c_eps_z = eps_z.ctypes.data_as(ctypes.c_void_p)
+    c_delta1 = ctypes.c_double(delta1)
+    c_delta2 = ctypes.c_double(delta2)
+    c_eps = ctypes.c_double(eps)
+    c_eps_sam = ctypes.c_double(eps_sam)
+    c_ngrids = ctypes.c_int(ngrids)
+    c_natm = ctypes.c_int(natm)
+    c_grad_eps = grad_eps.ctypes.data_as(ctypes.c_void_p)
+
+    drv(c_erf_list, c_grad_list, c_x, c_exp_z, c_eps_z, c_delta1, c_delta2,
+        c_eps, c_eps_sam, c_ngrids, c_natm, c_grad_eps)
+
+    return grad_eps
 
 def make_phi_sol(solvent_obj, dm=None, coords=None):
     """Generates solute potential in vacuum.
@@ -150,7 +192,7 @@ def make_phi_sol(solvent_obj, dm=None, coords=None):
 
     atom_coords = mol.atom_coords()
     Z = mol.atom_charges()
-    dist = pbe_helper.distance_calculator(coords, atom_coords)
+    dist = scipy.spatial.distance.cdist(atom_coords, coords, metric='euclidean')
     dist[dist < 1.0e-100] = numpy.inf # Machine precision
     Vnuc = numpy.tensordot(1.0e0 / dist, Z, axes=([0], [0]))
 
@@ -273,7 +315,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
 
     t0 = logger.timer(solvent_obj, 'bc', *t0)
 
-    grad_lneps = pbe_helper.product_vector_scalar(grad_eps, 1.0e0/eps)
+    grad_lneps = grad_eps / eps[:,None]
     get_rho_ions = solvent_obj._gen_get_rho_ions()
     rho_ions = get_rho_ions(solvent_obj, phi_tot, cb, lambda_r, T)
 
@@ -281,8 +323,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
     rho_iter = numpy.zeros(tot_ngrids)
     rho_pol = (1.0e0 - eps) / eps * rho_tot + rho_iter
 
-
-    rho_iter_bc = 0.25e0 / PI * pbe_helper.product_vector_vector(grad_lneps, grad_bc)
+    rho_iter_bc = 0.25e0 / PI * (grad_lneps * grad_bc).sum(axis=1)
 
     logger.info(solvent_obj, 'Bias vs. PZC = %.15f V', (bias - (ref_pot - pzc)) * HARTREE2EV)
     solver._initialize()
@@ -298,7 +339,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
 
         phi_opt = phi_old - bc
         dphi_opt = solver.gradient(phi_opt, phik, ngrids, spacing)
-        rho_iter = 0.25e0 / PI * pbe_helper.product_vector_vector(grad_lneps, dphi_opt)
+        rho_iter = 0.25e0 / PI * (grad_lneps * dphi_opt).sum(axis=1)
 
         rho_iter = eta * rho_iter + (1.0e0 - eta) * rho_iter_old
 
@@ -447,15 +488,16 @@ class PBE(ddcosmo.DDCOSMO):
         coords = self.grids.coords
         spacing = self.grids.spacing
         nao = mol.nao
+        tot_ngrids = self.grids.get_ngrids()
 
         vmat = numpy.zeros([nao, nao], order='C')
         max_memory = self.max_memory - lib.current_memory()[0]
         blksize = int(max(max_memory*.9e6/8/nao, 400))
-        vmat = numpy.zeros([nao, nao], order='C')
-        for p0, p1 in lib.prange(0, phi_pol.size, blksize):
+        for p0, p1 in lib.prange(0, tot_ngrids, blksize):
             ao = mol.eval_gto('GTOval', coords[p0:p1])
-            vmat -= 0.5e0*numpy.dot(ao.T * phi_pol[p0:p1], ao)
-        vmat = vmat * spacing**3
+            buf = ao * phi_pol[p0:p1, None]
+            vmat -= 0.5*numpy.dot(buf.T, ao)
+        vmat *= spacing**3
         return vmat
     
     def _get_v(self):
@@ -667,13 +709,12 @@ H        1.3390319419     -0.0095801980     -0.2157234144''',
     mf = RKS(mol, xc='pbe')
     from fcdft.wbl.rks import *
     wblmf = WBLMoleculeRKS(mol, xc='pbe', broad=0.01, smear=0.2, nelectron=70.00, ref_pot=5.51)
-    wblmf.pot_cycle=100
-    wblmf.pot_damp=0.7
-    wblmf.conv_tol=1e-7
+    # wblmf.pot_cycle=100
+    # wblmf.pot_damp=0.7
+    # wblmf.conv_tol=1e-7
+    wblmf.max_cycle=1
     wblmf.kernel()
-    dm = wblmf.make_rdm1()
     cm = PBE(mol, cb=1.0, length=20, ngrids=65, stern_sam=8.1, equiv=11)
-    cm._dm = dm
     cm.atom_bottom=12
     cm.solver = 'multigrid'
     solmf = pbe_for_scf(wblmf, cm)

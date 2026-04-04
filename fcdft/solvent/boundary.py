@@ -1,8 +1,13 @@
 import numpy
 import scipy
-from fcdft.solvent.pbe import HARTREE2EV, KB2HARTREE
+import fcdft
+import os
+import ctypes
+from fcdft.solvent.pbe import KB2HARTREE
 from pyscf.data.nist import BOHR
-from fcdft.lib import pbe_helper
+from pyscf import lib
+
+libpbe = lib.load_library(os.path.join(fcdft.__path__[0], 'lib', 'libpbe'))
 
 PI = numpy.pi
 SQRT3 = numpy.sqrt(3)
@@ -10,45 +15,68 @@ SQRT3 = numpy.sqrt(3)
 def make_grad_sas(solvent_obj):
     mol = solvent_obj.mol
     coords = solvent_obj.grids.coords
+    ngrids = solvent_obj.grids.ngrids
     atomic_radii = solvent_obj.get_atomic_radii()
     probe = solvent_obj.probe/ BOHR
     delta2 = solvent_obj.delta2 / BOHR
     atom_coords = mol.atom_coords()
-    grad_sas = numpy.zeros_like(coords)
+    natm = mol.natm
+
     r = atom_coords[:,None,:]
     rp = coords - r
-    dist = pbe_helper.distance_calculator(coords, atom_coords)
+    dist = scipy.spatial.distance.cdist(atom_coords, coords, metric='euclidean')
     x = (dist - atomic_radii[:,None] - probe) / delta2
     _erf = scipy.special.erf(x)
     erf_list = 0.5e0 * (1.0e0 + _erf)
-    er = pbe_helper.product_atom_vector_scalar(rp, 1.0e0/dist)
-    for i in range(mol.natm):
-        mask = numpy.ones(mol.natm, dtype=bool)
-        mask[i] = False
-        erf = numpy.prod(erf_list[mask], axis=0)
-        gauss = numpy.exp(-x[i]**2)
-        coeff = 1.0e0 / delta2 / numpy.sqrt(PI) * gauss * erf
-        grad_sas += pbe_helper.product_vector_scalar(er[i], coeff)
+    er = rp / dist[:,:,None]
+    gauss = numpy.exp(-x**2)
+    grad_list = numpy.multiply(er, gauss[:,:,None], out=er) / (delta2 * numpy.sqrt(PI))
+
+    drv = libpbe.grad_sas_drv
+    grad_sas = numpy.empty((ngrids**3, 3), dtype=numpy.float64, order='C')
+    c_erf_list = erf_list.ctypes.data_as(ctypes.c_void_p)
+    c_grad_list = grad_list.ctypes.data_as(ctypes.c_void_p)
+    c_x = x.ctypes.data_as(ctypes.c_void_p)
+    c_delta2 = ctypes.c_double(delta2)
+    c_ngrids = ctypes.c_int(ngrids)
+    c_natm = ctypes.c_int(natm)
+    c_grad_sas = grad_sas.ctypes.data_as(ctypes.c_void_p)
+    
+    drv(c_erf_list, c_grad_list, c_x, c_delta2, c_ngrids, c_natm, c_grad_sas)
+
     return grad_sas
 
 def make_lap_sas(solvent_obj):
     mol = solvent_obj.mol
     coords = solvent_obj.grids.coords
+    ngrids = solvent_obj.grids.ngrids
     atomic_radii = solvent_obj.get_atomic_radii()
     probe = solvent_obj.probe / BOHR
     delta2 = solvent_obj.delta2 / BOHR
     atom_coords = mol.atom_coords()
+    natm = mol.natm
 
     r = atom_coords[:,None,:]
     rp = coords - r
-    dist = pbe_helper.distance_calculator(coords, atom_coords)
+    dist = scipy.spatial.distance.cdist(atom_coords, coords, metric='euclidean')
     x = (dist - atomic_radii[:,None] - probe) / delta2
     _erf = scipy.special.erf(x)
     erf_list = 0.5e0 * (1.0e0 + _erf)
-    er = pbe_helper.product_atom_vector_scalar(rp, 1.0e0/dist)
+    er = rp / dist[:,:,None]
     gauss = numpy.exp(-x**2)
-    grad_list = pbe_helper.product_atom_vector_scalar(er, 1.0e0/delta2/numpy.sqrt(PI)*gauss)
-    lap_sas = pbe_helper.lap_sas(erf_list, grad_list, x, delta2)
+    grad_list = numpy.multiply(er, gauss[:,:,None], out=er) / (delta2 * numpy.sqrt(PI))
+
+    drv = libpbe.lap_sas_drv
+    lap_sas = numpy.empty(ngrids**3, dtype=numpy.float64, order='C')
+    c_erf_list = erf_list.ctypes.data_as(ctypes.c_void_p)
+    c_grad_list = grad_list.ctypes.data_as(ctypes.c_void_p)
+    c_x = x.ctypes.data_as(ctypes.c_void_p)
+    c_delta2 = ctypes.c_double(delta2)
+    c_ngrids = ctypes.c_int(ngrids)
+    c_natm = ctypes.c_int(natm)
+    c_lap_sas = lap_sas.ctypes.data_as(ctypes.c_void_p)
+    
+    drv(c_erf_list, c_grad_list, c_x, c_delta2, c_ngrids, c_natm, c_lap_sas)
 
     return lap_sas
 
@@ -139,7 +167,9 @@ def one_to_one_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas):
 
     grad_sas = make_grad_sas(solvent_obj)
 
-    grad_bc = pbe_helper.product_vector_scalar(grad_phi_z, sas) + pbe_helper.product_vector_scalar(grad_sas, phi_z)
+    grad_bc = grad_phi_z * sas[:,None]
+    grad_bc += grad_sas * phi_z[:,None]
+    
     return grad_bc, grad_phi_z, grad_sas
 
 def one_to_one_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, grad_sas):
@@ -170,7 +200,9 @@ def one_to_one_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, g
     d2phidz2[:,:,idx] = -kappa*numpy.cosh(-_phi_z[:,:,idx]/2.0e0/KB2HARTREE/T)*_grad_phi_z[:,:,idx]
     d2phidz2 = d2phidz2.ravel()
     lap_sas = make_lap_sas(solvent_obj)
-    lap_bc = d2phidz2*sas + phi_z*lap_sas + 2.0e0 * pbe_helper.product_vector_vector(grad_phi_z, grad_sas)
+
+    lap_bc = d2phidz2*sas + phi_z*lap_sas
+    lap_bc += 2.0*(grad_phi_z * grad_sas).sum(axis=1)
 
     return lap_bc
 
@@ -241,7 +273,9 @@ def two_to_one_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas):
 
     grad_sas = make_grad_sas(solvent_obj)
 
-    grad_bc = pbe_helper.product_vector_scalar(grad_phi_z, sas) + pbe_helper.product_vector_scalar(grad_sas, phi_z)
+    grad_bc = grad_phi_z * sas[:,None]
+    grad_bc += grad_sas * phi_z[:,None]
+
     return grad_bc, grad_phi_z, grad_sas
 
 def two_to_one_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, grad_sas):
@@ -282,7 +316,9 @@ def two_to_one_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, g
 
     d2phidz2 = d2phidz2.flatten()
     lap_sas = make_lap_sas(solvent_obj)
-    lap_bc = d2phidz2*sas + phi_z*lap_sas + 2.0e0 * pbe_helper.product_vector_vector(grad_phi_z, grad_sas)
+
+    lap_bc = d2phidz2*sas + phi_z*lap_sas
+    lap_bc += 2.0*(grad_phi_z * grad_sas).sum(axis=1)
 
     return lap_bc
 
@@ -353,7 +389,9 @@ def one_to_two_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas):
 
     grad_sas = make_grad_sas(solvent_obj)
 
-    grad_bc = pbe_helper.product_vector_scalar(grad_phi_z, sas) + pbe_helper.product_vector_scalar(grad_sas, phi_z)
+    grad_bc = grad_phi_z * sas[:,None]
+    grad_bc += grad_sas * phi_z[:,None]
+
     return grad_bc, grad_phi_z, grad_sas
 
 def one_to_two_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, grad_sas):
@@ -379,6 +417,8 @@ def one_to_two_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, g
 
     d2phidz2 = d2phidz2.flatten()
     lap_sas = make_lap_sas(solvent_obj)
-    lap_bc = d2phidz2*sas + phi_z*lap_sas + 2.0e0 * pbe_helper.product_vector_vector(grad_phi_z, grad_sas)
+
+    lap_bc = d2phidz2*sas + phi_z*lap_sas
+    lap_bc += 2.0*(grad_phi_z * grad_sas).sum(axis=1)
 
     return lap_bc

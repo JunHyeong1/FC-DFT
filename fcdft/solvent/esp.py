@@ -1,5 +1,6 @@
 # This code is from https://github.com/swillow/pyscf_esp
 import numpy as np
+import scipy
 from pyscf import gto, scf, mp
 from pyscf.data.nist import BOHR
 from pyscf.data import radii
@@ -167,8 +168,7 @@ def esp_esp (mol, dm, coords, gpu_accel=False):
 
     atom_coords = mol.atom_coords()
     Z = mol.atom_charges()
-    from fcdft.lib import pbe_helper
-    dist = pbe_helper.distance_calculator(coords, atom_coords)
+    dist = scipy.spatial.distance.cdist(atom_coords, coords, metric='euclidean')
     dist[dist < 1.0e-100] = 1.0e-100
     Vnuc = np.tensordot(1.0e0 / dist, Z, axes=([0], [0]))
 
