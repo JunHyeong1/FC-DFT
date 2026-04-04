@@ -59,164 +59,111 @@ double phi_a_finder(double kappa, double T, double eps, double eps_sam, double s
     exit(0);
 }
 
-void boundary_cond_drv(double kappa, double T, double eps, double eps_sam, double stern_sam, double bottom, double spacing, int ngrids, double *phi_z, double *slope) {
-    double phi_a = phi_a_finder(kappa, T, eps, eps_sam, stern_sam, bottom);
-    *slope = (phi_a - bottom) / stern_sam;
-    int i, j, k;
-    int ngrids2 = ngrids * ngrids;
-    #pragma omp parallel for private(i,j,k)
-    for (i = 0; i < ngrids; i++) {
-        for (j = 0; j < ngrids; j++) {
-            for (k = 0; k < ngrids; k++) {
-                if (k*spacing <= stern_sam) {
-                    phi_z[i*ngrids2 + j*ngrids + k] = *slope*k*spacing + bottom;
+void grad_sas_drv(double *erf_list, double *grad_list, double *x, double delta2, int ngrids, int natm, double *grad_sas) {
+    // erf_list: (natm, ngrids**3)
+    // grad_list: (natm, ngrids**3, 3)
+    // x: (natm, ngrids**3)
+    // grad_sas: (ngrids**3,3)
+    int ngrids3 = ngrids * ngrids * ngrids;
+    #pragma omp parallel for schedule(static)
+    for (int l = 0; l < ngrids3; l++) {
+        double grad_sas_lx = 0.0;
+        double grad_sas_ly = 0.0;
+        double grad_sas_lz = 0.0;
+        for (int i = 0; i < natm; i++) {
+            double erf_prod = 1.0;
+            for (int j = 0; j < natm; j++) {
+                if (i != j) {
+                    erf_prod *= erf_list[j*ngrids3+l];
+                }
+            }
+            int il = (i*ngrids3+l)*3;
+            grad_sas_lx += grad_list[il  ] * erf_prod;
+            grad_sas_ly += grad_list[il+1] * erf_prod;
+            grad_sas_lz += grad_list[il+2] * erf_prod;
+        }
+        int l3 = l*3;
+        grad_sas[l3  ] = grad_sas_lx;
+        grad_sas[l3+1] = grad_sas_ly;
+        grad_sas[l3+2] = grad_sas_lz;
+    }
+}
+
+void lap_sas_drv(double *erf_list, double *grad_list, double *x, double delta2, int ngrids, int natm, double *lap_sas) {
+    // erf_list: (natm, ngrids**3)
+    // grad_list: (natm, ngrids**3, 3)
+    // x: (natm, ngrids**3)
+    // lap_sas: (ngrids**3,)
+    int ngrids3 = ngrids * ngrids * ngrids;
+    double coeff = 1.0 / delta2 / delta2 / sqrt(M_PI);
+
+    #pragma omp parallel for schedule(static)
+    for (int l = 0; l < ngrids3; l++) {
+        double lap_sas_l = 0.0;
+        for (int i = 0; i < natm; i++) {
+            for (int j = 0; j < natm; j++) {
+                double lap_l = 0.0;
+                if (i == j) {
+                    double x_il = x[i*ngrids3+l];
+                    lap_l = -2.0 * coeff * x_il * exp(-x_il*x_il);
                 }
                 else {
-                    phi_z[i*ngrids2 + j*ngrids + k] = -4*KB2HARTREE*T*atanh(exp(-kappa*(k*spacing - stern_sam))*tanh(-phi_a/4/KB2HARTREE/T));
+                    int il = i*ngrids3*3+l*3;
+                    int jl = j*ngrids3*3+l*3;
+                    lap_l += grad_list[il  ] * grad_list[jl  ] 
+                          +  grad_list[il+1] * grad_list[jl+1]
+                          +  grad_list[il+2] * grad_list[jl+2];
                 }
+                double erf_prod_l = 1.0;
+                for (int k = 0; k < natm; k++) {
+                    if (k != i && k != j) {
+                        erf_prod_l *= erf_list[k*ngrids3+l];
+                    }
+                }
+                lap_sas_l += lap_l * erf_prod_l;
             }
         }
+        lap_sas[l] = lap_sas_l;
     }
 }
 
-void distance_calculator(double *coords, double *atom_coords, int natm, int ngrids, double *dist) {
-    int ngrids3 = ngrids*ngrids*ngrids;
-    int i, j;
-    #pragma omp parallel for private(i,j)
-    for (i = 0; i < natm; i++) {
-        for (j = 0; j < ngrids3; j++) {
-            dist[i*ngrids3 + j] = sqrt(pow(coords[j*3  ] - atom_coords[i*3  ], 2) 
-                                     + pow(coords[j*3+1] - atom_coords[i*3+1], 2)
-                                     + pow(coords[j*3+2] - atom_coords[i*3+2], 2));
-        }
-    }
-}
-
-void grad_sas_drv(double *erf_list, double *er, double *x, double delta2, int ngrids, int natm, double *grad_sas) {
-    int i, j, k;
+void grad_eps_drv(double *erf_list, double *grad_list, double *x, double *exp_z, double *eps_z, double delta1, double delta2, double eps, double eps_sam, int ngrids, int natm, double *grad_eps) {
+    // erf_list: (natm, ngrids**3)
+    // grad_list: (natm, ngrids**3, 3)
+    // x: (natm, ngrids**3)
+    // grad_eps: (ngrids**3,3)
     int ngrids3 = ngrids * ngrids * ngrids;
-    double *erf_prod = malloc(sizeof(double) * natm * ngrids3);
-    double *gauss = malloc(sizeof(double) * natm * ngrids3);
-    
-    #pragma omp parallel for
-    for (i = 0; i < ngrids3*3; i++) {
-        grad_sas[i] = 0;
-    }
+    double coeff = (eps - eps_sam) / (delta1 * sqrt(M_PI));
 
-    #pragma omp parallel for private(i, j)
-    for (i = 0; i < natm; i++) {
-        for (j = 0; j < ngrids3; j++) {
-            erf_prod[i*ngrids3 + j] = 1;
-            gauss[i*ngrids3 + j] = exp(-pow(x[i*ngrids3 + j], 2));
+    #pragma omp parallel for schedule(static)
+    for (int l = 0; l < ngrids3; l++) {
+        double grad_eps_lx = 0.0;
+        double grad_eps_ly = 0.0;
+        double grad_eps_lz = 0.0;
+        double erf_cumm[natm];
+        double erf_prod = 1.0;
+        for (int i = 0; i < natm; i++) {
+            erf_cumm[i] = erf_prod;
+            erf_prod *= erf_list[i*ngrids3+l];
+            // erf_prod_tot *= erf_list[i*ngrids3+l];
         }
-    }
+        double erf_prod_tot = erf_prod;
+        double erf_rev = 1.0;
+        for (int i = natm-1; i >= 0; i--) {
+            int il = (i*ngrids3+l)*3;
+            double eps_z_1 = eps_z[l] - 1;
+            erf_prod = erf_cumm[i] * erf_rev;
 
-    #pragma omp parallel for private(i, j, k)
-    for (i = 0; i < natm; i++) {
-        for (k = 0; k < natm; k++) {
-            if (k != i) {
-                for (j = 0; j < ngrids3; j++) {
-                    erf_prod[i*ngrids3 + j] *= erf_list[k*ngrids3 + j];
-                }
-            }
+            grad_eps_lx += (grad_list[il  ] * erf_prod) * eps_z_1;
+            grad_eps_ly += (grad_list[il+1] * erf_prod) * eps_z_1;
+            grad_eps_lz += (grad_list[il+2] * erf_prod) * eps_z_1;
+            
+            erf_rev *= erf_list[i*ngrids3+l];
         }
+        int l3 = l*3;
+        grad_eps_lz += coeff * exp_z[l] * erf_prod_tot;
+        grad_eps[l3  ] = grad_eps_lx;
+        grad_eps[l3+1] = grad_eps_ly;
+        grad_eps[l3+2] = grad_eps_lz;
     }
-
-    #pragma omp parallel for private(i, j, k) reduction(+:grad_sas[0:ngrids3*3])
-    for (i = 0; i < natm; i++) {
-        for (j = 0; j < ngrids3; j++) {
-            double coeff = 1 / delta2 / sqrt(M_PI) * gauss[i*ngrids3 + j] * erf_prod[i*ngrids3 + j];
-            for (k = 0; k < 3; k++) {
-                grad_sas[3*j + k] += er[i*ngrids3*3 + 3*j + k] * coeff;
-            }
-        }
-    }
-    free(erf_prod);
-    free(gauss);
-}
-
-void boundary_cond_gradient_drv(double *coords, double *atom_coords, double *atomic_radii,
-                                double *phi_z, double *sas, double kappa, double T,
-                                double probe, double delta2, double stern_sam, double spacing,
-                                double slope, int ngrids, int natm, double *grad_bc, 
-                                double *grad_phi_z, double *grad_sas) {
-    int ngrids3 = ngrids * ngrids * ngrids;
-    int ngrids2 = ngrids * ngrids;
-    int i, j, k;
-
-    double *dphidz = malloc(sizeof(double) * ngrids3);
-    double *dist = malloc(sizeof(double) * natm * ngrids3);
-    double *erf_list = malloc(sizeof(double) * natm * ngrids3);
-    double *x = malloc(sizeof(double) * natm * ngrids3);
-    double *er = malloc(sizeof(double) * natm * ngrids3 * 3);
-    double *rp = malloc(sizeof(double) * natm * ngrids3 * 3);
-
-    distance_calculator(coords, atom_coords, natm, ngrids, dist);
-    
-    #pragma omp parallel for private(i, j, k)
-    for (i = 0; i < ngrids; i++) {
-        for (j = 0; j < ngrids; j++) {
-            for (k = 0; k < ngrids; k++) {
-                if (k*spacing <= stern_sam) {
-                    dphidz[i*ngrids2 + j*ngrids + k] = slope;
-                }
-                else {
-                    dphidz[i*ngrids2 + j*ngrids + k] = 2.0*KB2HARTREE*T*kappa*sinh(-phi_z[i*ngrids2 + j*ngrids + k] / 2 / KB2HARTREE / T);
-                }
-            }
-        }
-    }
-
-    for (i = 0; i < ngrids3; i++) {
-        for (j = 0; j < 3; j++) {
-            if (j == 2) {
-                grad_phi_z[i*3 + j] = dphidz[i];
-            }
-            else {
-                grad_phi_z[i*3 + j] = 0;
-            }
-        }
-    }
-
-    #pragma omp parallel for private(i, j, k)
-    for (i = 0; i < natm; i++) {
-        for (j = 0; j < ngrids3; j++) {
-            for (k = 0; k < 3; k++) {
-                rp[i*ngrids3*3 + j*3 + k] = coords[j*3 + k] - atom_coords[i*3 + k];
-            }
-        }
-    }
-
-    #pragma omp parallel for private(i, j)
-    for (i = 0; i < natm; i++) {
-        for (j = 0; j < ngrids3; j++) {
-            x[i*ngrids3 + j] = (dist[i*ngrids3 + j] - atomic_radii[i] - probe) / delta2;
-            erf_list[i*ngrids3 + j] = 0.5 * (1 + gsl_sf_erf(x[i*ngrids3 + j]));
-        }
-    }
-
-    #pragma omp parallel for private(i, j, k)
-    for (i = 0; i < natm; i++) {
-        for (j = 0; j < ngrids3; j++) {
-            for (k = 0; k < 3; k++) {
-                er[i*ngrids3*3 + j*3 + k] = rp[i*ngrids3*3 + j*3 + k] / dist[i*ngrids3 + j];
-            }
-        }
-    }
-
-    grad_sas_drv(erf_list, er, x, delta2, ngrids, natm, grad_sas);
-
-    #pragma omp parallel for private(i, j)
-    for (i = 0; i < ngrids3; i++) {
-        for (j = 0; j < 3; j++) {
-            grad_bc[3*i + j] = grad_phi_z[3*i + j] * sas[i] + grad_sas[3*i + j] * phi_z[i];
-        }
-    }
-
-    free(erf_list);
-    free(x);
-    free(er);
-    free(dphidz);
-    free(dist);
-    free(rp);
 }
