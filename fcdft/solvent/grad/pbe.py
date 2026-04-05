@@ -205,9 +205,9 @@ def db_force(solvent_obj, dm):
     dphi_opt = solver.gradient(phi_opt, phi_optk, ngrids, spacing)
 
     grad_lneps = grad_eps / eps[:,None]
-    rho_iter_bc = 0.25e0 / PI * (grad_lneps, grad_bc).sum(axis=1)
+    rho_iter_bc = 0.25e0 / PI * (grad_lneps * grad_bc).sum(axis=1)
 
-    Fdb = pbe_helper.db_force_helper(atom_coords, coords, eps_sam, eps_bulk, probe, stern_sam, delta1, delta2, r_vdw, dphi_opt, grad_bc, rho_tot+rho_pol+rho_iter_bc, phi_tot, spacing, ngrids)
+    Fdb = pbe_helper.db_force_helper(atom_coords, coords, eps_sam, eps_bulk, probe, stern_sam, delta1, delta2, atomic_radii, dphi_opt, grad_bc, rho_tot+rho_pol+rho_iter_bc, phi_tot, spacing, ngrids)
 
     return Fdb
 
