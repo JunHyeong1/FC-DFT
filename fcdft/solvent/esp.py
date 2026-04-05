@@ -168,7 +168,7 @@ def esp_esp (mol, dm, coords, gpu_accel=False):
 
     atom_coords = mol.atom_coords()
     Z = mol.atom_charges()
-    dist = scipy.spatial.distance.cdist(atom_coords, coords, metric='euclidean')
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
     dist[dist < 1.0e-100] = 1.0e-100
     Vnuc = np.tensordot(1.0e0 / dist, Z, axes=([0], [0]))
 
