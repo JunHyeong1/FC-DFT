@@ -24,7 +24,7 @@ def make_grad_sas(solvent_obj):
 
     r = atom_coords[:,None,:]
     rp = coords - r
-    dist = scipy.spatial.distance.cdist(atom_coords, coords, metric='euclidean')
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
     x = (dist - atomic_radii[:,None] - probe) / delta2
     _erf = scipy.special.erf(x)
     erf_list = 0.5e0 * (1.0e0 + _erf)
@@ -36,13 +36,11 @@ def make_grad_sas(solvent_obj):
     grad_sas = numpy.empty((ngrids**3, 3), dtype=numpy.float64, order='C')
     c_erf_list = erf_list.ctypes.data_as(ctypes.c_void_p)
     c_grad_list = grad_list.ctypes.data_as(ctypes.c_void_p)
-    c_x = x.ctypes.data_as(ctypes.c_void_p)
     c_delta2 = ctypes.c_double(delta2)
     c_ngrids = ctypes.c_int(ngrids)
     c_natm = ctypes.c_int(natm)
     c_grad_sas = grad_sas.ctypes.data_as(ctypes.c_void_p)
-    
-    drv(c_erf_list, c_grad_list, c_x, c_delta2, c_ngrids, c_natm, c_grad_sas)
+    drv(c_erf_list, c_grad_list, c_delta2, c_ngrids, c_natm, c_grad_sas)
 
     return grad_sas
 
@@ -56,12 +54,13 @@ def make_lap_sas(solvent_obj):
     atom_coords = mol.atom_coords()
     natm = mol.natm
 
-    r = atom_coords[:,None,:]
-    rp = coords - r
-    dist = scipy.spatial.distance.cdist(atom_coords, coords, metric='euclidean')
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
     x = (dist - atomic_radii[:,None] - probe) / delta2
     _erf = scipy.special.erf(x)
     erf_list = 0.5e0 * (1.0e0 + _erf)
+
+    r = atom_coords[:,None,:]
+    rp = coords - r
     er = rp / dist[:,:,None]
     gauss = numpy.exp(-x**2)
     grad_list = numpy.multiply(er, gauss[:,:,None], out=er) / (delta2 * numpy.sqrt(PI))
