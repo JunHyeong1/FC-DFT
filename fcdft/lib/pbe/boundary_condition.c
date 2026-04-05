@@ -59,7 +59,7 @@ double phi_a_finder(double kappa, double T, double eps, double eps_sam, double s
     exit(0);
 }
 
-void grad_sas_drv(double *erf_list, double *grad_list, double *x, double delta2, int ngrids, int natm, double *grad_sas) {
+void grad_sas_drv(double *erf_list, double *grad_list, double delta2, int ngrids, int natm, double *grad_sas) {
     // erf_list: (natm, ngrids**3)
     // grad_list: (natm, ngrids**3, 3)
     // x: (natm, ngrids**3)
@@ -105,7 +105,7 @@ void lap_sas_drv(double *erf_list, double *grad_list, double *x, double delta2, 
                 double lap_l = 0.0;
                 if (i == j) {
                     double x_il = x[i*ngrids3+l];
-                    lap_l = -2.0 * coeff * x_il * exp(-x_il*x_il);
+                    lap_l += -2.0 * coeff * x_il * exp(-x_il*x_il);
                 }
                 else {
                     int il = i*ngrids3*3+l*3;
@@ -127,7 +127,7 @@ void lap_sas_drv(double *erf_list, double *grad_list, double *x, double delta2, 
     }
 }
 
-void grad_eps_drv(double *erf_list, double *grad_list, double *x, double *exp_z, double *eps_z, double delta1, double delta2, double eps, double eps_sam, int ngrids, int natm, double *grad_eps) {
+void grad_eps_drv(double *erf_list, double *grad_list, double *exp_z, double *eps_z, double delta1, double delta2, double eps, double eps_sam, int ngrids, int natm, double *grad_eps) {
     // erf_list: (natm, ngrids**3)
     // grad_list: (natm, ngrids**3, 3)
     // x: (natm, ngrids**3)
@@ -145,7 +145,6 @@ void grad_eps_drv(double *erf_list, double *grad_list, double *x, double *exp_z,
         for (int i = 0; i < natm; i++) {
             erf_cumm[i] = erf_prod;
             erf_prod *= erf_list[i*ngrids3+l];
-            // erf_prod_tot *= erf_list[i*ngrids3+l];
         }
         double erf_prod_tot = erf_prod;
         double erf_rev = 1.0;
