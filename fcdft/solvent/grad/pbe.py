@@ -131,62 +131,38 @@ def rf_force(solvent_obj, dm):
     for i in range(mol.natm):
         r = atom_coords[i]
         ratio = (r - origin) / spacing
-        Nx = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
-        Ny = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
-        Nz = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
+        N = []
+        dN = []
         for dim in range(3):
             x = ratio[dim]
-            mylist = numpy.array(list(range(ngrids)))
-            idx1 = numpy.argwhere(numpy.logical_and(mylist-1.5e0 <= x, x <= mylist-0.5e0))
-            val1 = 0.125e0 + 0.5e0*(x-idx1+1.0e0) + 0.5e0*(x-idx1+1.0e0)**2
-            idx2 = numpy.argwhere(numpy.logical_and(mylist-0.5e0 <= x, x <= mylist+0.5e0))
-            val2 = 0.75e0 - (x-idx2)**2
-            idx3 = numpy.argwhere(numpy.logical_and(mylist+0.5e0 <= x, x <= mylist+1.5e0))
-            val3 = 0.125e0 - 0.5e0*(x-idx3-1.0e0) + 0.5e0*(x-idx3-1.0e0)**2
-            if dim == 0:
-                Nx[idx1,:,:] = val1
-                Nx[idx2,:,:] = val2
-                Nx[idx3,:,:] = val3
-            elif dim == 1:
-                Ny[:,idx1,:] = val1
-                Ny[:,idx2,:] = val2
-                Ny[:,idx3,:] = val3
-            elif dim == 2:
-                Nz[:,:,idx1] = val1
-                Nz[:,:,idx2] = val2
-                Nz[:,:,idx3] = val3
-
-        dNxdx = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
-        dNydy = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
-        dNzdz = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
-        for dim in range(3):
-            x = ratio[dim]
-            mylist = numpy.array(list(range(ngrids)))
-            idx1 = numpy.argwhere(numpy.logical_and(mylist-1.5e0 <= x, x <= mylist-0.5e0))
-            val1 = 0.5e0 + (x-idx1+1.0e0)
-            idx2 = numpy.argwhere(numpy.logical_and(mylist-0.5e0 <= x, x <= mylist+0.5e0))
-            val2 = -2.0e0 * (x-idx2)
-            idx3 = numpy.argwhere(numpy.logical_and(mylist+0.5e0 <= x, x <= mylist+1.5e0))
-            val3 = -0.5e0 + (x-idx3-1.0e0)
-            if dim == 0:
-                dNxdx[idx1,:,:] = val1
-                dNxdx[idx2,:,:] = val2
-                dNxdx[idx3,:,:] = val3
-            elif dim == 1:
-                dNydy[:,idx1,:] = val1
-                dNydy[:,idx2,:] = val2
-                dNydy[:,idx3,:] = val3
-            elif dim == 2:
-                dNzdz[:,:,idx1] = val1
-                dNzdz[:,:,idx2] = val2
-                dNzdz[:,:,idx3] = val3
-        Nx, Ny, Nz = Nx.ravel(), Ny.ravel(), Nz.ravel()
-        dNxdx, dNydy, dNzdz = dNxdx.ravel(), dNydy.ravel(), dNzdz.ravel()
+            N_coords = numpy.zeros(ngrids)
+            dN_coords = numpy.zeros(ngrids)
+            indices = numpy.arange(int(numpy.ceil(x-1.5)), int(numpy.floor(x+1.5))+1)
+            indices = indices[(indices >= 0) & (indices < ngrids)]
+            for idx in indices:
+                delta = x - idx
+                if -1.5 <= delta and delta < -0.5:
+                    val = 0.125 + 0.5*(delta + 1.0) + 0.5*(delta + 1.0)**2
+                    dval = delta + 1.5
+                elif -0.5 <= delta and delta < 0.5:
+                    val = 0.75 - delta**2
+                    dval = -2.0*delta
+                elif 0.5 <= delta and delta <= 1.5:
+                    val = 0.125 - 0.5*(delta - 1.0) + 0.5*(delta - 1.0)**2
+                    dval = delta - 1.5
+                else: continue
+                N_coords[idx] = val
+                dN_coords[idx] = dval
+            N.append(N_coords)
+            dN.append(dN_coords)
+        Nx, Ny, Nz = N
+        dNxdx, dNydy, dNzdz = dN
         dNxdRx, dNydRy, dNzdRz = dNxdx/spacing, dNydy/spacing, dNzdz/spacing
-        grad = numpy.column_stack((dNxdRx*Ny*Nz, Nx*dNydRy*Nz, Nx*Ny*dNzdRz))
-        dqdR = qesp[i] * grad
-        Frf[i] = numpy.dot(phi_pol, dqdR)
-    Frf = -Frf
+        phi = phi_pol.reshape((ngrids,)*3)
+        Frf[i,0] = -qesp[i] * numpy.einsum('ijk,i,j,k', phi, dNxdRx, Ny, Nz)
+        Frf[i,1] = -qesp[i] * numpy.einsum('ijk,i,j,k', phi, Nx, dNydRy, Nz)
+        Frf[i,2] = -qesp[i] * numpy.einsum('ijk,i,j,k', phi, Nx, Ny, dNzdRz)
+
     return Frf
 
 def db_force(solvent_obj, dm):
@@ -194,7 +170,7 @@ def db_force(solvent_obj, dm):
     phi_tot = solvent_obj.phi_tot
     delta1 = solvent_obj.delta1 / BOHR
     delta2 = solvent_obj.delta2 / BOHR
-    r_vdw = solvent_obj.get_atomic_radii()
+    atomic_radii = solvent_obj.get_atomic_radii()
     coords = solvent_obj.grids.coords
     spacing = solvent_obj.grids.spacing
     ngrids = solvent_obj.grids.ngrids
@@ -222,14 +198,14 @@ def db_force(solvent_obj, dm):
     grad_bc, _, _ = bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas)
     phi_opt = phi_tot - bc
     solver = solvent_obj.solver
-    nproc = lib.num_threads()
+    NPROC = lib.num_threads()
     phi_optk = None
     if isinstance(solver, fcdft.solvent.solver.fft2d):
-        phi_optk = scipy.fft.fftn(phi_opt.reshape((ngrids,)*3), axes=(0,1), workers=nproc)
+        phi_optk = scipy.fft.fftn(phi_opt.reshape((ngrids,)*3), axes=(0,1), workers=NPROC)
     dphi_opt = solver.gradient(phi_opt, phi_optk, ngrids, spacing)
 
-    grad_lneps = pbe_helper.product_vector_scalar(grad_eps, 1.0e0/eps)
-    rho_iter_bc = 0.25e0 / PI * pbe_helper.product_vector_vector(grad_lneps, grad_bc)
+    grad_lneps = grad_eps / eps[:,None]
+    rho_iter_bc = 0.25e0 / PI * (grad_lneps, grad_bc).sum(axis=1)
 
     Fdb = pbe_helper.db_force_helper(atom_coords, coords, eps_sam, eps_bulk, probe, stern_sam, delta1, delta2, r_vdw, dphi_opt, grad_bc, rho_tot+rho_pol+rho_iter_bc, phi_tot, spacing, ngrids)
 
@@ -282,7 +258,7 @@ def one_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, del
     if cb == 0.0e0:
         return Fib
     
-    dist = pbe_helper.distance_calculator(coords, atom_coords)
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
     x = (dist - r_vdw[:,None] - probe - stern_mol) / delta2
     _erf = scipy.special.erf(x)
     erf_list = 0.5e0 * (1.0e0 + _erf)
@@ -297,7 +273,7 @@ def one_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, del
     for i in range(mol.natm):
         r = atom_coords[i]
         rp = coords - r
-        er = pbe_helper.product_vector_scalar(rp, 1.0e0/dist[i])
+        er = rp / dist[i][:,None]
         mask = [False if j == i else True for j in range(mol.natm)]
         erf = numpy.prod(erf_list[mask], axis=0)
         gauss_A = gauss_list[i]
@@ -320,7 +296,7 @@ def two_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, del
     if cb == 0.0e0:
         return Fib
     
-    dist = pbe_helper.distance_calculator(coords, atom_coords)
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
     x = (dist - r_vdw[:,None] - probe - stern_mol) / delta2
     _erf = scipy.special.erf(x)
     erf_list = 0.5e0 * (1.0e0 + _erf)
@@ -335,7 +311,7 @@ def two_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, del
     for i in range(mol.natm):
         r = atom_coords[i]
         rp = coords - r
-        er = pbe_helper.product_vector_scalar(rp, 1.0e0/dist[i])
+        er = rp / dist[i][:,None]
         mask = [False if j == i else True for j in range(mol.natm)]
         erf = numpy.prod(erf_list[mask], axis=0)
         gauss_A = gauss_list[i]
@@ -358,7 +334,7 @@ def one_to_two_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, del
     if cb == 0.0e0:
         return Fib
     
-    dist = pbe_helper.distance_calculator(coords, atom_coords)
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
     x = (dist - r_vdw[:,None] - probe - stern_mol) / delta2
     _erf = scipy.special.erf(x)
     erf_list = 0.5e0 * (1.0e0 + _erf)
@@ -373,7 +349,7 @@ def one_to_two_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, del
     for i in range(mol.natm):
         r = atom_coords[i]
         rp = coords - r
-        er = pbe_helper.product_vector_scalar(rp, 1.0e0/dist[i])
+        er = rp / dist[i][:,None]
         mask = [False if j == i else True for j in range(mol.natm)]
         erf = numpy.prod(erf_list[mask], axis=0)
         gauss_A = gauss_list[i]
@@ -404,13 +380,10 @@ H        1.3222704832     -0.0005811676     -0.3021302181''',
         basis='6-31g**', verbose=5, max_memory=10000)
     from fcdft.wbl.rks import *
     wblmf = WBLMoleculeRKS(mol, xc='b3lyp', broad=0.01, smear=0.2, nelectron=70.00)
-    wblmf.pot_cycle=100
-    wblmf.max_cycle=300
-    wblmf.kernel()
-    dm = wblmf.make_rdm1()
+    wblmf.max_cycle=1
     from fcdft.solvent.pbe import *
-    cm = PBE(mol, cb=1.0, ngrids=41, length=15, stern_sam=-100)
-    cm._dm = dm
+    cm = PBE(mol, cb=1.0, ngrids=41, length=15, stern_sam=8.1)
     solmf = pbe_for_scf(wblmf, cm)
-    from pyscf.geomopt.geometric_solver import optimize
-    solmf_opt = optimize(solmf, maxsteps=100)
+    solmf.kernel()
+    dm = solmf.make_rdm1()
+    Fib = ib_force(cm, dm)
