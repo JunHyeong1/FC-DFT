@@ -1,6 +1,7 @@
 import numpy
 import scipy
 import os
+import ctypes
 import fcdft
 import fcdft.solvent.calculus_helper as ch
 
@@ -51,7 +52,7 @@ def make_lambda(solvent_obj, mol, probe, stern_mol, stern_sam, coords, delta1, d
     """
     atom_coords = mol.atom_coords()
     # Molecular Stern Layer
-    dist = scipy.spatial.distance.cdist(atom_coords, coords, metric='euclidean')
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
     x = (dist - atomic_radii[:,None] - probe - stern_mol) / delta2
     erf_list = 0.5e0*(1.0e0 + scipy.special.erf(x))
     erf_list[x < -8.0e0*delta2] = 0.0e0
@@ -80,7 +81,7 @@ def make_sas(solvent_obj, mol, probe, coords, delta2, atomic_radii):
         1D numpy.ndarray: Solvent-accessible surface
     """
     atom_coords = mol.atom_coords()
-    dist = scipy.spatial.distance.cdist(atom_coords, coords, metric='euclidean')
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
     x = (dist - atomic_radii[:,None] - probe) / delta2
     _erf = scipy.special.erf(x)
     erf_list = 0.5e0 * (1.0e0 + _erf)
@@ -135,7 +136,7 @@ def make_grad_eps(solvent_obj, mol, coords, eps_sam, eps, probe, stern_sam, delt
     eps_z = eps_sam + 0.5e0 * (eps - eps_sam) * (1.0e0 + _erf)
     exp_z = numpy.exp(-x**2)
 
-    dist = scipy.spatial.distance.cdist(atom_coords, coords, metric='euclidean')
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
     x = (dist - atomic_radii[:,None] - probe) / delta2
     _erf = scipy.special.erf(x)
     erf_list = 0.5e0 * (1.0e0 + _erf)
@@ -154,7 +155,6 @@ def make_grad_eps(solvent_obj, mol, coords, eps_sam, eps, probe, stern_sam, delt
     drv = libpbe.grad_eps_drv
     c_erf_list = erf_list.ctypes.data_as(ctypes.c_void_p)
     c_grad_list = grad_list.ctypes.data_as(ctypes.c_void_p)
-    c_x = x.ctypes.data_as(ctypes.c_void_p)
     c_exp_z = exp_z.ctypes.data_as(ctypes.c_void_p)
     c_eps_z = eps_z.ctypes.data_as(ctypes.c_void_p)
     c_delta1 = ctypes.c_double(delta1)
@@ -165,7 +165,7 @@ def make_grad_eps(solvent_obj, mol, coords, eps_sam, eps, probe, stern_sam, delt
     c_natm = ctypes.c_int(natm)
     c_grad_eps = grad_eps.ctypes.data_as(ctypes.c_void_p)
 
-    drv(c_erf_list, c_grad_list, c_x, c_exp_z, c_eps_z, c_delta1, c_delta2,
+    drv(c_erf_list, c_grad_list, c_exp_z, c_eps_z, c_delta1, c_delta2,
         c_eps, c_eps_sam, c_ngrids, c_natm, c_grad_eps)
 
     return grad_eps
@@ -192,7 +192,7 @@ def make_phi_sol(solvent_obj, dm=None, coords=None):
 
     atom_coords = mol.atom_coords()
     Z = mol.atom_charges()
-    dist = scipy.spatial.distance.cdist(atom_coords, coords, metric='euclidean')
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
     dist[dist < 1.0e-100] = numpy.inf # Machine precision
     Vnuc = numpy.tensordot(1.0e0 / dist, Z, axes=([0], [0]))
 
@@ -714,7 +714,7 @@ H        1.3390319419     -0.0095801980     -0.2157234144''',
     # wblmf.conv_tol=1e-7
     wblmf.max_cycle=1
     wblmf.kernel()
-    cm = PBE(mol, cb=1.0, length=20, ngrids=65, stern_sam=8.1, equiv=11)
+    cm = PBE(mol, cb=1.0, length=20, ngrids=41, stern_sam=8.1, equiv=11)
     cm.atom_bottom=12
     cm.solver = 'multigrid'
     solmf = pbe_for_scf(wblmf, cm)
