@@ -1,14 +1,16 @@
 import numpy
 import scipy
 import fcdft
+import ctypes
+import os
 from fcdft.solvent.pbe import M2HARTREE, KB2HARTREE
-from fcdft.lib import pbe_helper
 from pyscf.solvent._attach_solvent import _Solvation
 from pyscf.grad import rhf as rhf_grad
 from pyscf import lib
 from pyscf.lib import logger
 from pyscf.data.nist import *
 
+libpbe = lib.load_library(os.path.join(fcdft.__path__[0], 'lib', 'libpbe'))
 PI = numpy.pi
 
 def make_grad_object(base_method):
@@ -180,6 +182,7 @@ def db_force(solvent_obj, dm):
     stern_sam = solvent_obj.stern_sam / BOHR
     T = solvent_obj.T
     atom_coords = mol.atom_coords()
+    natm = mol.natm
 
     _intermediates = solvent_obj._intermediates
     sas = _intermediates['sas']
@@ -207,7 +210,54 @@ def db_force(solvent_obj, dm):
     grad_lneps = grad_eps / eps[:,None]
     rho_iter_bc = 0.25e0 / PI * (grad_lneps * grad_bc).sum(axis=1)
 
-    Fdb = pbe_helper.db_force_helper(atom_coords, coords, eps_sam, eps_bulk, probe, stern_sam, delta1, delta2, atomic_radii, dphi_opt, grad_bc, rho_tot+rho_pol+rho_iter_bc, phi_tot, spacing, ngrids)
+
+    # Preparation
+    r = atom_coords[:,None,:]
+    rp = coords - r
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
+    x = (dist - atomic_radii[:,None] - probe) / delta2
+    _erf = scipy.special.erf(x)
+    erf_list = 0.5e0 * (1.0e0 + _erf)
+    exp_list = numpy.exp(-x**2)
+    er = rp / dist[:,:,None]
+    grad_list = numpy.multiply(er, exp_list[:,:,None]) / (delta2 * numpy.sqrt(PI))
+
+    zmin = coords[:,2].min()
+    z = (coords[:,2] - zmin - stern_sam) / delta1
+    _erf = scipy.special.erf(z)
+    eps_z = eps_sam + 0.5 * (eps_bulk - eps_sam) * (1.0 + _erf)
+    exp_z = numpy.exp(-z**2)
+
+    drv1 = libpbe.nuc_grad_eps_drv
+    drv2 = libpbe.grad_nuc_grad_eps_drv
+
+    c_erf_list = erf_list.ctypes.data_as(ctypes.c_void_p)
+    c_grad_list = grad_list.ctypes.data_as(ctypes.c_void_p)
+    c_exp_list = exp_list.ctypes.data_as(ctypes.c_void_p)
+    c_eps_z = eps_z.ctypes.data_as(ctypes.c_void_p)
+    c_exp_z = exp_z.ctypes.data_as(ctypes.c_void_p)
+    c_dist = dist.ctypes.data_as(ctypes.c_void_p)
+    c_er = er.ctypes.data_as(ctypes.c_void_p)
+    c_x = x.ctypes.data_as(ctypes.c_void_p)
+    c_delta1 = ctypes.c_double(delta1)
+    c_delta2 = ctypes.c_double(delta2)
+    c_eps_bulk = ctypes.c_double(eps_bulk)
+    c_eps_sam = ctypes.c_double(eps_sam)
+    c_ngrids = ctypes.c_int(ngrids)
+    c_natm = ctypes.c_int(natm)
+
+    nuc_grad_eps = numpy.zeros((natm, ngrids**3, 3))
+    grad_nuc_grad_eps = numpy.zeros((natm, ngrids**3))
+    c_nuc_grad_eps = nuc_grad_eps.ctypes.data_as(ctypes.c_void_p)
+    c_grad_nuc_grad_eps = grad_nuc_grad_eps.ctypes.data_as(ctypes.c_void_p)
+
+    drv1(c_erf_list, c_grad_list, c_eps_z, c_delta2, c_ngrids, c_natm, c_nuc_grad_eps)
+    drv2(c_erf_list, c_exp_list, c_er, c_x, c_eps_z, c_exp_z, c_dist, c_delta1, c_delta2, c_eps_bulk, c_eps_sam, c_ngrids, c_natm, c_grad_nuc_grad_eps)
+
+    integrand = (dphi_opt + grad_bc)[None,:,:] * grad_nuc_grad_eps[:,:,None]
+    integrand -= 4.0 * PI * nuc_grad_eps * (rho_tot+rho_pol+rho_iter_bc)[None,:,None]
+    integrand *= phi_tot[None,:,None]
+    Fdb = -0.125 / PI * integrand.sum(axis=1) * spacing**3
 
     return Fdb
 
@@ -232,7 +282,7 @@ def ib_force(solvent_obj, dm):
     spacing = solvent_obj.grids.spacing
 
     if cb == 0.0e0:
-        return Fib
+        return numpy.zeros((mol.natm, 3))
 
     equiv = solvent_obj.equiv
     if equiv == 11:
@@ -278,8 +328,8 @@ def one_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, del
         erf = numpy.prod(erf_list[mask], axis=0)
         gauss_A = gauss_list[i]
         gauss_A[x[i] < -8.0e0*delta2] = 0.0e0 # To ensure zero contribution inside the cavity.
-        dl = -1.0e0 / delta2 / numpy.sqrt(PI) * pbe_helper.product_vector_scalar(er, erf_z*gauss_A*erf)
-        Fib[i] = numpy.dot(1.0e0 / ((c12 / cb - 1.0e0) / t + lambda_r), dl)    
+        dl = -1.0e0 / delta2 / numpy.sqrt(PI) * er * (erf_z*gauss_A*erf)[:,None]
+        Fib[i] = numpy.dot(1.0e0 / ((c12 / cb - 1.0e0) / t + lambda_r), dl)
 
     Fib = 2.0*c12*KB2HARTREE*T*Fib*spacing**3
     return Fib
@@ -316,7 +366,7 @@ def two_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, del
         erf = numpy.prod(erf_list[mask], axis=0)
         gauss_A = gauss_list[i]
         gauss_A[x[i] < -8.0e0*delta2] = 0.0e0 # To ensure zero contribution inside the cavity.
-        dl = -1.0e0 / delta2 / numpy.sqrt(PI) * pbe_helper.product_vector_scalar(er, erf_z*gauss_A*erf)
+        dl = -1.0e0 / delta2 / numpy.sqrt(PI) * er * (erf_z*gauss_A*erf)[:,None]
         Fib[i] = numpy.dot(1.0e0 / ((c12 / cb - 1.0e0) / t + lambda_r), dl)
 
     Fib = 3.0*c12*KB2HARTREE*T*Fib*spacing**3
@@ -354,10 +404,11 @@ def one_to_two_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, del
         erf = numpy.prod(erf_list[mask], axis=0)
         gauss_A = gauss_list[i]
         gauss_A[x[i] < -8.0e0*delta2] = 0.0e0 # To ensure zero contribution inside the cavity.
-        dl = -1.0e0 / delta2 / numpy.sqrt(PI) * pbe_helper.product_vector_scalar(er, erf_z*gauss_A*erf)
+        dl = -1.0e0 / delta2 / numpy.sqrt(PI) * er * (erf_z*gauss_A*erf)[:,None]
         Fib[i] = numpy.dot(1.0e0 / ((c12 / cb - 1.0e0) / t + lambda_r), dl)
 
     Fib = 3.0*c12*KB2HARTREE*T*Fib*spacing**3
+    return Fib
 
 if __name__ == '__main__':
     from pyscf import gto
@@ -386,4 +437,3 @@ H        1.3222704832     -0.0005811676     -0.3021302181''',
     solmf = pbe_for_scf(wblmf, cm)
     solmf.kernel()
     dm = solmf.make_rdm1()
-    Fib = ib_force(cm, dm)
