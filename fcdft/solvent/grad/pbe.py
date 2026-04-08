@@ -197,8 +197,8 @@ def db_force(solvent_obj, dm):
     jump_coeff = solvent_obj.jump_coeff
 
     impose_bc, bc_grad, _ = solvent_obj._gen_boundary_conditions()
-    bc, phi_z, slope = impose_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps_bulk, sas, pzc, ref_pot, jump_coeff)
-    grad_bc, _, _ = bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas)
+    bc, phi_z, slope = impose_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps_bulk, pzc, ref_pot, jump_coeff)
+    grad_bc, _ = bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z)
     phi_opt = phi_tot - bc
     solver = solvent_obj.solver
     NPROC = lib.num_threads()
