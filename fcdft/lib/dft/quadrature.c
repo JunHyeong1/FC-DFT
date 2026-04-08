@@ -151,7 +151,7 @@ void gsl_occupation_drv(double *moe_energy, double fermi, double broad, double s
     // offset for avoiding singulartity
     double smear_offset = 2000*smear;
     double broad_offset = 2000*broad;
-    double *pts = malloc(sizeof(double)*4);
+    double pts[4];
 
     for (int i = 0; i < nbas; i++) {
         params.moe_energy = moe_energy[i];
@@ -173,7 +173,6 @@ void gsl_occupation_drv(double *moe_energy, double fermi, double broad, double s
         mo_occ[i] = result1 + result2 + result3;
     }
     gsl_integration_workspace_free(w);
-    free(pts);
 }
 
 void gsl_occupation_grad_drv(double *moe_energy, double fermi, double broad, double smear, int nbas, double *occ_grad) {
@@ -196,7 +195,7 @@ void gsl_occupation_grad_drv(double *moe_energy, double fermi, double broad, dou
     // offset for avoiding singulartity
     double smear_offset = 2000*smear;
     double broad_offset = 2000*broad;
-    double *pts = malloc(sizeof(double)*4);
+    double pts[4];
 
     for (int i = 0; i < nbas; i++) {
         params.moe_energy = moe_energy[i];
@@ -218,7 +217,6 @@ void gsl_occupation_grad_drv(double *moe_energy, double fermi, double broad, dou
         occ_grad[i] = result1 + result2 + result3;
     }
     gsl_integration_workspace_free(w);
-    free(pts);
 }
 
 void gsl_fermi_level_drv(double *moe_energy, double fermi, double broad, double smear, int nbas, double *mo_occ, double *mo_grad) {
