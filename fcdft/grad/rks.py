@@ -10,12 +10,27 @@ from pyscf.scf import _vhf
 from pyscf.data.nist import HARTREE2EV
 
 def grad_elec(mf_grad, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
-    '''
-    Electronic part of RHF/RKS gradients under the frozen-potential approx.
+    """
+    Compute electronic contribution to WBL nuclear gradients under frozen-potential approximation.
 
-    Args:
-        mf_grad : grad.rhf.Gradients or grad.rks.Gradients object
-    '''
+    Parameters
+    ----------
+    mf_grad : Gradients
+        WBL gradient object.
+    mo_energy : ndarray, optional
+        MO energies (shape n_mo). If None, uses self.base.mo_energy.
+    mo_coeff : ndarray, optional
+        MO coefficients (shape n_ao x n_mo). If None, uses self.base.mo_coeff.
+    mo_occ : ndarray, optional
+        MO occupations (shape n_mo). If None, uses self.base.mo_occ.
+    atmlst : list, optional
+        List of atom indices for which to compute forces. If None, computes all atoms.
+
+    Returns
+    -------
+    de : ndarray, shape (len(atmlst), 3)
+        Real part only.
+    """
     mf = mf_grad.base
     mol = mf_grad.mol
     if mo_energy is None: mo_energy = mf.mo_energy
@@ -71,12 +86,6 @@ def grad_elec(mf_grad, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
     return de.real
 
 def get_veff(ks_grad, mol=None, dm=None):
-    '''
-    First order derivative of DFT effective potential matrix (wrt electron coordinates)
-
-    Args:
-        ks_grad : grad.uhf.Gradients or grad.uks.Gradients object
-    '''
     if mol is None: mol = ks_grad.mol
     if dm is None: dm = ks_grad.base.make_rdm1()
     t0 = (logger.process_clock(), logger.perf_counter())
@@ -132,7 +141,9 @@ def get_veff(ks_grad, mol=None, dm=None):
     return lib.tag_array(vxc, exc1_grid=exc)
 
 def make_rdm1e(mo_energy, mo_coeff, mo_occ):
-    '''Complex energy weighted density matrix'''
+    """
+    Construct energy-weighted density matrix.
+    """
     mo0e =  mo_coeff * (mo_energy * mo_occ)
     return numpy.dot(mo0e, mo_coeff.T)
 
@@ -304,6 +315,27 @@ class GradientsBase(rhf_grad.GradientsBase):
             return -(vkre + vkim*1.0j)        
 
 class Gradients(rks_grad.Gradients, GradientsBase):
+    """
+    Nuclear gradients for WBL-Molecule RKS.
+
+    Computes nuclear forces (first derivatives of SCF energy with respect to
+    nuclear positions) for molecules at electrode surfaces using the WBL
+    approximation. Combines PySCF RKS gradient framework with WBL-specific
+    terms (self-energy, voltage correction).
+
+    The computed gradients enable geometry optimization and vibrational analysis
+    for electrochemical systems.
+
+    Examples
+    --------
+    >>> from fcdft.wbl.rks import WBLMoleculeRKS
+    >>> mol = gto.M(atom='C 0 0 0; S 0 0 1.5', basis='6-31g**')
+    >>> wbl = WBLMoleculeRKS(mol, xc='pbe', broad=0.01, ref_pot=-4.5)
+    >>> wbl.kernel()
+    >>> grad = wbl.nuc_grad_method()
+    >>> forces = grad.kernel()  # shape (n_atoms, 3), in Hartree/Bohr
+    >>> print(forces)
+    """
     def __init__(self, mf):
         rks_grad.Gradients.__init__(self, mf)
         GradientsBase.__init__(self, mf)

@@ -3,15 +3,44 @@ import numpy as np
 from pyscf.lib import logger
 
 def hess_generator(mol, g_scanner, h, order):
-    """Numerical Hessian matrix generator
+    """
+    Generate numerical Hessian matrix from finite differences of gradients.
 
-    Args:
-        mol (_type_): Mole
-        g_scanner (_type_): g_scanner
-        h (_type_, optional): Finite difference. Defaults to 5.0e-3 Bohr.
+    Computes the Hessian by displacing each coordinate ±Δ and evaluating
+    the gradient at each displaced geometry, then differencing.
 
-    Returns:
-        _type_: _description_
+    Parameters
+    ----------
+    mol : gto.Mole
+        Molecule specification (used for coordinate displacement).
+    g_scanner : callable
+        Gradient scanner function that returns (energy, gradient) for a given
+        molecule geometry. Typically obtained from as_scanner(nuc_grad_method()).
+    h : float, optional
+        Finite difference step size in Bohr. If None, defaults to 5.0e-3 Bohr.
+    order : int, optional
+        Order of finite difference stencil: 3 (2-point) or 5 (4-point).
+        If None, defaults to 3. 5th order is more accurate but requires more
+        gradient evaluations (4 per coordinate vs. 2).
+
+    Returns
+    -------
+    hess : ndarray, shape (n_atoms, n_atoms, 3, 3)
+        Hessian matrix in PySCF convention: hess[i, j, α, β] = ∂²E/∂R_iα∂R_jβ.
+        Units: Hartree/Bohr².
+
+    Also saves: mol.output + ".hessian" file with flattened 2D Hessian.
+
+    Raises
+    ------
+    ValueError
+        If order is not 3 or 5.
+
+    Notes
+    -----
+    The full Hessian is symmetrized after computation: (H + H^T) / 2.
+    For WBL systems with fractional occupations, the numerical approach
+    avoids analytical complications of non-Hermitian perturbation theory.
     """
     if h is None: delta = 5.0e-3
     else: delta = h
@@ -75,7 +104,7 @@ class Hessian(rhf_hess.HessianBase):
         if self.base.disp is not None:
             self.de += self.get_dispersion()
         return self.de
-    
+
     hess = kernel
 
 
