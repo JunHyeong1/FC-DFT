@@ -1,5 +1,8 @@
 # Fractional Charge Density Functional Theory (FC-DFT)
-This code computes single-point energies, optimized structures, vibrational frequencies, and solvation free energies of open quantum systems using fractional charge density functional theory (FC-DFT).
+
+**FC-DFT** is a Python package for DFT calculations at electrochemical interfaces. It combines the wide-band limit (WBL) approximation for electrode coupling with continuum solvation models to study molecules at electrode/solvent interfaces under applied potential.
+
+The code computes single-point energies, optimized structures, vibrational frequencies, and solvation free energies of open quantum systems using FC-DFT methodology.
 
 ## Requirements
 - [GeomeTRIC](https://github.com/leeping/geomeTRIC)
@@ -33,6 +36,7 @@ This code computes single-point energies, optimized structures, vibrational freq
         cmake .. && make
 
 ### Tips for compilation
+
   * When linking Intel MKL, make sure to link the sequential one by `cmake -DBLA_VENDOR=Intel10_64lp_seq ..`. The performance of Intel MKL over OpenBLAS has not been tested. One may want to link OpenBLAS instead by `cmake -DBLA_VENDOR=OpenBLAS ..` for easier installation.
   * If CMake fails to find either `lapacke.h` or `cblas.h`, set `C_INCLUDE_PATH` manually.
 
@@ -43,6 +47,7 @@ This code computes single-point energies, optimized structures, vibrational freq
   - Numerical Hessian calculations.
 
 ## Notes
+
 Poisson-Boltzmann geometry optimization uses RESP atomic charges, which are computed by the code provided by https://github.com/swillow/pyscf_esp after some modifications for computational efficiency.
 
 ## How to Cite
@@ -53,4 +58,5 @@ Jun-Hyeong Kim, Dongju Kim, Weitao Yang, and Mu-Hyun Baik. Fractional Charge Den
 Jun-Hyeong Kim and Weitao Yang. Fractional Charge Density Functional Theory Elucidates Electro-Inductive and Electric Field Effects at Electrochemical Interfaces. _Submitted_ ChemRxiv: 10.26434/chemrxiv-2025-6qqfb
 
 ## Bug Report and Feature Request
+
 Please open a thread on the [Issues](https://github.com/Yang-Laboratory/FC-DFT/issues) tab.
