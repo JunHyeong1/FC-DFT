@@ -11,7 +11,7 @@ from pyscf.data.nist import HARTREE2EV
 
 def grad_elec(mf_grad, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
     '''
-    Electronic part of RHF/RKS gradients
+    Electronic part of RHF/RKS gradients under the frozen-potential approx.
 
     Args:
         mf_grad : grad.rhf.Gradients or grad.rks.Gradients object
@@ -63,7 +63,7 @@ def grad_elec(mf_grad, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
         # Pulay force
         de[k] -= numpy.einsum('xij,ij->x',s1[:,p0:p1], dme0[p0:p1])*2
         # Extra force contribution
-        de[k] += mf_grad.extra_force(ia, locals())   
+        de[k] += mf_grad.extra_force(ia, locals())
 
     if log.verbose >= logger.DEBUG:
         log.debug('gradients of electronic part')
@@ -345,4 +345,3 @@ class Gradients(rks_grad.Gradients, GradientsBase):
 
     get_veff = get_veff
     grad_elec = grad_elec
-    
