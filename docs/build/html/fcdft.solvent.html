@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fcdft.solvent package &#8212; FC-DFT 1.0.0 documentation</title>
+    <title>fcdft.solvent package &#8212; FC-DFT 1.1.5 documentation</title>
   
   
   
@@ -38,13 +38,15 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/documentation_options.js?v=a48ae3df"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'fcdft.solvent';</script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="fcdft.tools package" href="fcdft.tools.html" />
+    <link rel="prev" title="fcdft.lifcdft package" href="fcdft.lifcdft.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -109,7 +111,7 @@
   
   
   
-    <p class="title logo__title">FC-DFT 1.0.0 documentation</p>
+    <p class="title logo__title">FC-DFT 1.1.5 documentation</p>
   
 </a></div>
     
@@ -140,6 +142,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="about.html">
     About
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="fcdft.html">
+    fcdft package
   </a>
 </li>
 
@@ -252,6 +261,13 @@
   </a>
 </li>
 
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="fcdft.html">
+    fcdft package
+  </a>
+</li>
+
   </ul>
 </nav></div>
           
@@ -345,6 +361,9 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
+    
+    <li class="breadcrumb-item"><a href="fcdft.html" class="nav-link">fcdft package</a></li>
+    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fcdft.solvent package</span></li>
   </ul>
 </nav>
@@ -364,20 +383,37 @@
                   
   <section id="fcdft-solvent-package">
 <h1>fcdft.solvent package<a class="headerlink" href="#fcdft-solvent-package" title="Link to this heading">#</a></h1>
+<p>Poisson-Boltzmann solvation model for electrode/liquid interfaces.</p>
+<p>This package implements continuum solvation for molecules at electrode surfaces using
+a non-linear Poisson-Boltzmann (PB) approach. Key features:</p>
+<ul class="simple">
+<li><p><strong>Position-dependent dielectric</strong>: Smooth transition from SAM through Stern layers to bulk</p></li>
+<li><p><strong>Ion concentration</strong>: From Boltzmann distribution at the applied potential</p></li>
+<li><p><strong>Gouy-Chapman-Stern boundary conditions</strong>: Electrode surface treatment</p></li>
+<li><p><strong>Analytic gradients</strong>: For geometry optimization</p></li>
+<li><p><strong>GPU acceleration</strong>: Optional gpu4pyscf support for large grids</p></li>
+</ul>
+<p>The non-linear PB equation solved is: ∇·(ε(r) ∇φ_tot) = -4π[ρ_sol + ρ_ions(φ_tot, T)]</p>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
 </section>
 <section id="module-fcdft.solvent.calculus_helper">
 <span id="fcdft-solvent-calculus-helper-module"></span><h2>fcdft.solvent.calculus_helper module<a class="headerlink" href="#module-fcdft.solvent.calculus_helper" title="Link to this heading">#</a></h2>
 <dl class="py function">
+<dt class="sig sig-object py" id="fcdft.solvent.calculus_helper.dirichlet_gradient">
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.calculus_helper.</span></span><span class="sig-name descname"><span class="pre">dirichlet_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">varargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/calculus_helper.html#dirichlet_gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.calculus_helper.dirichlet_gradient" title="Link to this definition">#</a></dt>
+<dd><p>Optimized Gradient Calculator</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.calculus_helper.gradient">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.calculus_helper.</span></span><span class="sig-name descname"><span class="pre">gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">varargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.calculus_helper.gradient" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.calculus_helper.</span></span><span class="sig-name descname"><span class="pre">gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">varargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/calculus_helper.html#gradient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.calculus_helper.gradient" title="Link to this definition">#</a></dt>
 <dd><p>Optimized Gradient Calculator</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.calculus_helper.poisson">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.calculus_helper.</span></span><span class="sig-name descname"><span class="pre">poisson</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'float'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type='FD'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.calculus_helper.poisson" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.calculus_helper.</span></span><span class="sig-name descname"><span class="pre">poisson</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'float'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type='FD'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/calculus_helper.html#poisson"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.calculus_helper.poisson" title="Link to this definition">#</a></dt>
 <dd><p>Positive definite Laplacian operator generator</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -405,7 +441,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.calculus_helper.vectorize_grad">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.calculus_helper.</span></span><span class="sig-name descname"><span class="pre">vectorize_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad_object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.calculus_helper.vectorize_grad" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.calculus_helper.</span></span><span class="sig-name descname"><span class="pre">vectorize_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad_object</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/calculus_helper.html#vectorize_grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.calculus_helper.vectorize_grad" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -464,7 +500,7 @@ restrain hfree</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.esp.esp_atomic_charges">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.esp.</span></span><span class="sig-name descname"><span class="pre">esp_atomic_charges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_accel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.esp.esp_atomic_charges" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.esp.</span></span><span class="sig-name descname"><span class="pre">esp_atomic_charges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_accel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/esp.html#esp_atomic_charges"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.esp.esp_atomic_charges" title="Link to this definition">#</a></dt>
 <dd><p>Estimate (R)ESP atomic charges</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -486,7 +522,7 @@ restrain hfree</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.esp.esp_esp">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.esp.</span></span><span class="sig-name descname"><span class="pre">esp_esp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_accel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.esp.esp_esp" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.esp.</span></span><span class="sig-name descname"><span class="pre">esp_esp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gpu_accel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/esp.html#esp_esp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.esp.esp_esp" title="Link to this definition">#</a></dt>
 <dd><p>Estimate the electrostatic potential (ESP) at each grid point and atomic site as the second step.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -508,7 +544,7 @@ restrain hfree</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.esp.esp_fit">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.esp.</span></span><span class="sig-name descname"><span class="pre">esp_fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grids_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">restraint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hfree</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resp_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resp_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxiter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.esp.esp_fit" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.esp.</span></span><span class="sig-name descname"><span class="pre">esp_fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grids_val</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">restraint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hfree</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resp_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resp_b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxiter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/esp.html#esp_fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.esp.esp_fit" title="Link to this definition">#</a></dt>
 <dd><dl class="simple">
 <dt>Fitting procedure for (R)ESP atomic charges</dt><dd><p>In case of RESP, a penalty function is a hyperbolic form:
 penalty funciton = resp_a sum_i (q_i*q_i - resp_b*resp_b)**0.5 - resp_b)</p>
@@ -547,7 +583,7 @@ qf : list</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.esp.esp_grid">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.esp.</span></span><span class="sig-name descname"><span class="pre">esp_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rcut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngrids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">49</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.esp.esp_grid" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.esp.</span></span><span class="sig-name descname"><span class="pre">esp_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rcut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngrids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">49</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/esp.html#esp_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.esp.esp_grid" title="Link to this definition">#</a></dt>
 <dd><p>Generate grid points as the first step. This function was modified for better performance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -569,7 +605,7 @@ qf : list</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.esp.get_esp_radii">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.esp.</span></span><span class="sig-name descname"><span class="pre">get_esp_radii</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.esp.get_esp_radii" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.esp.</span></span><span class="sig-name descname"><span class="pre">get_esp_radii</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">probe</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/esp.html#get_esp_radii"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.esp.get_esp_radii" title="Link to this definition">#</a></dt>
 <dd><p>Obtain Solvent Inaccessible Radii</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -586,7 +622,7 @@ qf : list</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.esp.make_rdm1_with_orbital_response">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.esp.</span></span><span class="sig-name descname"><span class="pre">make_rdm1_with_orbital_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.esp.make_rdm1_with_orbital_response" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.esp.</span></span><span class="sig-name descname"><span class="pre">make_rdm1_with_orbital_response</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/esp.html#make_rdm1_with_orbital_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.esp.make_rdm1_with_orbital_response" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -594,88 +630,57 @@ qf : list</p>
 <span id="fcdft-solvent-pbe-module"></span><h2>fcdft.solvent.pbe module<a class="headerlink" href="#module-fcdft.solvent.pbe" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.Grids">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">Grids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngrids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">97</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.Grids" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">Grids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngrids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">97</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#Grids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.Grids" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Cube</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.Grids.build">
-<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.Grids.build" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#Grids.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.Grids.build" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.Grids.dump_flags">
-<span class="sig-name descname"><span class="pre">dump_flags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.Grids.dump_flags" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">dump_flags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#Grids.dump_flags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.Grids.dump_flags" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.Grids.get_coords">
-<span class="sig-name descname"><span class="pre">get_coords</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.Grids.get_coords" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_coords</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#Grids.get_coords"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.Grids.get_coords" title="Link to this definition">#</a></dt>
 <dd><p>Result: set of coordinates to compute a field which is to be stored
 in the file.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.Grids.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.Grids.reset" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#Grids.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.Grids.reset" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">PBE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cation_rad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anion_rad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">298.15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern_mol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.44</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern_sam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8.1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.PBE" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">PBE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cation_rad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anion_rad</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">298.15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern_mol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.44</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern_sam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">equiv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">11</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#PBE"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.PBE" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ddCOSMO</span></code></p>
 <dl class="py method">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE._get_v">
-<span class="sig-name descname"><span class="pre">_get_v</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.PBE._get_v" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE._get_vind">
-<span class="sig-name descname"><span class="pre">_get_vind</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dm</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.PBE._get_vind" title="Link to this definition">#</a></dt>
-<dd><p>A single shot solvent effects for given density matrix.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE._get_vmat">
-<span class="sig-name descname"><span class="pre">_get_vmat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phi_pol</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.PBE._get_vmat" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE._keys">
-<span class="sig-name descname"><span class="pre">_keys</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'L',</span> <span class="pre">'T',</span> <span class="pre">'anion_rad',</span> <span class="pre">'atom_bottom',</span> <span class="pre">'bias',</span> <span class="pre">'cation_rad',</span> <span class="pre">'cb',</span> <span class="pre">'cmax',</span> <span class="pre">'cycle',</span> <span class="pre">'delta1',</span> <span class="pre">'delta2',</span> <span class="pre">'eps_sam',</span> <span class="pre">'gpu_accel',</span> <span class="pre">'jump_coeff',</span> <span class="pre">'kappa',</span> <span class="pre">'ml',</span> <span class="pre">'nelectron',</span> <span class="pre">'phi_pol',</span> <span class="pre">'phi_sol',</span> <span class="pre">'phi_tot',</span> <span class="pre">'probe',</span> <span class="pre">'pzc',</span> <span class="pre">'ref_pot',</span> <span class="pre">'rho_ions',</span> <span class="pre">'rho_pol',</span> <span class="pre">'rho_sol',</span> <span class="pre">'stern_mol',</span> <span class="pre">'stern_sam',</span> <span class="pre">'thresh_amg',</span> <span class="pre">'thresh_ions',</span> <span class="pre">'thresh_pol'}</span></em><a class="headerlink" href="#fcdft.solvent.pbe.PBE._keys" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE.build">
-<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.PBE.build" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#PBE.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.PBE.build" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE.dump_flags">
-<span class="sig-name descname"><span class="pre">dump_flags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.PBE.dump_flags" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">dump_flags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#PBE.dump_flags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.PBE.dump_flags" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE.get_rho_ions">
-<span class="sig-name descname"><span class="pre">get_rho_ions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phi_tot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.PBE.get_rho_ions" title="Link to this definition">#</a></dt>
-<dd><p>Size-modified ion charge density.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>solvent_obj</strong> (<a class="reference internal" href="#fcdft.solvent.pbe.PBE" title="fcdft.solvent.pbe.PBE"><code class="xref py py-class docutils literal notranslate"><span class="pre">PBE</span></code></a>) – Solvent object</p></li>
-<li><p><strong>phi_tot</strong> (<em>1D numpy.ndarray</em><em>, </em><em>optional</em>) – Total electrostatic potential. Defaults to None.</p></li>
-<li><p><strong>cb</strong> (<em>float</em><em>, </em><em>optional</em>) – Ion concentration in atomic unit. Defaults to None.</p></li>
-<li><p><strong>lambda_r</strong> (<em>1D numpy.ndarray</em><em>, </em><em>optional</em>) – Ion-exclusion function. Defaults to None.</p></li>
-<li><p><strong>T</strong> (<em>float</em><em>, </em><em>optional</em>) – Temperature. Defaults to None.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Ion charge density</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>1D numpy.ndarray</p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE.energy_osm">
+<span class="sig-name descname"><span class="pre">energy_osm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phi_tot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">equiv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#PBE.energy_osm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.PBE.energy_osm" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE.grad">
+<span class="sig-name descname"><span class="pre">grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dm</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#PBE.grad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.PBE.grad" title="Link to this definition">#</a></dt>
+<dd><p>Computes the Jacobian for the energy associated with the solvent,
+including the derivatives of the solvent itsself and the interactions
+between the solvent and the charge density of the solute.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -757,6 +762,77 @@ in the file.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE.make_phi">
+<span class="sig-name descname"><span class="pre">make_phi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_sol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho_sol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.PBE.make_phi" title="Link to this definition">#</a></dt>
+<dd><p>Non-linear Poisson-Boltzmann equation driver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>solvent_obj</strong> – An instance of <a class="reference internal" href="#fcdft.solvent.pbe.PBE" title="fcdft.solvent.pbe.PBE"><code class="xref py py-class docutils literal notranslate"><span class="pre">PBE</span></code></a></p></li>
+<li><p><strong>bias</strong> (<em>float</em><em>, </em><em>optional</em>) – Bias potential in atomic unit. Defaults to None.</p></li>
+<li><p><strong>phi_sol</strong> (<em>numpy.ndarray</em><em>, </em><em>optional</em>) – Solute potential in vacuum. Defaults to None.</p></li>
+<li><p><strong>rho_sol</strong> (<em>numpy.ndarray</em><em>, </em><em>optional</em>) – Solute charge density in vacuum. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>RuntimeError</strong> – Infinite ion charge density.</p></li>
+<li><p><strong>RuntimeError</strong> – PBE self-consistent cycle fails to converge.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Total potential, ion charge density, and polarization charge density.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>numpy.ndarray, numpy.ndarray, numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE.make_phi_sol">
+<span class="sig-name descname"><span class="pre">make_phi_sol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.PBE.make_phi_sol" title="Link to this definition">#</a></dt>
+<dd><p>Generates solute potential in vacuum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>solvent_obj</strong> (<a class="reference internal" href="#fcdft.solvent.pbe.PBE" title="fcdft.solvent.pbe.PBE"><code class="xref py py-class docutils literal notranslate"><span class="pre">PBE</span></code></a>) – Solvent object.</p></li>
+<li><p><strong>dm</strong> (<em>2D numpy.ndarray</em>) – Density matrix</p></li>
+<li><p><strong>coords</strong> (<em>2D numpy.ndarray</em>) – Cartesian grids.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Solute electrostatic potential.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy tag_array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE.make_rho_sol">
+<span class="sig-name descname"><span class="pre">make_rho_sol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phi_sol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngrids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.PBE.make_rho_sol" title="Link to this definition">#</a></dt>
+<dd><p>Solute charge density by solving the Poisson equation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>solvent_obj</strong> (<a class="reference internal" href="#fcdft.solvent.pbe.PBE" title="fcdft.solvent.pbe.PBE"><code class="xref py py-class docutils literal notranslate"><span class="pre">PBE</span></code></a>) – Solvent object.</p></li>
+<li><p><strong>phi_sol</strong> (<em>1D numpy.ndarray</em>) – Electrostatic potential of the solute molecule.</p></li>
+<li><p><strong>ngrids</strong> (<em>int</em>) – Number of grid points along each axis.</p></li>
+<li><p><strong>spacing</strong> (<em>float</em>) – Grid spacing</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Solute charge density</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>1D numpy.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE.make_sas">
 <span class="sig-name descname"><span class="pre">make_sas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_radii</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.PBE.make_sas" title="Link to this definition">#</a></dt>
 <dd><p>Generating solvent-accessible surface</p>
@@ -781,19 +857,19 @@ in the file.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE.nuc_grad_method">
-<span class="sig-name descname"><span class="pre">nuc_grad_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad_method</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.PBE.nuc_grad_method" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">nuc_grad_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad_method</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#PBE.nuc_grad_method"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.PBE.nuc_grad_method" title="Link to this definition">#</a></dt>
 <dd><p>For grad_method in vacuum, add nuclear gradients of solvent</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.PBE.reset" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#PBE.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.PBE.reset" title="Link to this definition">#</a></dt>
 <dd><p>Reset mol and clean up relevant attributes for scanner mode</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.PBE.to_gpu">
-<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.PBE.to_gpu" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">to_gpu</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#PBE.to_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.PBE.to_gpu" title="Link to this definition">#</a></dt>
 <dd><p>Convert a method to its corresponding GPU variant, and recursively
 converts all attributes of a method to cupy objects or gpu4pyscf objects.</p>
 </dd></dl>
@@ -801,117 +877,13 @@ converts all attributes of a method to cupy objects or gpu4pyscf objects.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe.bc_grad">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">bc_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngrids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slope</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sas</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.bc_grad" title="Link to this definition">#</a></dt>
-<dd><p>Analytic gradient of the boundary conditions.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>solvent_obj</strong> (<a class="reference internal" href="#fcdft.solvent.pbe.PBE" title="fcdft.solvent.pbe.PBE"><code class="xref py py-class docutils literal notranslate"><span class="pre">PBE</span></code></a>) – Solvent object.</p></li>
-<li><p><strong>ngrids</strong> (<em>int</em>) – Number of grid points along each axis.</p></li>
-<li><p><strong>spacing</strong> (<em>float</em>) – Grid spacing.</p></li>
-<li><p><strong>T</strong> (<em>float</em>) – Temperature.</p></li>
-<li><p><strong>slope</strong> (<em>float</em>) – Negative of electric field inside the Stern layer.</p></li>
-<li><p><strong>phi_z</strong> (<em>1D numpy.ndarray</em>) – Boundary value before applying the solvent-accessible surface.</p></li>
-<li><p><strong>sas</strong> (<em>1D numpy.ndarray</em>) – Solvent-accessible surface.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Analytic gradient of the boundary values,
-analytic gradient of the electrostatic potential before applying solvent-accessible surface,
-and analytic gradient of the solvent-accessible surface.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>2D numpy.ndarray, 2D numpy.ndarray, 2D numpy.ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe.bc_laplacian">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">bc_laplacian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngrids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_phi_z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_sas</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.bc_laplacian" title="Link to this definition">#</a></dt>
-<dd><p>Laplacian of the boundary values.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>solvent_obj</strong> (<a class="reference internal" href="#fcdft.solvent.pbe.PBE" title="fcdft.solvent.pbe.PBE"><code class="xref py py-class docutils literal notranslate"><span class="pre">PBE</span></code></a>) – Solvent object.</p></li>
-<li><p><strong>ngrids</strong> (<em>int</em>) – Number of grid points along each axis.</p></li>
-<li><p><strong>spacing</strong> (<em>float</em>) – Grid spacing.</p></li>
-<li><p><strong>T</strong> (<em>float</em>) – Temperature.</p></li>
-<li><p><strong>phi_z</strong> (<em>1D numpy.ndarray</em>) – Boundary value before applying the solvent-accessible surface.</p></li>
-<li><p><strong>grad_phi_z</strong> (<em>2D numpy.ndarray</em>) – Gradient of the boundary values before applying the solvent accessible surface.</p></li>
-<li><p><strong>sas</strong> (<em>1D numpy.ndarray</em>) – Solvent-accessible surface.</p></li>
-<li><p><strong>grad_sas</strong> (<em>2D numpy.ndarray</em>) – Gradient of the solvent-accessible surface.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Laplacian of the boundary values.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>1D numpy.ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.gen_pbe_solver">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">gen_pbe_solver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.gen_pbe_solver" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">gen_pbe_solver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#gen_pbe_solver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.gen_pbe_solver" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe.get_rho_ions">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">get_rho_ions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_tot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cb</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_r</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.get_rho_ions" title="Link to this definition">#</a></dt>
-<dd><p>Size-modified ion charge density.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>solvent_obj</strong> (<a class="reference internal" href="#fcdft.solvent.pbe.PBE" title="fcdft.solvent.pbe.PBE"><code class="xref py py-class docutils literal notranslate"><span class="pre">PBE</span></code></a>) – Solvent object</p></li>
-<li><p><strong>phi_tot</strong> (<em>1D numpy.ndarray</em><em>, </em><em>optional</em>) – Total electrostatic potential. Defaults to None.</p></li>
-<li><p><strong>cb</strong> (<em>float</em><em>, </em><em>optional</em>) – Ion concentration in atomic unit. Defaults to None.</p></li>
-<li><p><strong>lambda_r</strong> (<em>1D numpy.ndarray</em><em>, </em><em>optional</em>) – Ion-exclusion function. Defaults to None.</p></li>
-<li><p><strong>T</strong> (<em>float</em><em>, </em><em>optional</em>) – Temperature. Defaults to None.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Ion charge density</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>1D numpy.ndarray</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe.impose_bc">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">impose_bc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngrids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern_sam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps_sam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pzc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_pot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jump_coeff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.impose_bc" title="Link to this definition">#</a></dt>
-<dd><p>Boundary condition generator by the linearized Poisson-Boltzmann equation and the Gouy-Chapman-Stern model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>solvent_obj</strong> (<a class="reference internal" href="#fcdft.solvent.pbe.PBE" title="fcdft.solvent.pbe.PBE"><code class="xref py py-class docutils literal notranslate"><span class="pre">PBE</span></code></a>) – Solvent object.</p></li>
-<li><p><strong>ngrids</strong> (<em>int</em>) – Number of grid points along each axis.</p></li>
-<li><p><strong>spacing</strong> (<em>float</em>) – Grid spacing.</p></li>
-<li><p><strong>bias</strong> (<em>float</em>) – Bias Potential.</p></li>
-<li><p><strong>stern</strong> (<em>float</em>) – Stern layer by self-assembled monolayer.</p></li>
-<li><p><strong>kappa</strong> (<em>float</em>) – Debye inverse screening length.</p></li>
-<li><p><strong>T</strong> (<em>float</em>) – Temperature.</p></li>
-<li><p><strong>eps_sam</strong> (<em>float</em>) – Dielectric constant of the self-assembled monolayer.</p></li>
-<li><p><strong>eps</strong> (<em>float</em>) – Dielectric constant of the bulk solvent.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Boundary values, electrostatic potential
-before applying solvent-accessible surface, and the potential slope in the Stern layer.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>1D numpy.ndarray, 1D numpy.ndarray, float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.make_eps">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">make_eps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps_sam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern_sam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sas</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.make_eps" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">make_eps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps_sam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern_sam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sas</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#make_eps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.make_eps" title="Link to this definition">#</a></dt>
 <dd><p>Calculates the dielectric function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -935,7 +907,7 @@ before applying solvent-accessible surface, and the potential slope in the Stern
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.make_grad_eps">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">make_grad_eps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps_sam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern_sam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_radii</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sas</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.make_grad_eps" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">make_grad_eps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps_sam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern_sam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_radii</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sas</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#make_grad_eps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.make_grad_eps" title="Link to this definition">#</a></dt>
 <dd><p>Generates analytic gradient of the dielectric function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -963,7 +935,7 @@ before applying solvent-accessible surface, and the potential slope in the Stern
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.make_lambda">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">make_lambda</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern_mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern_sam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_radii</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.make_lambda" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">make_lambda</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern_mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern_sam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_radii</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#make_lambda"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.make_lambda" title="Link to this definition">#</a></dt>
 <dd><p>Ion-exclusion function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -989,7 +961,7 @@ before applying solvent-accessible surface, and the potential slope in the Stern
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.make_phi">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">make_phi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_sol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho_sol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.make_phi" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">make_phi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_sol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho_sol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#make_phi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.make_phi" title="Link to this definition">#</a></dt>
 <dd><p>Non-linear Poisson-Boltzmann equation driver.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1017,7 +989,7 @@ before applying solvent-accessible surface, and the potential slope in the Stern
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.make_phi_sol">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">make_phi_sol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.make_phi_sol" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">make_phi_sol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#make_phi_sol"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.make_phi_sol" title="Link to this definition">#</a></dt>
 <dd><p>Generates solute potential in vacuum.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1038,13 +1010,14 @@ before applying solvent-accessible surface, and the potential slope in the Stern
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.make_rho_sol">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">make_rho_sol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_sol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.make_rho_sol" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">make_rho_sol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_sol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngrids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#make_rho_sol"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.make_rho_sol" title="Link to this definition">#</a></dt>
 <dd><p>Solute charge density by solving the Poisson equation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>solvent_obj</strong> (<a class="reference internal" href="#fcdft.solvent.pbe.PBE" title="fcdft.solvent.pbe.PBE"><code class="xref py py-class docutils literal notranslate"><span class="pre">PBE</span></code></a>) – Solvent object.</p></li>
 <li><p><strong>phi_sol</strong> (<em>1D numpy.ndarray</em>) – Electrostatic potential of the solute molecule.</p></li>
+<li><p><strong>ngrids</strong> (<em>int</em>) – Number of grid points along each axis.</p></li>
 <li><p><strong>spacing</strong> (<em>float</em>) – Grid spacing</p></li>
 </ul>
 </dd>
@@ -1059,7 +1032,7 @@ before applying solvent-accessible surface, and the potential slope in the Stern
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.make_sas">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">make_sas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_radii</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.make_sas" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">make_sas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomic_radii</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#make_sas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.make_sas" title="Link to this definition">#</a></dt>
 <dd><p>Generating solvent-accessible surface</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1082,91 +1055,12 @@ before applying solvent-accessible surface, and the potential slope in the Stern
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.solvent.pbe.pbe_for_scf">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">pbe_for_scf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.pbe_for_scf" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">pbe_for_scf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solvent_obj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/solvent/pbe.html#pbe_for_scf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.solvent.pbe.pbe_for_scf" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe.phi_a_finder">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe.</span></span><span class="sig-name descname"><span class="pre">phi_a_finder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kappa</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps_sam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern_sam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bottom</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe.phi_a_finder" title="Link to this definition">#</a></dt>
-<dd><p>Interface potential value finder by the bisection + Newton-Rhapson method.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>kappa</strong> (<em>float</em>) – Debye inverse screening length in atomic unit.</p></li>
-<li><p><strong>T</strong> (<em>float</em>) – Temperature in Kelvin.</p></li>
-<li><p><strong>eps</strong> (<em>float</em>) – Dielectric constant of bulk solvent.</p></li>
-<li><p><strong>eps_sam</strong> (<em>float</em>) – Dielectric constant of the self-assembled monolayer.</p></li>
-<li><p><strong>stern_sam</strong> (<em>float</em>) – Stern layer length in atomic unit.</p></li>
-<li><p><strong>bottom</strong> (<em>float</em>) – Relative potential at the bottom in atomic unit.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>RuntimeError</strong> – Convergence failure in 1000 Newton-Raphson cycles.</p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Electrostatic potential at the interface.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
 
 </section>
-<section id="module-fcdft.solvent.pbe_grad">
-<span id="fcdft-solvent-pbe-grad-module"></span><h2>fcdft.solvent.pbe_grad module<a class="headerlink" href="#module-fcdft.solvent.pbe_grad" title="Link to this heading">#</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe_grad.WithSolventGrad">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe_grad.</span></span><span class="sig-name descname"><span class="pre">WithSolventGrad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad_method</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe_grad.WithSolventGrad" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe_grad.WithSolventGrad._finalize">
-<span class="sig-name descname"><span class="pre">_finalize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe_grad.WithSolventGrad._finalize" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe_grad.WithSolventGrad._keys">
-<span class="sig-name descname"><span class="pre">_keys</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'de_solute',</span> <span class="pre">'de_solvent'}</span></em><a class="headerlink" href="#fcdft.solvent.pbe_grad.WithSolventGrad._keys" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe_grad.WithSolventGrad.kernel">
-<span class="sig-name descname"><span class="pre">kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe_grad.WithSolventGrad.kernel" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe_grad.WithSolventGrad.undo_solvent">
-<span class="sig-name descname"><span class="pre">undo_solvent</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe_grad.WithSolventGrad.undo_solvent" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe_grad.db_force">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe_grad.</span></span><span class="sig-name descname"><span class="pre">db_force</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pbeobj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe_grad.db_force" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe_grad.ib_force">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe_grad.</span></span><span class="sig-name descname"><span class="pre">ib_force</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pbeobj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe_grad.ib_force" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe_grad.kernel">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe_grad.</span></span><span class="sig-name descname"><span class="pre">kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pbeobj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe_grad.kernel" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe_grad.make_grad_object">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe_grad.</span></span><span class="sig-name descname"><span class="pre">make_grad_object</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grad_method</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe_grad.make_grad_object" title="Link to this definition">#</a></dt>
-<dd><p>For grad_method in vacuum, add nuclear gradients of solvent pcmobj</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.solvent.pbe_grad.rf_force">
-<span class="sig-prename descclassname"><span class="pre">fcdft.solvent.pbe_grad.</span></span><span class="sig-name descname"><span class="pre">rf_force</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pbeobj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.solvent.pbe_grad.rf_force" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
+<section id="fcdft-solvent-pbe-grad-module">
+<h2>fcdft.solvent.pbe_grad module<a class="headerlink" href="#fcdft-solvent-pbe-grad-module" title="Link to this heading">#</a></h2>
 </section>
 <section id="module-fcdft.solvent.radii">
 <span id="fcdft-solvent-radii-module"></span><h2>fcdft.solvent.radii module<a class="headerlink" href="#module-fcdft.solvent.radii" title="Link to this heading">#</a></h2>
@@ -1186,6 +1080,24 @@ before applying solvent-accessible surface, and the potential slope in the Stern
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="fcdft.lifcdft.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">fcdft.lifcdft package</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="fcdft.tools.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">fcdft.tools package</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -1207,6 +1119,7 @@ before applying solvent-accessible surface, and the potential slope in the Stern
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-fcdft.solvent.calculus_helper">fcdft.solvent.calculus_helper module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.calculus_helper.dirichlet_gradient"><code class="docutils literal notranslate"><span class="pre">dirichlet_gradient()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.calculus_helper.gradient"><code class="docutils literal notranslate"><span class="pre">gradient()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.calculus_helper.poisson"><code class="docutils literal notranslate"><span class="pre">poisson()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.calculus_helper.vectorize_grad"><code class="docutils literal notranslate"><span class="pre">vectorize_grad()</span></code></a></li>
@@ -1231,27 +1144,23 @@ before applying solvent-accessible surface, and the potential slope in the Stern
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE"><code class="docutils literal notranslate"><span class="pre">PBE</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE._get_v"><code class="docutils literal notranslate"><span class="pre">PBE._get_v()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE._get_vind"><code class="docutils literal notranslate"><span class="pre">PBE._get_vind()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE._get_vmat"><code class="docutils literal notranslate"><span class="pre">PBE._get_vmat()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE._keys"><code class="docutils literal notranslate"><span class="pre">PBE._keys</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE.build"><code class="docutils literal notranslate"><span class="pre">PBE.build()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE.dump_flags"><code class="docutils literal notranslate"><span class="pre">PBE.dump_flags()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE.get_rho_ions"><code class="docutils literal notranslate"><span class="pre">PBE.get_rho_ions()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE.energy_osm"><code class="docutils literal notranslate"><span class="pre">PBE.energy_osm()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE.grad"><code class="docutils literal notranslate"><span class="pre">PBE.grad()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE.make_eps"><code class="docutils literal notranslate"><span class="pre">PBE.make_eps()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE.make_grad_eps"><code class="docutils literal notranslate"><span class="pre">PBE.make_grad_eps()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE.make_lambda"><code class="docutils literal notranslate"><span class="pre">PBE.make_lambda()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE.make_phi"><code class="docutils literal notranslate"><span class="pre">PBE.make_phi()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE.make_phi_sol"><code class="docutils literal notranslate"><span class="pre">PBE.make_phi_sol()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE.make_rho_sol"><code class="docutils literal notranslate"><span class="pre">PBE.make_rho_sol()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE.make_sas"><code class="docutils literal notranslate"><span class="pre">PBE.make_sas()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE.nuc_grad_method"><code class="docutils literal notranslate"><span class="pre">PBE.nuc_grad_method()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE.reset"><code class="docutils literal notranslate"><span class="pre">PBE.reset()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.PBE.to_gpu"><code class="docutils literal notranslate"><span class="pre">PBE.to_gpu()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.bc_grad"><code class="docutils literal notranslate"><span class="pre">bc_grad()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.bc_laplacian"><code class="docutils literal notranslate"><span class="pre">bc_laplacian()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.gen_pbe_solver"><code class="docutils literal notranslate"><span class="pre">gen_pbe_solver()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.get_rho_ions"><code class="docutils literal notranslate"><span class="pre">get_rho_ions()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.impose_bc"><code class="docutils literal notranslate"><span class="pre">impose_bc()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.make_eps"><code class="docutils literal notranslate"><span class="pre">make_eps()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.make_grad_eps"><code class="docutils literal notranslate"><span class="pre">make_grad_eps()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.make_lambda"><code class="docutils literal notranslate"><span class="pre">make_lambda()</span></code></a></li>
@@ -1260,24 +1169,9 @@ before applying solvent-accessible surface, and the potential slope in the Stern
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.make_rho_sol"><code class="docutils literal notranslate"><span class="pre">make_rho_sol()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.make_sas"><code class="docutils literal notranslate"><span class="pre">make_sas()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.pbe_for_scf"><code class="docutils literal notranslate"><span class="pre">pbe_for_scf()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe.phi_a_finder"><code class="docutils literal notranslate"><span class="pre">phi_a_finder()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-fcdft.solvent.pbe_grad">fcdft.solvent.pbe_grad module</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe_grad.WithSolventGrad"><code class="docutils literal notranslate"><span class="pre">WithSolventGrad</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe_grad.WithSolventGrad._finalize"><code class="docutils literal notranslate"><span class="pre">WithSolventGrad._finalize()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe_grad.WithSolventGrad._keys"><code class="docutils literal notranslate"><span class="pre">WithSolventGrad._keys</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe_grad.WithSolventGrad.kernel"><code class="docutils literal notranslate"><span class="pre">WithSolventGrad.kernel()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe_grad.WithSolventGrad.undo_solvent"><code class="docutils literal notranslate"><span class="pre">WithSolventGrad.undo_solvent()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe_grad.db_force"><code class="docutils literal notranslate"><span class="pre">db_force()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe_grad.ib_force"><code class="docutils literal notranslate"><span class="pre">ib_force()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe_grad.kernel"><code class="docutils literal notranslate"><span class="pre">kernel()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe_grad.make_grad_object"><code class="docutils literal notranslate"><span class="pre">make_grad_object()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.solvent.pbe_grad.rf_force"><code class="docutils literal notranslate"><span class="pre">rf_force()</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft-solvent-pbe-grad-module">fcdft.solvent.pbe_grad module</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-fcdft.solvent.radii">fcdft.solvent.radii module</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-fcdft.solvent">Module contents</a></li>
 </ul>
@@ -1317,7 +1211,7 @@ before applying solvent-accessible surface, and the potential slope in the Stern
 
   <p class="copyright">
     
-      © Copyright 2025, Jun-Hyeong Kim.
+      © Copyright 2026, Jun-Hyeong Kim.
       <br/>
     
   </p>
@@ -1326,7 +1220,7 @@ before applying solvent-accessible surface, and the potential slope in the Stern
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     <br/>
   </p>
 </div>

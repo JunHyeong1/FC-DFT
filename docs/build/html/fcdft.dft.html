@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fcdft.dft package &#8212; FC-DFT 1.0.0 documentation</title>
+    <title>fcdft.dft package &#8212; FC-DFT 1.1.5 documentation</title>
   
   
   
@@ -38,13 +38,15 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/documentation_options.js?v=a48ae3df"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'fcdft.dft';</script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="fcdft.grad package" href="fcdft.grad.html" />
+    <link rel="prev" title="fcdft package" href="fcdft.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -109,7 +111,7 @@
   
   
   
-    <p class="title logo__title">FC-DFT 1.0.0 documentation</p>
+    <p class="title logo__title">FC-DFT 1.1.5 documentation</p>
   
 </a></div>
     
@@ -140,6 +142,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="about.html">
     About
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="fcdft.html">
+    fcdft package
   </a>
 </li>
 
@@ -252,6 +261,13 @@
   </a>
 </li>
 
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="fcdft.html">
+    fcdft package
+  </a>
+</li>
+
   </ul>
 </nav></div>
           
@@ -345,6 +361,9 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
+    
+    <li class="breadcrumb-item"><a href="fcdft.html" class="nav-link">fcdft package</a></li>
+    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fcdft.dft package</span></li>
   </ul>
 </nav>
@@ -371,31 +390,14 @@
 <span id="fcdft-dft-numint-module"></span><h2>fcdft.dft.numint module<a class="headerlink" href="#module-fcdft.dft.numint" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="fcdft.dft.numint.NumInt">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fcdft.dft.numint.</span></span><span class="sig-name descname"><span class="pre">NumInt</span></span><a class="headerlink" href="#fcdft.dft.numint.NumInt" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fcdft.dft.numint.</span></span><span class="sig-name descname"><span class="pre">NumInt</span></span><a class="reference internal" href="_modules/fcdft/dft/numint.html#NumInt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.dft.numint.NumInt" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">NumInt</span></code></p>
 <p>Bypassing warning messages</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="fcdft.dft.numint.NumInt._gen_rho_evaluator">
-<span class="sig-name descname"><span class="pre">_gen_rho_evaluator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hermi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_lapl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.dft.numint.NumInt._gen_rho_evaluator" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.dft.numint._contract_rho">
-<span class="sig-prename descclassname"><span class="pre">fcdft.dft.numint.</span></span><span class="sig-name descname"><span class="pre">_contract_rho</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ket</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.dft.numint._contract_rho" title="Link to this definition">#</a></dt>
-<dd><p>Real part of rho for rho=einsum(‘pi,pi-&gt;p’, bra.conj(), ket)</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.dft.numint._dot_ao_dm">
-<span class="sig-prename descclassname"><span class="pre">fcdft.dft.numint.</span></span><span class="sig-name descname"><span class="pre">_dot_ao_dm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ao</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non0tab</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shls_slice</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ao_loc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.dft.numint._dot_ao_dm" title="Link to this definition">#</a></dt>
-<dd><p>return numpy.dot(ao, dm)</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.dft.numint.eval_rho">
-<span class="sig-prename descclassname"><span class="pre">fcdft.dft.numint.</span></span><span class="sig-name descname"><span class="pre">eval_rho</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ao</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non0tab</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xctype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LDA'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hermi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_lapl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.dft.numint.eval_rho" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.dft.numint.</span></span><span class="sig-name descname"><span class="pre">eval_rho</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ao</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non0tab</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xctype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LDA'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hermi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_lapl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/dft/numint.html#eval_rho"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.dft.numint.eval_rho" title="Link to this definition">#</a></dt>
 <dd><p>Hooker to allow double * complex double _contract_rho</p>
 </dd></dl>
 
@@ -415,6 +417,24 @@
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="fcdft.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">fcdft package</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="fcdft.grad.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">fcdft.grad package</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -436,12 +456,7 @@
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-fcdft.dft.numint">fcdft.dft.numint module</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.dft.numint.NumInt"><code class="docutils literal notranslate"><span class="pre">NumInt</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.dft.numint.NumInt._gen_rho_evaluator"><code class="docutils literal notranslate"><span class="pre">NumInt._gen_rho_evaluator()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.dft.numint._contract_rho"><code class="docutils literal notranslate"><span class="pre">_contract_rho()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.dft.numint._dot_ao_dm"><code class="docutils literal notranslate"><span class="pre">_dot_ao_dm()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.dft.numint.NumInt"><code class="docutils literal notranslate"><span class="pre">NumInt</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.dft.numint.eval_rho"><code class="docutils literal notranslate"><span class="pre">eval_rho()</span></code></a></li>
 </ul>
 </li>
@@ -483,7 +498,7 @@
 
   <p class="copyright">
     
-      © Copyright 2025, Jun-Hyeong Kim.
+      © Copyright 2026, Jun-Hyeong Kim.
       <br/>
     
   </p>
@@ -492,7 +507,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     <br/>
   </p>
 </div>

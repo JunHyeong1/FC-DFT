@@ -64,8 +64,8 @@
 
 
 \title{FC\sphinxhyphen{}DFT}
-\date{Jun 12, 2025}
-\release{1.0.0}
+\date{Apr 08, 2026}
+\release{1.1.5}
 \author{Jun\sphinxhyphen{}Hyeong Kim}
 \newcommand{\sphinxlogo}{\vbox{}}
 \renewcommand{\releasename}{Release}
@@ -165,119 +165,184 @@ Go into \sphinxtitleref{build} and compile the C shared libraries by \sphinxtitl
 \chapter{Examples}
 \label{\detokenize{examples:examples}}\label{\detokenize{examples::doc}}
 \sphinxAtStartPar
-This chapter introduces brief exmaples of running FC\sphinxhyphen{}DFT and Poisson\sphinxhyphen{}Boltzmann solvation calculations
+This chapter introduces practical examples of running FC\sphinxhyphen{}DFT and Poisson\sphinxhyphen{}Boltzmann solvation calculations with the current implementation.
 
 
-\section{Wide\sphinxhyphen{}Band Limit}
-\label{\detokenize{examples:wide-band-limit}}
+\section{Wide\sphinxhyphen{}Band Limit (WBL) Approximation}
+\label{\detokenize{examples:wide-band-limit-wbl-approximation}}
 \sphinxAtStartPar
-FC\sphinxhyphen{}DFT uses the wide\sphinxhyphen{}band limit (WBL) approximation. In particular, the WBL\sphinxhyphen{}Molecule approximation is adopted for simple but powerful implementation. WBL\sphinxhyphen{}Molecule requires users to provide the imaginary part of the self\sphinxhyphen{}energy in \sphinxcode{\sphinxupquote{WBLMolecule}} object.
-Currently, spin\sphinxhyphen{}restricted version of FC\sphinxhyphen{}DFT (\sphinxcode{\sphinxupquote{fcdft.wbl.rks}}) is supported. Below is a sample code, where the self\sphinxhyphen{}energy of 0.01 eV is attached to the sulfur atom of methanethiol with 25.95 electrons.
+FC\sphinxhyphen{}DFT implements the wide\sphinxhyphen{}band limit (WBL) approximation through the WBL\sphinxhyphen{}Molecule approach, which allows DFT calculations on molecules coupled to electrode contacts. The WBL\sphinxhyphen{}Molecule requires you to specify the imaginary part of the self\sphinxhyphen{}energy (broadening parameter, Γ\_L) and the Fermi level (reference potential).
+
+\sphinxAtStartPar
+The self\sphinxhyphen{}energy in WBL is defined as:
+\begin{equation*}
+\begin{split}\Sigma_L = \Lambda_L - \frac{i}{2}\Gamma_L S\end{split}
+\end{equation*}
+\sphinxAtStartPar
+where Λ\_L shifts the energy levels and Γ\_L controls the level broadening (related to the \sphinxcode{\sphinxupquote{broad}} parameter). The applied voltage is incorporated through a potential correction:
+\begin{equation*}
+\begin{split}[\Delta H_L]_{\mu\nu} = \Delta V_b [S]_{\mu\nu}\end{split}
+\end{equation*}
+\sphinxAtStartPar
+where ΔV\_b = \sphinxhyphen{}(μ \sphinxhyphen{} μ\_ref) is the chemical potential difference from the reference electrode potential.
+
+\sphinxAtStartPar
+Currently, the spin\sphinxhyphen{}restricted version (\sphinxcode{\sphinxupquote{fcdft.wbl.rks}}) is supported. The example below shows how to perform a WBL calculation on methanethiol with a sulfur\sphinxhyphen{}electrode contact:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pyscf}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{gto}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pyscf}\PYG{n+nn}{.}\PYG{n+nn}{dft}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{RKS}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{c+c1}{\PYGZsh{} Define molecular structure}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{mol} \PYG{o}{=} \PYG{n}{gto}\PYG{o}{.}\PYG{n}{M}\PYG{p}{(}\PYG{n}{atom}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
-\PYG{g+gp}{... }\PYG{l+s+s1}{           C       \PYGZhy{}1.718553971     \PYGZhy{}0.000000250     \PYGZhy{}0.626147715}
-\PYG{g+gp}{... }\PYG{l+s+s1}{           H       \PYGZhy{}2.739245971     \PYGZhy{}0.008907250     \PYGZhy{}0.227127715}
-\PYG{g+gp}{... }\PYG{l+s+s1}{           H       \PYGZhy{}1.200493971     \PYGZhy{}0.879491250     \PYGZhy{}0.227127715}
-\PYG{g+gp}{... }\PYG{l+s+s1}{           H       \PYGZhy{}1.215921971      0.888398750     \PYGZhy{}0.227127715}
-\PYG{g+gp}{... }\PYG{l+s+s1}{           S       \PYGZhy{}1.718553971     \PYGZhy{}0.000000250     \PYGZhy{}2.396147715}
-\PYG{g+gp}{... }\PYG{l+s+s1}{           H       \PYGZhy{}2.150082583      0.805150681     \PYGZhy{}2.710667448}\PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{n}{charge}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{basis}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{6\PYGZhy{}31g**}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+\PYG{g+gp}{... }\PYG{l+s+s1}{    C    \PYGZhy{}1.718553971    \PYGZhy{}0.000000250    \PYGZhy{}0.626147715}
+\PYG{g+gp}{... }\PYG{l+s+s1}{    H    \PYGZhy{}2.739245971    \PYGZhy{}0.008907250    \PYGZhy{}0.227127715}
+\PYG{g+gp}{... }\PYG{l+s+s1}{    H    \PYGZhy{}1.200493971    \PYGZhy{}0.879491250    \PYGZhy{}0.227127715}
+\PYG{g+gp}{... }\PYG{l+s+s1}{    H    \PYGZhy{}1.215921971     0.888398750    \PYGZhy{}0.227127715}
+\PYG{g+gp}{... }\PYG{l+s+s1}{    S    \PYGZhy{}1.718553971    \PYGZhy{}0.000000250    \PYGZhy{}2.396147715}
+\PYG{g+gp}{... }\PYG{l+s+s1}{    H    \PYGZhy{}2.150082583     0.805150681    \PYGZhy{}2.710667448}\PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}\PYG{p}{,}
+\PYG{g+gp}{... }    \PYG{n}{charge}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{basis}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{6\PYGZhy{}31g**}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{c+c1}{\PYGZsh{} Standard DFT calculation}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{mf} \PYG{o}{=} \PYG{n}{RKS}\PYG{p}{(}\PYG{n}{mol}\PYG{p}{,} \PYG{n}{xc}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{pbe}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{mf}\PYG{o}{.}\PYG{n}{kernel}\PYG{p}{(}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{fcdft}\PYG{n+nn}{.}\PYG{n+nn}{wbl}\PYG{n+nn}{.}\PYG{n+nn}{rks}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{o}{*}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wblmf} \PYG{o}{=} \PYG{n}{WBLMolecule}\PYG{p}{(}\PYG{n}{mf}\PYG{p}{,} \PYG{n}{broad}\PYG{o}{=}\PYG{l+m+mf}{0.01}\PYG{p}{,} \PYG{n}{nelectron}\PYG{o}{=}\PYG{l+m+mf}{25.95}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{c+c1}{\PYGZsh{} WBL calculation}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{fcdft}\PYG{n+nn}{.}\PYG{n+nn}{wbl}\PYG{n+nn}{.}\PYG{n+nn}{rks}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{WBLMoleculeRKS}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wblmf} \PYG{o}{=} \PYG{n}{WBLMoleculeRKS}\PYG{p}{(}\PYG{n}{mol}\PYG{p}{,} \PYG{n}{xc}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{pbe}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{broad}\PYG{o}{=}\PYG{l+m+mf}{0.01}\PYG{p}{,} \PYG{n}{nelectron}\PYG{o}{=}\PYG{l+m+mf}{25.95}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wblmf}\PYG{o}{.}\PYG{n}{ref\PYGZus{}pot} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{4.5}  \PYG{c+c1}{\PYGZsh{} Reference potential (e.g., electrode Fermi level) in eV}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wblmf}\PYG{o}{.}\PYG{n}{kernel}\PYG{p}{(}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{dm} \PYG{o}{=} \PYG{n}{wblmf}\PYG{o}{.}\PYG{n}{make\PYGZus{}rdm1}\PYG{p}{(}\PYG{p}{)}  \PYG{c+c1}{\PYGZsh{} Density matrix at electrode contact}
 \end{sphinxVerbatim}
 
 
-\section{Non\sphinxhyphen{}Linear Poisson\sphinxhyphen{}Boltzmann Solvation Model}
-\label{\detokenize{examples:non-linear-poisson-boltzmann-solvation-model}}
+\section{Poisson\sphinxhyphen{}Boltzmann Solvation Model}
+\label{\detokenize{examples:poisson-boltzmann-solvation-model}}
 \sphinxAtStartPar
-We provide the Poisson\sphinxhyphen{}Boltzmann solver for general purpose. \sphinxcode{\sphinxupquote{fcdft.solvent.pbe}} module supports usual solvation energy calculations as what polarizable continuum model does.
-To do so, a few attributes of \sphinxcode{\sphinxupquote{PBE}} needs to be controlled since it was originally intended to solve the electrostatic potential under the Gouy\sphinxhyphen{}Chapman\sphinxhyphen{}Stern theory:
+The \sphinxcode{\sphinxupquote{fcdft.solvent.pbe}} module provides a non\sphinxhyphen{}linear Poisson\sphinxhyphen{}Boltzmann (PB) solver for modeling solvation at electrode/liquid interfaces. Unlike standard PCM models, this implementation can handle complex boundary conditions including Stern layers and is designed for electrochemical systems.
+
+\sphinxAtStartPar
+The non\sphinxhyphen{}linear Poisson\sphinxhyphen{}Boltzmann equation is:
+\begin{equation*}
+\begin{split}\nabla \cdot (\epsilon(r)\nabla\phi^{\text{tot}}(r)) = -4\pi[\rho^{\text{sol}}(r) + \rho^{\text{ions}}(r)]\end{split}
+\end{equation*}
+\sphinxAtStartPar
+where ε(r) is the position\sphinxhyphen{}dependent dielectric function, φ\textasciicircum{}tot(r) is the total electrostatic potential, ρ\textasciicircum{}sol(r) is the solute charge density, and ρ\textasciicircum{}ions(r) is the ion charge density. The dielectric function varies smoothly from the SAM (self\sphinxhyphen{}assembled monolayer) to the bulk solvent:
+\begin{equation*}
+\begin{split}\epsilon(z) = \epsilon_{\text{SAM}} + \frac{1}{2}(\epsilon_{\text{bulk}} - \epsilon_{\text{SAM}})\left[1 + \text{erf}\left(\frac{z-a}{\Delta_1}\right)\right]\end{split}
+\end{equation*}
+\sphinxAtStartPar
+\sphinxstylestrong{Standard Solvation :}
+
+\sphinxAtStartPar
+For standard continuum solvation without electrode effects:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pyscf}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{gto}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pyscf}\PYG{n+nn}{.}\PYG{n+nn}{dft}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{RKS}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{fcdft}\PYG{n+nn}{.}\PYG{n+nn}{solvent}\PYG{n+nn}{.}\PYG{n+nn}{pbe}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{PBE}\PYG{p}{,} \PYG{n}{pbe\PYGZus{}for\PYGZus{}scf}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{c+c1}{\PYGZsh{} Water molecule}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{mol} \PYG{o}{=} \PYG{n}{gto}\PYG{o}{.}\PYG{n}{M}\PYG{p}{(}\PYG{n}{atom}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
-\PYG{g+gp}{... }\PYG{l+s+s1}{           O        0.152427064      0.959723218     \PYGZhy{}2.275350162}
-\PYG{g+gp}{... }\PYG{l+s+s1}{           H        0.152427064      1.719060218     \PYGZhy{}1.679307162}
-\PYG{g+gp}{... }\PYG{l+s+s1}{           H        0.152427064      0.200386218     \PYGZhy{}1.679307162}\PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{n}{charge}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{basis}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{6\PYGZhy{}31g**}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+\PYG{g+gp}{... }\PYG{l+s+s1}{    O    0.152427064    0.959723218   \PYGZhy{}2.275350162}
+\PYG{g+gp}{... }\PYG{l+s+s1}{    H    0.152427064    1.719060218   \PYGZhy{}1.679307162}
+\PYG{g+gp}{... }\PYG{l+s+s1}{    H    0.152427064    0.200386218   \PYGZhy{}1.679307162}\PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}\PYG{p}{,}
+\PYG{g+gp}{... }    \PYG{n}{charge}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{basis}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{6\PYGZhy{}31g**}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{c+c1}{\PYGZsh{} Standard DFT}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{mf} \PYG{o}{=} \PYG{n}{RKS}\PYG{p}{(}\PYG{n}{mol}\PYG{p}{,} \PYG{n}{xc}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{b3lyp}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{fcdft}\PYG{n+nn}{.}\PYG{n+nn}{solvent}\PYG{n+nn}{.}\PYG{n+nn}{pbe}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{o}{*}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{c+c1}{\PYGZsh{} Setup PBE solvation model}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{cm} \PYG{o}{=} \PYG{n}{PBE}\PYG{p}{(}\PYG{n}{mol}\PYG{p}{,} \PYG{n}{cb}\PYG{o}{=}\PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{n}{length}\PYG{o}{=}\PYG{l+m+mi}{15}\PYG{p}{,} \PYG{n}{ngrids}\PYG{o}{=}\PYG{l+m+mi}{41}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{cm}\PYG{o}{.}\PYG{n}{eps} \PYG{o}{=} \PYG{l+m+mf}{78.3553}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{cm}\PYG{o}{.}\PYG{n}{atom\PYGZus{}bottom} \PYG{o}{=} \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{center}\PYG{l+s+s1}{\PYGZsq{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{cm}\PYG{o}{.}\PYG{n}{eps} \PYG{o}{=} \PYG{l+m+mf}{78.3553}  \PYG{c+c1}{\PYGZsh{} Dielectric constant of water}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{cm}\PYG{o}{.}\PYG{n}{nelectron} \PYG{o}{=} \PYG{n}{mol}\PYG{o}{.}\PYG{n}{nelectron}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{cm}\PYG{o}{.}\PYG{n}{bias} \PYG{o}{=} \PYG{l+m+mf}{0.0e0}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{cm}\PYG{o}{.}\PYG{n}{surf} \PYG{o}{=} \PYG{l+m+mf}{0.0e0}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{cm}\PYG{o}{.}\PYG{n}{atom\PYGZus{}bottom} \PYG{o}{=} \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{center}\PYG{l+s+s1}{\PYGZsq{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{c+c1}{\PYGZsh{} Solvated DFT calculation}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{solmf} \PYG{o}{=} \PYG{n}{pbe\PYGZus{}for\PYGZus{}scf}\PYG{p}{(}\PYG{n}{mf}\PYG{p}{,} \PYG{n}{cm}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{solmf}\PYG{o}{.}\PYG{n}{kernel}\PYG{p}{(}\PYG{p}{)}
 \end{sphinxVerbatim}
 
 \sphinxAtStartPar
-The following example introduces how to run the Poisson\sphinxhyphen{}Boltzmann solver under the Gouy\sphinxhyphen{}Chapman\sphinxhyphen{}Stern boundary values:
+\sphinxstylestrong{Electrochemical Solvation:}
+
+\sphinxAtStartPar
+For electrochemical systems with a Stern layer and self\sphinxhyphen{}assembled monolayer (SAM), combine WBL and PBE solvation. The boundary conditions follow the Gouy\sphinxhyphen{}Chapman\sphinxhyphen{}Stern theory.
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pyscf}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{gto}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pyscf}\PYG{n+nn}{.}\PYG{n+nn}{dft}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{RKS}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{fcdft}\PYG{n+nn}{.}\PYG{n+nn}{wbl}\PYG{n+nn}{.}\PYG{n+nn}{rks}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{WBLMoleculeRKS}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{fcdft}\PYG{n+nn}{.}\PYG{n+nn}{solvent}\PYG{n+nn}{.}\PYG{n+nn}{pbe}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{PBE}\PYG{p}{,} \PYG{n}{pbe\PYGZus{}for\PYGZus{}scf}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{c+c1}{\PYGZsh{} Methanethiol molecule}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{mol} \PYG{o}{=} \PYG{n}{gto}\PYG{o}{.}\PYG{n}{M}\PYG{p}{(}\PYG{n}{atom}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}
-\PYG{g+gp}{... }\PYG{l+s+s1}{           C       \PYGZhy{}1.718553971     \PYGZhy{}0.000000250     \PYGZhy{}0.626147715}
-\PYG{g+gp}{... }\PYG{l+s+s1}{           H       \PYGZhy{}2.739245971     \PYGZhy{}0.008907250     \PYGZhy{}0.227127715}
-\PYG{g+gp}{... }\PYG{l+s+s1}{           H       \PYGZhy{}1.200493971     \PYGZhy{}0.879491250     \PYGZhy{}0.227127715}
-\PYG{g+gp}{... }\PYG{l+s+s1}{           H       \PYGZhy{}1.215921971      0.888398750     \PYGZhy{}0.227127715}
-\PYG{g+gp}{... }\PYG{l+s+s1}{           S       \PYGZhy{}1.718553971     \PYGZhy{}0.000000250     \PYGZhy{}2.396147715}
-\PYG{g+gp}{... }\PYG{l+s+s1}{           H       \PYGZhy{}2.150082583      0.805150681     \PYGZhy{}2.710667448}\PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}\PYG{p}{,}
-\PYG{g+gp}{... }       \PYG{n}{charge}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{basis}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{6\PYGZhy{}31g**}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{mf} \PYG{o}{=} \PYG{n}{RKS}\PYG{p}{(}\PYG{n}{mol}\PYG{p}{,} \PYG{n}{xc}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{pbe}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{mf}\PYG{o}{.}\PYG{n}{kernel}\PYG{p}{(}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{fcdft}\PYG{n+nn}{.}\PYG{n+nn}{wbl}\PYG{n+nn}{.}\PYG{n+nn}{rks}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{o}{*}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wblmf} \PYG{o}{=} \PYG{n}{WBLMolecule}\PYG{p}{(}\PYG{n}{mf}\PYG{p}{,} \PYG{n}{broad}\PYG{o}{=}\PYG{l+m+mf}{0.01}\PYG{p}{,} \PYG{n}{nelectron}\PYG{o}{=}\PYG{l+m+mf}{25.95}\PYG{p}{)}
+\PYG{g+gp}{... }\PYG{l+s+s1}{    C    \PYGZhy{}1.718553971    \PYGZhy{}0.000000250    \PYGZhy{}0.626147715}
+\PYG{g+gp}{... }\PYG{l+s+s1}{    H    \PYGZhy{}2.739245971    \PYGZhy{}0.008907250    \PYGZhy{}0.227127715}
+\PYG{g+gp}{... }\PYG{l+s+s1}{    H    \PYGZhy{}1.200493971    \PYGZhy{}0.879491250    \PYGZhy{}0.227127715}
+\PYG{g+gp}{... }\PYG{l+s+s1}{    H    \PYGZhy{}1.215921971     0.888398750    \PYGZhy{}0.227127715}
+\PYG{g+gp}{... }\PYG{l+s+s1}{    S    \PYGZhy{}1.718553971    \PYGZhy{}0.000000250    \PYGZhy{}2.396147715}
+\PYG{g+gp}{... }\PYG{l+s+s1}{    H    \PYGZhy{}2.150082583     0.805150681    \PYGZhy{}2.710667448}\PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}\PYGZsq{}}\PYG{p}{,}
+\PYG{g+gp}{... }    \PYG{n}{charge}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{basis}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{6\PYGZhy{}31g**}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{c+c1}{\PYGZsh{} Step 1: WBL calculation at fixed electrode potential}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wblmf} \PYG{o}{=} \PYG{n}{WBLMoleculeRKS}\PYG{p}{(}\PYG{n}{mol}\PYG{p}{,} \PYG{n}{xc}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{pbe}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{broad}\PYG{o}{=}\PYG{l+m+mf}{0.01}\PYG{p}{,} \PYG{n}{nelectron}\PYG{o}{=}\PYG{l+m+mf}{25.95}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wblmf}\PYG{o}{.}\PYG{n}{ref\PYGZus{}pot} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{4.5}  \PYG{c+c1}{\PYGZsh{} Electrode Fermi level}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{wblmf}\PYG{o}{.}\PYG{n}{kernel}\PYG{p}{(}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{dm} \PYG{o}{=} \PYG{n}{wblmf}\PYG{o}{.}\PYG{n}{make\PYGZus{}rdm1}\PYG{p}{(}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{fcdft}\PYG{n+nn}{.}\PYG{n+nn}{solvent}\PYG{n+nn}{.}\PYG{n+nn}{pbe}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{o}{*}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{c+c1}{\PYGZsh{} Step 2: Add solvation with SAM and Stern layer}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{cm} \PYG{o}{=} \PYG{n}{PBE}\PYG{p}{(}\PYG{n}{mol}\PYG{p}{,} \PYG{n}{cb}\PYG{o}{=}\PYG{l+m+mf}{1.0}\PYG{p}{,} \PYG{n}{length}\PYG{o}{=}\PYG{l+m+mi}{15}\PYG{p}{,} \PYG{n}{ngrids}\PYG{o}{=}\PYG{l+m+mi}{41}\PYG{p}{,} \PYG{n}{stern\PYGZus{}sam}\PYG{o}{=}\PYG{l+m+mf}{3.0}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{cm}\PYG{o}{.}\PYG{n}{eps} \PYG{o}{=} \PYG{l+m+mf}{78.3553}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{cm}\PYG{o}{.}\PYG{n}{eps\PYGZus{}sam} \PYG{o}{=} \PYG{l+m+mf}{2.284}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{cm}\PYG{o}{.}\PYG{n}{\PYGZus{}dm} \PYG{o}{=} \PYG{n}{dm}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{cm}\PYG{o}{.}\PYG{n}{eps} \PYG{o}{=} \PYG{l+m+mf}{78.3553}        \PYG{c+c1}{\PYGZsh{} Water dielectric constant}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{cm}\PYG{o}{.}\PYG{n}{eps\PYGZus{}sam} \PYG{o}{=} \PYG{l+m+mf}{2.284}      \PYG{c+c1}{\PYGZsh{} SAM dielectric constant}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{cm}\PYG{o}{.}\PYG{n}{nelectron} \PYG{o}{=} \PYG{n}{mol}\PYG{o}{.}\PYG{n}{nelectron}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{cm}\PYG{o}{.}\PYG{n}{bias} \PYG{o}{=} \PYG{n}{wblmf}\PYG{o}{.}\PYG{n}{bias}    \PYG{c+c1}{\PYGZsh{} Applied potential from WBL calculation}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{c+c1}{\PYGZsh{} FC\PYGZhy{}DFT+ calculation}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{solmf} \PYG{o}{=} \PYG{n}{pbe\PYGZus{}for\PYGZus{}scf}\PYG{p}{(}\PYG{n}{wblmf}\PYG{p}{,} \PYG{n}{cm}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{solmf}\PYG{o}{.}\PYG{n}{kernel}\PYG{p}{(}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{solmf}\PYG{o}{.}\PYG{n}{kernel}\PYG{p}{(}\PYG{n}{dm0}\PYG{o}{=}\PYG{n}{dm}\PYG{p}{)}
 \end{sphinxVerbatim}
 
 
 \section{Geometry Optimization}
 \label{\detokenize{examples:geometry-optimization}}
 \sphinxAtStartPar
-Our code supports analytic nuclear gradients of FC\sphinxhyphen{}DFT as well as the Poisson\sphinxhyphen{}Boltzmann solvation model. We have tested geometry optimization using GeomeTRIC, an external geometry optimizer implemented in PySCF:
+FC\sphinxhyphen{}DFT supports analytic gradients for both WBL and solvation models. Geometry optimization can be performed using external optimizers like GeomeTRIC:
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pyscf}\PYG{n+nn}{.}\PYG{n+nn}{geomopt}\PYG{n+nn}{.}\PYG{n+nn}{geometric\PYGZus{}solver}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{optimize}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{c+c1}{\PYGZsh{} Optimize structure at fixed electrode potential}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{moleq} \PYG{o}{=} \PYG{n}{optimize}\PYG{p}{(}\PYG{n}{solmf}\PYG{p}{,} \PYG{n}{maxstep}\PYG{o}{=}\PYG{l+m+mi}{100}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{c+c1}{\PYGZsh{} Access optimized geometry and energies}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{n}{moleq}\PYG{o}{.}\PYG{n}{atom\PYGZus{}coords}\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+s2}{Final energy: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{moleq}\PYG{o}{.}\PYG{n}{e\PYGZus{}tot}\PYG{l+s+si}{:}\PYG{l+s+s2}{.6f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ Hartree}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
 \end{sphinxVerbatim}
 
 
-\section{Thermochemistry}
-\label{\detokenize{examples:thermochemistry}}
+\section{Vibrational Analysis and Thermochemistry}
+\label{\detokenize{examples:vibrational-analysis-and-thermochemistry}}
 \sphinxAtStartPar
-We provide a code for numerical Hessian matrix constructed by analytic forces due to the non\sphinxhyphen{}Hermitian Hamiltonian resulted by the self\sphinxhyphen{}energy. Thermochemical properties can be calculated by utilizing \sphinxcode{\sphinxupquote{pyscf.hessian.thermo}} module.
-\sphinxcode{\sphinxupquote{Hessian}} offers three\sphinxhyphen{}point (default) and five\sphinxhyphen{}point finite difference method for calculating the Hessian matrix. The following code introduces how to obtain thermochemical properties using \sphinxcode{\sphinxupquote{harmonic\_analysis}} function:
+FC\sphinxhyphen{}DFT provides numerical Hessian calculations based on analytic forces. This is important for non\sphinxhyphen{}Hermitian Hamiltonians (WBL) where analytical Hessian is not readily available. The Hessian is constructed using finite differences:
+\begin{equation*}
+\begin{split}H_{ij} = \frac{1}{2\Delta x}\left[\frac{\partial^2 E}{\partial R_i \partial R_j}\right]\end{split}
+\end{equation*}
+\sphinxAtStartPar
+where the derivatives are obtained from analytic nuclear gradients.
 
 \begin{sphinxVerbatim}[commandchars=\\\{\}]
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{fcdft}\PYG{n+nn}{.}\PYG{n+nn}{hessian} \PYG{n}{numhess} \PYG{k+kn}{import}\PYG{+w}{ }\PYG{o}{*}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{fcdft}\PYG{n+nn}{.}\PYG{n+nn}{hessian}\PYG{n+nn}{.}\PYG{n+nn}{numhess}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{Hessian}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pyscf}\PYG{n+nn}{.}\PYG{n+nn}{hessian}\PYG{n+nn}{.}\PYG{n+nn}{thermo}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{harmonic\PYGZus{}analysis}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{c+c1}{\PYGZsh{} Calculate Hessian using finite differences of analytic gradients}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{hessmf} \PYG{o}{=} \PYG{n}{Hessian}\PYG{p}{(}\PYG{n}{solmf}\PYG{p}{)}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{hess} \PYG{o}{=} \PYG{n}{hessmf}\PYG{o}{.}\PYG{n}{kernel}\PYG{p}{(}\PYG{p}{)}
-\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pyscf}\PYG{n+nn}{.}\PYG{n+nn}{hessian}\PYG{n+nn}{.}\PYG{n+nn}{thermo}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{harmonic\PYGZus{}analysis}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{c+c1}{\PYGZsh{} Analyze vibrational frequencies and thermochemistry}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{freq\PYGZus{}info} \PYG{o}{=} \PYG{n}{harmonic\PYGZus{}analysis}\PYG{p}{(}\PYG{n}{moleq}\PYG{p}{,} \PYG{n}{hess}\PYG{p}{)}
-\end{sphinxVerbatim}
-
-\sphinxAtStartPar
-Once the quantities are obtained, these can be saved into a molden format as implemented in \sphinxcode{\sphinxupquote{fcdft.tools.molden}}:
-
-\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{}}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{c+c1}{\PYGZsh{} Save to Molden format for visualization}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{fcdft}\PYG{n+nn}{.}\PYG{n+nn}{tools}\PYG{n+nn}{.}\PYG{n+nn}{molden}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{dump\PYGZus{}freq}
 \PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{dump\PYGZus{}freq}\PYG{p}{(}\PYG{n}{moleq}\PYG{p}{,} \PYG{n}{freq\PYGZus{}info}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{freq.molden}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
 \end{sphinxVerbatim}
@@ -310,6 +375,3457 @@ Jun\sphinxhyphen{}Hyeong Kim and Weitao Yang. Fractional Charge Density Function
 \sphinxAtStartPar
 Please open a thread on the \sphinxhref{https://github.com/Yang-Laboratory/FC-DFT/issues}{Issues} tab.
 
+\sphinxstepscope
+
+
+\chapter{fcdft package}
+\label{\detokenize{fcdft:fcdft-package}}\label{\detokenize{fcdft::doc}}
+\sphinxAtStartPar
+FC\sphinxhyphen{}DFT is a Python package for DFT calculations at electrochemical interfaces.
+It combines the wide\sphinxhyphen{}band limit (WBL) approximation for electrode coupling with
+continuum solvation models to study molecules at electrode/liquid interfaces under
+applied potential.
+
+
+\chapter{Core Modules}
+\label{\detokenize{fcdft:core-modules}}
+\sphinxAtStartPar
+\sphinxstylestrong{Wide\sphinxhyphen{}Band Limit (WBL)}: Couples molecules to electrode contacts via complex self\sphinxhyphen{}energy
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{fcdft.wbl.rks}} — Restricted Kohn\sphinxhyphen{}Sham with WBL (RKS + electrode coupling)
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{fcdft.wbl.uks}} — Unrestricted Kohn\sphinxhyphen{}Sham with WBL
+
+\end{itemize}
+
+\sphinxAtStartPar
+\sphinxstylestrong{Solvation}: Non\sphinxhyphen{}linear Poisson\sphinxhyphen{}Boltzmann for electrode/liquid interfaces
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{fcdft.solvent.pbe}} — Poisson\sphinxhyphen{}Boltzmann electrolyte model
+
+\item {} 
+\sphinxAtStartPar
+Stern layers and self\sphinxhyphen{}assembled monolayers (SAM) support
+
+\item {} 
+\sphinxAtStartPar
+Analytic gradients included
+
+\end{itemize}
+
+\sphinxAtStartPar
+\sphinxstylestrong{Gradients}: Analytic nuclear forces for geometry optimization
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{fcdft.grad.rks}} — Gradients for WBL (RKS)
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{fcdft.grad.uks}} — Gradients for WBL (UKS)
+
+\end{itemize}
+
+\sphinxAtStartPar
+\sphinxstylestrong{Hessian}: Numerical Hessians for vibrational analysis
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{fcdft.hessian.numhess}} — Numerical second derivatives via finite differences
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{fcdft.hessian.thermo}} — Thermochemistry analysis from Hessians
+
+\end{itemize}
+
+\sphinxAtStartPar
+\sphinxstylestrong{Additional}:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{fcdft.lifcdft}} — Linear\sphinxhyphen{}interaction FC\sphinxhyphen{}DFT for charge analysis
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{fcdft.jellium}} — Jellium electrode models
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{fcdft.dft}} — DFT numerics (grids, numerical integration)
+
+\item {} 
+\sphinxAtStartPar
+\sphinxcode{\sphinxupquote{fcdft.tools}} — Utilities (Molden export, etc.)
+
+\end{itemize}
+
+
+\section{Subpackages}
+\label{\detokenize{fcdft:subpackages}}
+\sphinxstepscope
+
+
+\subsection{fcdft.dft package}
+\label{\detokenize{fcdft.dft:fcdft-dft-package}}\label{\detokenize{fcdft.dft::doc}}
+
+\subsubsection{Submodules}
+\label{\detokenize{fcdft.dft:submodules}}
+
+\subsubsection{fcdft.dft.numint module}
+\label{\detokenize{fcdft.dft:module-fcdft.dft.numint}}\label{\detokenize{fcdft.dft:fcdft-dft-numint-module}}\index{module@\spxentry{module}!fcdft.dft.numint@\spxentry{fcdft.dft.numint}}\index{fcdft.dft.numint@\spxentry{fcdft.dft.numint}!module@\spxentry{module}}\index{NumInt (class in fcdft.dft.numint)@\spxentry{NumInt}\spxextra{class in fcdft.dft.numint}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.dft:fcdft.dft.numint.NumInt}}
+\pysigstartsignatures
+\pysigline
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{fcdft.dft.numint.}}\sphinxbfcode{\sphinxupquote{NumInt}}}
+\pysigstopsignatures
+\sphinxAtStartPar
+Bases: \sphinxcode{\sphinxupquote{NumInt}}
+
+\sphinxAtStartPar
+Bypassing warning messages
+
+\end{fulllineitems}
+
+\index{eval\_rho() (in module fcdft.dft.numint)@\spxentry{eval\_rho()}\spxextra{in module fcdft.dft.numint}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.dft:fcdft.dft.numint.eval_rho}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.dft.numint.}}\sphinxbfcode{\sphinxupquote{eval\_rho}}}
+{\sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{ao}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}}\sphinxparamcomma \sphinxparam{\DUrole{n}{non0tab}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{xctype}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}LDA\textquotesingle{}}}\sphinxparamcomma \sphinxparam{\DUrole{n}{hermi}\DUrole{o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{with\_lapl}\DUrole{o}{=}\DUrole{default_value}{True}}\sphinxparamcomma \sphinxparam{\DUrole{n}{verbose}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Hooker to allow double * complex double \_contract\_rho
+
+\end{fulllineitems}
+
+
+
+\subsubsection{Module contents}
+\label{\detokenize{fcdft.dft:module-fcdft.dft}}\label{\detokenize{fcdft.dft:module-contents}}\index{module@\spxentry{module}!fcdft.dft@\spxentry{fcdft.dft}}\index{fcdft.dft@\spxentry{fcdft.dft}!module@\spxentry{module}}
+\sphinxstepscope
+
+
+\subsection{fcdft.grad package}
+\label{\detokenize{fcdft.grad:fcdft-grad-package}}\label{\detokenize{fcdft.grad::doc}}
+
+\subsubsection{Submodules}
+\label{\detokenize{fcdft.grad:submodules}}
+
+\subsubsection{fcdft.grad.lifcdft module}
+\label{\detokenize{fcdft.grad:module-fcdft.grad.lifcdft}}\label{\detokenize{fcdft.grad:fcdft-grad-lifcdft-module}}\index{module@\spxentry{module}!fcdft.grad.lifcdft@\spxentry{fcdft.grad.lifcdft}}\index{fcdft.grad.lifcdft@\spxentry{fcdft.grad.lifcdft}!module@\spxentry{module}}\index{Gradients (class in fcdft.grad.lifcdft)@\spxentry{Gradients}\spxextra{class in fcdft.grad.lifcdft}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.lifcdft.Gradients}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{fcdft.grad.lifcdft.}}\sphinxbfcode{\sphinxupquote{Gradients}}}
+{\sphinxparam{\DUrole{n}{mf}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Bases: \sphinxcode{\sphinxupquote{Gradients}}
+\index{kernel() (fcdft.grad.lifcdft.Gradients method)@\spxentry{kernel()}\spxextra{fcdft.grad.lifcdft.Gradients method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.lifcdft.Gradients.kernel}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{kernel}}}
+{}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Kernel function is the main driver of a method.  Every method should
+define the kernel function as the entry of the calculation.  Note the
+return value of kernel function is not strictly defined.  It can be
+anything related to the method (such as the energy, the wave\sphinxhyphen{}function,
+the DFT mesh grids etc.).
+
+\end{fulllineitems}
+
+
+\end{fulllineitems}
+
+
+
+\subsubsection{fcdft.grad.rks module}
+\label{\detokenize{fcdft.grad:module-fcdft.grad.rks}}\label{\detokenize{fcdft.grad:fcdft-grad-rks-module}}\index{module@\spxentry{module}!fcdft.grad.rks@\spxentry{fcdft.grad.rks}}\index{fcdft.grad.rks@\spxentry{fcdft.grad.rks}!module@\spxentry{module}}\index{Gradients (class in fcdft.grad.rks)@\spxentry{Gradients}\spxextra{class in fcdft.grad.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.Gradients}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{fcdft.grad.rks.}}\sphinxbfcode{\sphinxupquote{Gradients}}}
+{\sphinxparam{\DUrole{n}{mf}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Bases: \sphinxcode{\sphinxupquote{Gradients}}, {\hyperref[\detokenize{fcdft.grad:fcdft.grad.rks.GradientsBase}]{\sphinxcrossref{\sphinxcode{\sphinxupquote{GradientsBase}}}}}
+\index{get\_veff() (fcdft.grad.rks.Gradients method)@\spxentry{get\_veff()}\spxextra{fcdft.grad.rks.Gradients method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.Gradients.get_veff}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{get\_veff}}}
+{\sphinxparam{\DUrole{n}{mol}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+First order derivative of DFT effective potential matrix (wrt electron coordinates)
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{ks\_grad}} \textendash{} grad.uhf.Gradients or grad.uks.Gradients object
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{grad\_elec() (fcdft.grad.rks.Gradients method)@\spxentry{grad\_elec()}\spxextra{fcdft.grad.rks.Gradients method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.Gradients.grad_elec}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{grad\_elec}}}
+{\sphinxparam{\DUrole{n}{mo\_energy}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_coeff}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{atmlst}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Electronic part of RHF/RKS gradients
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mf\_grad}} \textendash{} grad.rhf.Gradients or grad.rks.Gradients object
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{kernel() (fcdft.grad.rks.Gradients method)@\spxentry{kernel()}\spxextra{fcdft.grad.rks.Gradients method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.Gradients.kernel}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{kernel}}}
+{\sphinxparam{\DUrole{n}{mo\_energy}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_coeff}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{atmlst}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Kernel function is the main driver of a method.  Every method should
+define the kernel function as the entry of the calculation.  Note the
+return value of kernel function is not strictly defined.  It can be
+anything related to the method (such as the energy, the wave\sphinxhyphen{}function,
+the DFT mesh grids etc.).
+
+\end{fulllineitems}
+
+\index{make\_rdm1e() (fcdft.grad.rks.Gradients method)@\spxentry{make\_rdm1e()}\spxextra{fcdft.grad.rks.Gradients method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.Gradients.make_rdm1e}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{make\_rdm1e}}}
+{\sphinxparam{\DUrole{n}{mo\_energy}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_coeff}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+
+\end{fulllineitems}
+
+\index{GradientsBase (class in fcdft.grad.rks)@\spxentry{GradientsBase}\spxextra{class in fcdft.grad.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.GradientsBase}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{fcdft.grad.rks.}}\sphinxbfcode{\sphinxupquote{GradientsBase}}}
+{\sphinxparam{\DUrole{n}{method}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Bases: \sphinxcode{\sphinxupquote{GradientsBase}}
+\index{get\_j() (fcdft.grad.rks.GradientsBase method)@\spxentry{get\_j()}\spxextra{fcdft.grad.rks.GradientsBase method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.GradientsBase.get_j}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{get\_j}}}
+{\sphinxparam{\DUrole{n}{mol}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{hermi}\DUrole{o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{omega}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{get\_jk() (fcdft.grad.rks.GradientsBase method)@\spxentry{get\_jk()}\spxextra{fcdft.grad.rks.GradientsBase method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.GradientsBase.get_jk}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{get\_jk}}}
+{\sphinxparam{\DUrole{n}{mol}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{hermi}\DUrole{o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{omega}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+J = ((\sphinxhyphen{}nabla i) j| kl) D\_lk
+K = ((\sphinxhyphen{}nabla i) j| kl) D\_jk
+
+\end{fulllineitems}
+
+\index{get\_k() (fcdft.grad.rks.GradientsBase method)@\spxentry{get\_k()}\spxextra{fcdft.grad.rks.GradientsBase method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.GradientsBase.get_k}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{get\_k}}}
+{\sphinxparam{\DUrole{n}{mol}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{hermi}\DUrole{o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{omega}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+
+\end{fulllineitems}
+
+\index{get\_jk() (in module fcdft.grad.rks)@\spxentry{get\_jk()}\spxextra{in module fcdft.grad.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.get_jk}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.grad.rks.}}\sphinxbfcode{\sphinxupquote{get\_jk}}}
+{\sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+J = ((\sphinxhyphen{}nabla i) j| kl) D\_lk
+K = ((\sphinxhyphen{}nabla i) j| kl) D\_jk
+
+\end{fulllineitems}
+
+\index{get\_mo\_occ\_grad() (in module fcdft.grad.rks)@\spxentry{get\_mo\_occ\_grad()}\spxextra{in module fcdft.grad.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.get_mo_occ_grad}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.grad.rks.}}\sphinxbfcode{\sphinxupquote{get\_mo\_occ\_grad}}}
+{\sphinxparam{\DUrole{n}{mf\_grad}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Per\sphinxhyphen{}MO occupation gradient d(mo\_occ{[}k{]})/d(mu) in a.u.\textasciicircum{}\{\sphinxhyphen{}1\}.
+
+\sphinxAtStartPar
+Uses the same quadrature scheme (GAUSS or QUADPACK) as the SCF to compute
+the derivative of each MO occupation with respect to the chemical potential
+(Fermi level), evaluated at the converged mu.  The spin factor of 2 for
+closed\sphinxhyphen{}shell is already included in the returned array.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mf}} \textendash{} WBLMoleculeRKS instance (converged)
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+d(mo\_occ{[}k{]})/d(mu\_au), real.
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+mocc\_grad (1D ndarray, shape (nmo,))
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{get\_nlc\_vxc() (in module fcdft.grad.rks)@\spxentry{get\_nlc\_vxc()}\spxextra{in module fcdft.grad.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.get_nlc_vxc}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.grad.rks.}}\sphinxbfcode{\sphinxupquote{get\_nlc\_vxc}}}
+{\sphinxparam{\DUrole{n}{ni}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{grids}}\sphinxparamcomma \sphinxparam{\DUrole{n}{xc\_code}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}}\sphinxparamcomma \sphinxparam{\DUrole{n}{relativity}\DUrole{o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{hermi}\DUrole{o}{=}\DUrole{default_value}{1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{max\_memory}\DUrole{o}{=}\DUrole{default_value}{2000}}\sphinxparamcomma \sphinxparam{\DUrole{n}{verbose}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{get\_veff() (in module fcdft.grad.rks)@\spxentry{get\_veff()}\spxextra{in module fcdft.grad.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.get_veff}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.grad.rks.}}\sphinxbfcode{\sphinxupquote{get\_veff}}}
+{\sphinxparam{\DUrole{n}{ks\_grad}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mol}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+First order derivative of DFT effective potential matrix (wrt electron coordinates)
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{ks\_grad}} \textendash{} grad.uhf.Gradients or grad.uks.Gradients object
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{get\_vxc() (in module fcdft.grad.rks)@\spxentry{get\_vxc()}\spxextra{in module fcdft.grad.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.get_vxc}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.grad.rks.}}\sphinxbfcode{\sphinxupquote{get\_vxc}}}
+{\sphinxparam{\DUrole{n}{ni}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{grids}}\sphinxparamcomma \sphinxparam{\DUrole{n}{xc\_code}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dms}}\sphinxparamcomma \sphinxparam{\DUrole{n}{relativity}\DUrole{o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{hermi}\DUrole{o}{=}\DUrole{default_value}{1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{max\_memory}\DUrole{o}{=}\DUrole{default_value}{2000}}\sphinxparamcomma \sphinxparam{\DUrole{n}{verbose}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{grad\_elec() (in module fcdft.grad.rks)@\spxentry{grad\_elec()}\spxextra{in module fcdft.grad.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.grad_elec}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.grad.rks.}}\sphinxbfcode{\sphinxupquote{grad\_elec}}}
+{\sphinxparam{\DUrole{n}{mf\_grad}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_energy}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_coeff}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{atmlst}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Electronic part of RHF/RKS gradients
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mf\_grad}} \textendash{} grad.rhf.Gradients or grad.rks.Gradients object
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{make\_rdm1e() (in module fcdft.grad.rks)@\spxentry{make\_rdm1e()}\spxextra{in module fcdft.grad.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.make_rdm1e}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.grad.rks.}}\sphinxbfcode{\sphinxupquote{make\_rdm1e}}}
+{\sphinxparam{\DUrole{n}{mo\_energy}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_coeff}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Complex energy weighted density matrix
+
+\end{fulllineitems}
+
+\index{test\_grad\_elec() (in module fcdft.grad.rks)@\spxentry{test\_grad\_elec()}\spxextra{in module fcdft.grad.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.rks.test_grad_elec}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.grad.rks.}}\sphinxbfcode{\sphinxupquote{test\_grad\_elec}}}
+{\sphinxparam{\DUrole{n}{mf\_grad}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_energy}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_coeff}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{atmlst}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Electronic part of RHF/RKS gradients WITH chemical potential response
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mf\_grad}} \textendash{} grad.rhf.Gradients or grad.rks.Gradients object
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+
+
+\subsubsection{fcdft.grad.uks module}
+\label{\detokenize{fcdft.grad:module-fcdft.grad.uks}}\label{\detokenize{fcdft.grad:fcdft-grad-uks-module}}\index{module@\spxentry{module}!fcdft.grad.uks@\spxentry{fcdft.grad.uks}}\index{fcdft.grad.uks@\spxentry{fcdft.grad.uks}!module@\spxentry{module}}\index{Gradients (class in fcdft.grad.uks)@\spxentry{Gradients}\spxextra{class in fcdft.grad.uks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.uks.Gradients}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{fcdft.grad.uks.}}\sphinxbfcode{\sphinxupquote{Gradients}}}
+{\sphinxparam{\DUrole{n}{mf}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Bases: \sphinxcode{\sphinxupquote{Gradients}}, {\hyperref[\detokenize{fcdft.grad:fcdft.grad.rks.GradientsBase}]{\sphinxcrossref{\sphinxcode{\sphinxupquote{GradientsBase}}}}}
+\index{get\_veff() (fcdft.grad.uks.Gradients method)@\spxentry{get\_veff()}\spxextra{fcdft.grad.uks.Gradients method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.uks.Gradients.get_veff}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{get\_veff}}}
+{\sphinxparam{\DUrole{n}{mol}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+First order derivative of DFT effective potential matrix (wrt electron coordinates)
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{ks\_grad}} \textendash{} grad.uhf.Gradients or grad.uks.Gradients object
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{grad\_elec() (fcdft.grad.uks.Gradients method)@\spxentry{grad\_elec()}\spxextra{fcdft.grad.uks.Gradients method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.uks.Gradients.grad_elec}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{grad\_elec}}}
+{\sphinxparam{\DUrole{n}{mo\_energy}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_coeff}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{atmlst}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Electronic part of UHF/UKS gradients
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mf\_grad}} \textendash{} grad.uhf.Gradients or grad.uks.Gradients object
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{make\_rdm1e() (fcdft.grad.uks.Gradients method)@\spxentry{make\_rdm1e()}\spxextra{fcdft.grad.uks.Gradients method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.uks.Gradients.make_rdm1e}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{make\_rdm1e}}}
+{\sphinxparam{\DUrole{n}{mo\_energy}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_coeff}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+
+\end{fulllineitems}
+
+\index{get\_veff() (in module fcdft.grad.uks)@\spxentry{get\_veff()}\spxextra{in module fcdft.grad.uks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.uks.get_veff}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.grad.uks.}}\sphinxbfcode{\sphinxupquote{get\_veff}}}
+{\sphinxparam{\DUrole{n}{ks\_grad}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mol}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+First order derivative of DFT effective potential matrix (wrt electron coordinates)
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{ks\_grad}} \textendash{} grad.uhf.Gradients or grad.uks.Gradients object
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{get\_vxc() (in module fcdft.grad.uks)@\spxentry{get\_vxc()}\spxextra{in module fcdft.grad.uks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.uks.get_vxc}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.grad.uks.}}\sphinxbfcode{\sphinxupquote{get\_vxc}}}
+{\sphinxparam{\DUrole{n}{ni}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{grids}}\sphinxparamcomma \sphinxparam{\DUrole{n}{xc\_code}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dms}}\sphinxparamcomma \sphinxparam{\DUrole{n}{relativity}\DUrole{o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{hermi}\DUrole{o}{=}\DUrole{default_value}{1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{max\_memory}\DUrole{o}{=}\DUrole{default_value}{2000}}\sphinxparamcomma \sphinxparam{\DUrole{n}{verbose}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{grad\_elec() (in module fcdft.grad.uks)@\spxentry{grad\_elec()}\spxextra{in module fcdft.grad.uks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.uks.grad_elec}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.grad.uks.}}\sphinxbfcode{\sphinxupquote{grad\_elec}}}
+{\sphinxparam{\DUrole{n}{mf\_grad}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_energy}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_coeff}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{atmlst}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Electronic part of UHF/UKS gradients
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mf\_grad}} \textendash{} grad.uhf.Gradients or grad.uks.Gradients object
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{make\_rdm1e() (in module fcdft.grad.uks)@\spxentry{make\_rdm1e()}\spxextra{in module fcdft.grad.uks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.grad:fcdft.grad.uks.make_rdm1e}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.grad.uks.}}\sphinxbfcode{\sphinxupquote{make\_rdm1e}}}
+{\sphinxparam{\DUrole{n}{mo\_energy}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_coeff}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+
+
+\subsubsection{Module contents}
+\label{\detokenize{fcdft.grad:module-fcdft.grad}}\label{\detokenize{fcdft.grad:module-contents}}\index{module@\spxentry{module}!fcdft.grad@\spxentry{fcdft.grad}}\index{fcdft.grad@\spxentry{fcdft.grad}!module@\spxentry{module}}
+\sphinxstepscope
+
+
+\subsection{fcdft.hessian package}
+\label{\detokenize{fcdft.hessian:fcdft-hessian-package}}\label{\detokenize{fcdft.hessian::doc}}
+
+\subsubsection{Submodules}
+\label{\detokenize{fcdft.hessian:submodules}}
+
+\subsubsection{fcdft.hessian.lifcdft module}
+\label{\detokenize{fcdft.hessian:module-fcdft.hessian.lifcdft}}\label{\detokenize{fcdft.hessian:fcdft-hessian-lifcdft-module}}\index{module@\spxentry{module}!fcdft.hessian.lifcdft@\spxentry{fcdft.hessian.lifcdft}}\index{fcdft.hessian.lifcdft@\spxentry{fcdft.hessian.lifcdft}!module@\spxentry{module}}\index{Hessian (class in fcdft.hessian.lifcdft)@\spxentry{Hessian}\spxextra{class in fcdft.hessian.lifcdft}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.hessian:fcdft.hessian.lifcdft.Hessian}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{fcdft.hessian.lifcdft.}}\sphinxbfcode{\sphinxupquote{Hessian}}}
+{\sphinxparam{\DUrole{n}{scf\_method}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Bases: \sphinxcode{\sphinxupquote{HessianBase}}
+\index{kernel() (fcdft.hessian.lifcdft.Hessian method)@\spxentry{kernel()}\spxextra{fcdft.hessian.lifcdft.Hessian method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.hessian:fcdft.hessian.lifcdft.Hessian.kernel}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{kernel}}}
+{\sphinxparam{\DUrole{n}{mo\_energy}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_coeff}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{atmlst}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Kernel function is the main driver of a method.  Every method should
+define the kernel function as the entry of the calculation.  Note the
+return value of kernel function is not strictly defined.  It can be
+anything related to the method (such as the energy, the wave\sphinxhyphen{}function,
+the DFT mesh grids etc.).
+
+\end{fulllineitems}
+
+
+\end{fulllineitems}
+
+
+
+\subsubsection{fcdft.hessian.numhess module}
+\label{\detokenize{fcdft.hessian:module-fcdft.hessian.numhess}}\label{\detokenize{fcdft.hessian:fcdft-hessian-numhess-module}}\index{module@\spxentry{module}!fcdft.hessian.numhess@\spxentry{fcdft.hessian.numhess}}\index{fcdft.hessian.numhess@\spxentry{fcdft.hessian.numhess}!module@\spxentry{module}}\index{Hessian (class in fcdft.hessian.numhess)@\spxentry{Hessian}\spxextra{class in fcdft.hessian.numhess}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.hessian:fcdft.hessian.numhess.Hessian}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{fcdft.hessian.numhess.}}\sphinxbfcode{\sphinxupquote{Hessian}}}
+{\sphinxparam{\DUrole{n}{scf\_method}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Bases: \sphinxcode{\sphinxupquote{HessianBase}}
+\index{hess() (fcdft.hessian.numhess.Hessian method)@\spxentry{hess()}\spxextra{fcdft.hessian.numhess.Hessian method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.hessian:fcdft.hessian.numhess.Hessian.hess}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{hess}}}
+{\sphinxparam{\DUrole{n}{mo\_energy}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_coeff}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{atmlst}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{h}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{order}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Kernel function is the main driver of a method.  Every method should
+define the kernel function as the entry of the calculation.  Note the
+return value of kernel function is not strictly defined.  It can be
+anything related to the method (such as the energy, the wave\sphinxhyphen{}function,
+the DFT mesh grids etc.).
+
+\end{fulllineitems}
+
+\index{kernel() (fcdft.hessian.numhess.Hessian method)@\spxentry{kernel()}\spxextra{fcdft.hessian.numhess.Hessian method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.hessian:fcdft.hessian.numhess.Hessian.kernel}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{kernel}}}
+{\sphinxparam{\DUrole{n}{mo\_energy}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_coeff}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{atmlst}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{h}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{order}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Kernel function is the main driver of a method.  Every method should
+define the kernel function as the entry of the calculation.  Note the
+return value of kernel function is not strictly defined.  It can be
+anything related to the method (such as the energy, the wave\sphinxhyphen{}function,
+the DFT mesh grids etc.).
+
+\end{fulllineitems}
+
+
+\end{fulllineitems}
+
+\index{hess\_generator() (in module fcdft.hessian.numhess)@\spxentry{hess\_generator()}\spxextra{in module fcdft.hessian.numhess}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.hessian:fcdft.hessian.numhess.hess_generator}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.hessian.numhess.}}\sphinxbfcode{\sphinxupquote{hess\_generator}}}
+{\sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{g\_scanner}}\sphinxparamcomma \sphinxparam{\DUrole{n}{h}}\sphinxparamcomma \sphinxparam{\DUrole{n}{order}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Numerical Hessian matrix generator
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mol}} (\sphinxstyleliteralemphasis{\sphinxupquote{\_type\_}}) \textendash{} Mole
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{g\_scanner}} (\sphinxstyleliteralemphasis{\sphinxupquote{\_type\_}}) \textendash{} g\_scanner
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{h}} (\sphinxstyleliteralemphasis{\sphinxupquote{\_type\_}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} Finite difference. Defaults to 5.0e\sphinxhyphen{}3 Bohr.
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+\_description\_
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+\_type\_
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+
+
+\subsubsection{Module contents}
+\label{\detokenize{fcdft.hessian:module-fcdft.hessian}}\label{\detokenize{fcdft.hessian:module-contents}}\index{module@\spxentry{module}!fcdft.hessian@\spxentry{fcdft.hessian}}\index{fcdft.hessian@\spxentry{fcdft.hessian}!module@\spxentry{module}}
+\sphinxstepscope
+
+
+\subsection{fcdft.jellium package}
+\label{\detokenize{fcdft.jellium:fcdft-jellium-package}}\label{\detokenize{fcdft.jellium::doc}}
+
+\subsubsection{Submodules}
+\label{\detokenize{fcdft.jellium:submodules}}
+
+\subsubsection{fcdft.jellium.jellium module}
+\label{\detokenize{fcdft.jellium:module-fcdft.jellium.jellium}}\label{\detokenize{fcdft.jellium:fcdft-jellium-jellium-module}}\index{module@\spxentry{module}!fcdft.jellium.jellium@\spxentry{fcdft.jellium.jellium}}\index{fcdft.jellium.jellium@\spxentry{fcdft.jellium.jellium}!module@\spxentry{module}}\index{Jellium (class in fcdft.jellium.jellium)@\spxentry{Jellium}\spxextra{class in fcdft.jellium.jellium}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.jellium:fcdft.jellium.jellium.Jellium}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{fcdft.jellium.jellium.}}\sphinxbfcode{\sphinxupquote{Jellium}}}
+{\sphinxparam{\DUrole{n}{UM}\DUrole{o}{=}\DUrole{default_value}{30}}\sphinxparamcomma \sphinxparam{\DUrole{n}{rs}\DUrole{o}{=}\DUrole{default_value}{3.01}}\sphinxparamcomma \sphinxparam{\DUrole{n}{solvent}\DUrole{o}{=}\DUrole{default_value}{55.6}}\sphinxparamcomma \sphinxparam{\DUrole{n}{cation}\DUrole{o}{=}\DUrole{default_value}{1.0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{anion}\DUrole{o}{=}\DUrole{default_value}{1.0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{Ws}\DUrole{o}{=}\DUrole{default_value}{5.0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{Wc}\DUrole{o}{=}\DUrole{default_value}{0.0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{Wa}\DUrole{o}{=}\DUrole{default_value}{0.0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{stern}\DUrole{o}{=}\DUrole{default_value}{1.0}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Bases: \sphinxcode{\sphinxupquote{object}}
+\index{build() (fcdft.jellium.jellium.Jellium method)@\spxentry{build()}\spxextra{fcdft.jellium.jellium.Jellium method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.jellium:fcdft.jellium.jellium.Jellium.build}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{build}}}
+{}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{init\_guess() (fcdft.jellium.jellium.Jellium method)@\spxentry{init\_guess()}\spxextra{fcdft.jellium.jellium.Jellium method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.jellium:fcdft.jellium.jellium.Jellium.init_guess}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{init\_guess}}}
+{\sphinxparam{\DUrole{n}{UM}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{n0}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Generate the initial guess for the collocation method.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{jellium\_obj}} (\sphinxstyleliteralemphasis{\sphinxupquote{\_type\_}}) \textendash{} Jellium object
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{UM}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} Bulk electrostatic potential. Defaults to None.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{n0}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} Jellium background charge. Defaults to None.
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Electrostatic potential, gradient of the electrostatic potential, electron density, and gradient of the electron density.
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+1D np.array, 1D np.array, 1D np.array, 1D np.array
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{kernel() (fcdft.jellium.jellium.Jellium method)@\spxentry{kernel()}\spxextra{fcdft.jellium.jellium.Jellium method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.jellium:fcdft.jellium.jellium.Jellium.kernel}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{kernel}}}
+{}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+
+\end{fulllineitems}
+
+\index{bc() (in module fcdft.jellium.jellium)@\spxentry{bc()}\spxextra{in module fcdft.jellium.jellium}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.jellium:fcdft.jellium.jellium.bc}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.jellium.jellium.}}\sphinxbfcode{\sphinxupquote{bc}}}
+{\sphinxparam{\DUrole{n}{ya}}\sphinxparamcomma \sphinxparam{\DUrole{n}{yb}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Dirichlet boundary condition.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{ya}} (\sphinxstyleliteralemphasis{\sphinxupquote{\_type\_}}) \textendash{} \_description\_
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{yb}} (\sphinxstyleliteralemphasis{\sphinxupquote{\_type\_}}) \textendash{} \_description\_
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+\_description\_
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+\_type\_
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{eps\_s() (in module fcdft.jellium.jellium)@\spxentry{eps\_s()}\spxextra{in module fcdft.jellium.jellium}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.jellium:fcdft.jellium.jellium.eps_s}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.jellium.jellium.}}\sphinxbfcode{\sphinxupquote{eps\_s}}}
+{\sphinxparam{\DUrole{n}{X}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dUdX}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Calculate the field\sphinxhyphen{}dependent dielectric function and its gradient.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{X}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D np.array}}) \textendash{} Grids
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{dUdX}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D np.array}}) \textendash{} Negative of the electric field.
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Dielectric function and its gradient.
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+1D np.array, 1D np.array
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{fun() (in module fcdft.jellium.jellium)@\spxentry{fun()}\spxextra{in module fcdft.jellium.jellium}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.jellium:fcdft.jellium.jellium.fun}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.jellium.jellium.}}\sphinxbfcode{\sphinxupquote{fun}}}
+{\sphinxparam{\DUrole{n}{x}}\sphinxparamcomma \sphinxparam{\DUrole{n}{y}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Control equation of the Jellium+PBE model
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{x}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D np.array}}) \textendash{} Grids
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{y}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D np.array}}) \textendash{} Input values
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+dUdX, d2UdX2, dnedX, d2nedX2
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+2D np.array
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{gamma() (in module fcdft.jellium.jellium)@\spxentry{gamma()}\spxextra{in module fcdft.jellium.jellium}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.jellium:fcdft.jellium.jellium.gamma}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.jellium.jellium.}}\sphinxbfcode{\sphinxupquote{gamma}}}
+{\sphinxparam{\DUrole{n}{xe}}\sphinxparamcomma \sphinxparam{\DUrole{n}{ne}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Orbital\sphinxhyphen{}Free Local Density Approximation
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{xe}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D np.array}}) \textendash{} Input electron density
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{ne}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D np.array}}) \textendash{} Reference electron density
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Electronic energy density referenced to the bulk
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+1D np.array
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{init\_guess() (in module fcdft.jellium.jellium)@\spxentry{init\_guess()}\spxextra{in module fcdft.jellium.jellium}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.jellium:fcdft.jellium.jellium.init_guess}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.jellium.jellium.}}\sphinxbfcode{\sphinxupquote{init\_guess}}}
+{\sphinxparam{\DUrole{n}{jellium\_obj}}\sphinxparamcomma \sphinxparam{\DUrole{n}{UM}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{n0}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Generate the initial guess for the collocation method.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{jellium\_obj}} (\sphinxstyleliteralemphasis{\sphinxupquote{\_type\_}}) \textendash{} Jellium object
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{UM}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} Bulk electrostatic potential. Defaults to None.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{n0}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} Jellium background charge. Defaults to None.
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Electrostatic potential, gradient of the electrostatic potential, electron density, and gradient of the electron density.
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+1D np.array, 1D np.array, 1D np.array, 1D np.array
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{kernel() (in module fcdft.jellium.jellium)@\spxentry{kernel()}\spxextra{in module fcdft.jellium.jellium}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.jellium:fcdft.jellium.jellium.kernel}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.jellium.jellium.}}\sphinxbfcode{\sphinxupquote{kernel}}}
+{}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+
+
+\subsubsection{Module contents}
+\label{\detokenize{fcdft.jellium:module-fcdft.jellium}}\label{\detokenize{fcdft.jellium:module-contents}}\index{module@\spxentry{module}!fcdft.jellium@\spxentry{fcdft.jellium}}\index{fcdft.jellium@\spxentry{fcdft.jellium}!module@\spxentry{module}}
+\sphinxstepscope
+
+
+\subsection{fcdft.lib package}
+\label{\detokenize{fcdft.lib:fcdft-lib-package}}\label{\detokenize{fcdft.lib::doc}}
+
+\subsubsection{Submodules}
+\label{\detokenize{fcdft.lib:submodules}}
+
+\subsubsection{fcdft.lib.fcdft\_helper module}
+\label{\detokenize{fcdft.lib:fcdft-lib-fcdft-helper-module}}
+
+\subsubsection{fcdft.lib.misc module}
+\label{\detokenize{fcdft.lib:module-fcdft.lib.misc}}\label{\detokenize{fcdft.lib:fcdft-lib-misc-module}}\index{module@\spxentry{module}!fcdft.lib.misc@\spxentry{fcdft.lib.misc}}\index{fcdft.lib.misc@\spxentry{fcdft.lib.misc}!module@\spxentry{module}}\index{load\_library() (in module fcdft.lib.misc)@\spxentry{load\_library()}\spxextra{in module fcdft.lib.misc}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.lib:fcdft.lib.misc.load_library}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.lib.misc.}}\sphinxbfcode{\sphinxupquote{load\_library}}}
+{\sphinxparam{\DUrole{n}{libname}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Load C shared library
+
+\end{fulllineitems}
+
+
+
+\subsubsection{fcdft.lib.pbe\_helper module}
+\label{\detokenize{fcdft.lib:fcdft-lib-pbe-helper-module}}
+
+\subsubsection{Module contents}
+\label{\detokenize{fcdft.lib:module-fcdft.lib}}\label{\detokenize{fcdft.lib:module-contents}}\index{module@\spxentry{module}!fcdft.lib@\spxentry{fcdft.lib}}\index{fcdft.lib@\spxentry{fcdft.lib}!module@\spxentry{module}}
+\sphinxstepscope
+
+
+\subsection{fcdft.lifcdft package}
+\label{\detokenize{fcdft.lifcdft:fcdft-lifcdft-package}}\label{\detokenize{fcdft.lifcdft::doc}}
+
+\subsubsection{Submodules}
+\label{\detokenize{fcdft.lifcdft:submodules}}
+
+\subsubsection{fcdft.lifcdft.lifcdft module}
+\label{\detokenize{fcdft.lifcdft:module-fcdft.lifcdft.lifcdft}}\label{\detokenize{fcdft.lifcdft:fcdft-lifcdft-lifcdft-module}}\index{module@\spxentry{module}!fcdft.lifcdft.lifcdft@\spxentry{fcdft.lifcdft.lifcdft}}\index{fcdft.lifcdft.lifcdft@\spxentry{fcdft.lifcdft.lifcdft}!module@\spxentry{module}}\index{LIFCDFT (class in fcdft.lifcdft.lifcdft)@\spxentry{LIFCDFT}\spxextra{class in fcdft.lifcdft.lifcdft}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.lifcdft:fcdft.lifcdft.lifcdft.LIFCDFT}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{fcdft.lifcdft.lifcdft.}}\sphinxbfcode{\sphinxupquote{LIFCDFT}}}
+{\sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{xc}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}LDA,VWN\textquotesingle{}}}\sphinxparamcomma \sphinxparam{\DUrole{n}{delta}\DUrole{o}{=}\DUrole{default_value}{0.0}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Bases: \sphinxcode{\sphinxupquote{UKS}}
+\index{Hessian() (fcdft.lifcdft.lifcdft.LIFCDFT method)@\spxentry{Hessian()}\spxextra{fcdft.lifcdft.lifcdft.LIFCDFT method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.lifcdft:fcdft.lifcdft.lifcdft.LIFCDFT.Hessian}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{Hessian}}}
+{\sphinxparam{\DUrole{o}{*}\DUrole{n}{args}}\sphinxparamcomma \sphinxparam{\DUrole{o}{**}\DUrole{n}{kwargs}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Non\sphinxhyphen{}relativistic UKS hessian
+
+\end{fulllineitems}
+
+\index{build() (fcdft.lifcdft.lifcdft.LIFCDFT method)@\spxentry{build()}\spxextra{fcdft.lifcdft.lifcdft.LIFCDFT method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.lifcdft:fcdft.lifcdft.lifcdft.LIFCDFT.build}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{build}}}
+{}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{dump\_flags() (fcdft.lifcdft.lifcdft.LIFCDFT method)@\spxentry{dump\_flags()}\spxextra{fcdft.lifcdft.lifcdft.LIFCDFT method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.lifcdft:fcdft.lifcdft.lifcdft.LIFCDFT.dump_flags}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{dump\_flags}}}
+{\sphinxparam{\DUrole{n}{verbose}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{kernel() (fcdft.lifcdft.lifcdft.LIFCDFT method)@\spxentry{kernel()}\spxextra{fcdft.lifcdft.lifcdft.LIFCDFT method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.lifcdft:fcdft.lifcdft.lifcdft.LIFCDFT.kernel}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{kernel}}}
+{\sphinxparam{\DUrole{n}{dm0}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+SCF main driver
+\begin{description}
+\sphinxlineitem{Kwargs:}\begin{description}
+\sphinxlineitem{dm0}{[}ndarray{]}
+\sphinxAtStartPar
+If given, it will be used as the initial guess density matrix
+
+\end{description}
+
+\end{description}
+
+\sphinxAtStartPar
+Examples:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{numpy}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{pyscf}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{gto}\PYG{p}{,} \PYG{n}{scf}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{mol} \PYG{o}{=} \PYG{n}{gto}\PYG{o}{.}\PYG{n}{M}\PYG{p}{(}\PYG{n}{atom}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{H 0 0 0; F 0 0 1.1}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{mf} \PYG{o}{=} \PYG{n}{scf}\PYG{o}{.}\PYG{n}{hf}\PYG{o}{.}\PYG{n}{SCF}\PYG{p}{(}\PYG{n}{mol}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{dm\PYGZus{}guess} \PYG{o}{=} \PYG{n}{numpy}\PYG{o}{.}\PYG{n}{eye}\PYG{p}{(}\PYG{n}{mol}\PYG{o}{.}\PYG{n}{nao\PYGZus{}nr}\PYG{p}{(}\PYG{p}{)}\PYG{p}{)}
+\PYG{g+gp}{\PYGZgt{}\PYGZgt{}\PYGZgt{} }\PYG{n}{mf}\PYG{o}{.}\PYG{n}{kernel}\PYG{p}{(}\PYG{n}{dm\PYGZus{}guess}\PYG{p}{)}
+\PYG{g+go}{converged SCF energy = \PYGZhy{}98.5521904482821}
+\PYG{g+go}{\PYGZhy{}98.552190448282104}
+\end{sphinxVerbatim}
+
+\end{fulllineitems}
+
+\index{newton() (fcdft.lifcdft.lifcdft.LIFCDFT method)@\spxentry{newton()}\spxextra{fcdft.lifcdft.lifcdft.LIFCDFT method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.lifcdft:fcdft.lifcdft.lifcdft.LIFCDFT.newton}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{newton}}}
+{}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Create an SOSCF object based on the mean\sphinxhyphen{}field object
+
+\end{fulllineitems}
+
+\index{nuc\_grad\_method() (fcdft.lifcdft.lifcdft.LIFCDFT method)@\spxentry{nuc\_grad\_method()}\spxextra{fcdft.lifcdft.lifcdft.LIFCDFT method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.lifcdft:fcdft.lifcdft.lifcdft.LIFCDFT.nuc_grad_method}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{nuc\_grad\_method}}}
+{}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Hook to create object for analytical nuclear gradients.
+
+\end{fulllineitems}
+
+\index{reset() (fcdft.lifcdft.lifcdft.LIFCDFT method)@\spxentry{reset()}\spxextra{fcdft.lifcdft.lifcdft.LIFCDFT method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.lifcdft:fcdft.lifcdft.lifcdft.LIFCDFT.reset}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{reset}}}
+{\sphinxparam{\DUrole{n}{mol}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Reset mol and relevant attributes associated to the old mol object
+
+\end{fulllineitems}
+
+
+\end{fulllineitems}
+
+
+
+\subsubsection{Module contents}
+\label{\detokenize{fcdft.lifcdft:module-fcdft.lifcdft}}\label{\detokenize{fcdft.lifcdft:module-contents}}\index{module@\spxentry{module}!fcdft.lifcdft@\spxentry{fcdft.lifcdft}}\index{fcdft.lifcdft@\spxentry{fcdft.lifcdft}!module@\spxentry{module}}
+\sphinxstepscope
+
+
+\subsection{fcdft.solvent package}
+\label{\detokenize{fcdft.solvent:fcdft-solvent-package}}\label{\detokenize{fcdft.solvent::doc}}
+\sphinxAtStartPar
+Poisson\sphinxhyphen{}Boltzmann solvation model for electrode/liquid interfaces.
+
+\sphinxAtStartPar
+This package implements continuum solvation for molecules at electrode surfaces using
+a non\sphinxhyphen{}linear Poisson\sphinxhyphen{}Boltzmann (PB) approach. Key features:
+\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstylestrong{Position\sphinxhyphen{}dependent dielectric}: Smooth transition from SAM through Stern layers to bulk
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstylestrong{Ion concentration}: From Boltzmann distribution at the applied potential
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstylestrong{Gouy\sphinxhyphen{}Chapman\sphinxhyphen{}Stern boundary conditions}: Electrode surface treatment
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstylestrong{Analytic gradients}: For geometry optimization
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstylestrong{GPU acceleration}: Optional gpu4pyscf support for large grids
+
+\end{itemize}
+
+\sphinxAtStartPar
+The non\sphinxhyphen{}linear PB equation solved is: ∇·(ε(r) ∇φ\_tot) = \sphinxhyphen{}4π{[}ρ\_sol + ρ\_ions(φ\_tot, T){]}
+
+
+\subsubsection{Submodules}
+\label{\detokenize{fcdft.solvent:submodules}}
+
+\subsubsection{fcdft.solvent.calculus\_helper module}
+\label{\detokenize{fcdft.solvent:module-fcdft.solvent.calculus_helper}}\label{\detokenize{fcdft.solvent:fcdft-solvent-calculus-helper-module}}\index{module@\spxentry{module}!fcdft.solvent.calculus\_helper@\spxentry{fcdft.solvent.calculus\_helper}}\index{fcdft.solvent.calculus\_helper@\spxentry{fcdft.solvent.calculus\_helper}!module@\spxentry{module}}\index{dirichlet\_gradient() (in module fcdft.solvent.calculus\_helper)@\spxentry{dirichlet\_gradient()}\spxextra{in module fcdft.solvent.calculus\_helper}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.calculus_helper.dirichlet_gradient}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.calculus\_helper.}}\sphinxbfcode{\sphinxupquote{dirichlet\_gradient}}}
+{\sphinxparam{\DUrole{n}{f}}\sphinxparamcomma \sphinxparam{\DUrole{o}{*}\DUrole{n}{varargs}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Optimized Gradient Calculator
+
+\end{fulllineitems}
+
+\index{gradient() (in module fcdft.solvent.calculus\_helper)@\spxentry{gradient()}\spxextra{in module fcdft.solvent.calculus\_helper}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.calculus_helper.gradient}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.calculus\_helper.}}\sphinxbfcode{\sphinxupquote{gradient}}}
+{\sphinxparam{\DUrole{n}{f}}\sphinxparamcomma \sphinxparam{\DUrole{o}{*}\DUrole{n}{varargs}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Optimized Gradient Calculator
+
+\end{fulllineitems}
+
+\index{poisson() (in module fcdft.solvent.calculus\_helper)@\spxentry{poisson()}\spxextra{in module fcdft.solvent.calculus\_helper}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.calculus_helper.poisson}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.calculus\_helper.}}\sphinxbfcode{\sphinxupquote{poisson}}}
+{\sphinxparam{\DUrole{n}{grid}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dtype=\textless{}class \textquotesingle{}float\textquotesingle{}\textgreater{}}}\sphinxparamcomma \sphinxparam{\DUrole{n}{format=None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{type=\textquotesingle{}FD\textquotesingle{}}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Positive definite Laplacian operator generator
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{grid}} (\sphinxstyleliteralemphasis{\sphinxupquote{\_type\_}}) \textendash{} \_description\_
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{dtype}} (\sphinxstyleliteralemphasis{\sphinxupquote{\_type\_}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} \_description\_. Defaults to float.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{format}} (\sphinxstyleliteralemphasis{\sphinxupquote{\_type\_}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} \_description\_. Defaults to None.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{type}} (\sphinxstyleliteralemphasis{\sphinxupquote{str}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} \_description\_. Defaults to ‘FD’.
+
+\end{itemize}
+
+\sphinxlineitem{Raises}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{ValueError}} \textendash{} \_description\_
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{NotImplementedError}} \textendash{} \_description\_
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+\_description\_
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+\_type\_
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{vectorize\_grad() (in module fcdft.solvent.calculus\_helper)@\spxentry{vectorize\_grad()}\spxextra{in module fcdft.solvent.calculus\_helper}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.calculus_helper.vectorize_grad}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.calculus\_helper.}}\sphinxbfcode{\sphinxupquote{vectorize\_grad}}}
+{\sphinxparam{\DUrole{n}{grad\_object}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+
+
+\subsubsection{fcdft.solvent.esp module}
+\label{\detokenize{fcdft.solvent:module-fcdft.solvent.esp}}\label{\detokenize{fcdft.solvent:fcdft-solvent-esp-module}}\index{module@\spxentry{module}!fcdft.solvent.esp@\spxentry{fcdft.solvent.esp}}\index{fcdft.solvent.esp@\spxentry{fcdft.solvent.esp}!module@\spxentry{module}}\index{ang2bohr (in module fcdft.solvent.esp)@\spxentry{ang2bohr}\spxextra{in module fcdft.solvent.esp}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.esp.ang2bohr}}
+\pysigstartsignatures
+\pysigline
+{\sphinxcode{\sphinxupquote{fcdft.solvent.esp.}}\sphinxbfcode{\sphinxupquote{ang2bohr}}\sphinxbfcode{\sphinxupquote{\DUrole{w}{ }\DUrole{p}{=}\DUrole{w}{ }1.8897261245650618}}}
+\pysigstopsignatures
+\sphinxAtStartPar
+The values in ‘options’ (in esp\_atomic\_charges) are set to reproduce the NWCHEM ESP calculation.
+— \textless{}input\textgreater{}—
+
+\sphinxAtStartPar
+charge    0
+geometry units angstroms noautosym noautoz nocenter
+\begin{quote}
+
+\sphinxAtStartPar
+O   0.00000      \sphinxhyphen{}0.07579       0.0000
+H   0.86681       0.60144       0.0000
+H  \sphinxhyphen{}0.86681       0.60144       0.0000
+\end{quote}
+
+\sphinxAtStartPar
+end
+\begin{description}
+\sphinxlineitem{basis spherical}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+library “aug\sphinxhyphen{}cc\sphinxhyphen{}pvdz”
+
+\end{itemize}
+
+\end{description}
+
+\sphinxAtStartPar
+end
+\begin{description}
+\sphinxlineitem{scf}
+\sphinxAtStartPar
+thresh 1e\sphinxhyphen{}8
+print low
+
+\end{description}
+
+\sphinxAtStartPar
+end
+
+\sphinxAtStartPar
+task scf       energy
+\begin{description}
+\sphinxlineitem{esp}
+\sphinxAtStartPar
+recalculate
+restrain hfree
+
+\end{description}
+
+\sphinxAtStartPar
+end
+
+\sphinxAtStartPar
+task esp
+—\textless{}end input\textgreater{}—\textendash{}
+\begin{description}
+\sphinxlineitem{— (output: RHF/aug\sphinxhyphen{}cc\sphinxhyphen{}pvdz)\textendash{}}
+\sphinxAtStartPar
+Atom              Coordinates                           Charge
+\begin{quote}
+\begin{description}
+\sphinxlineitem{ESP         RESP        RESP2}
+\sphinxAtStartPar
+constr
+
+\end{description}
+\end{quote}
+
+\sphinxAtStartPar
+1 O     0.000000   \sphinxhyphen{}0.007579    0.000000   \sphinxhyphen{}0.673531   \sphinxhyphen{}0.672911   \sphinxhyphen{}0.672911
+2 H     0.086681    0.060144    0.000000    0.333545    0.333230    0.333230
+3 H    \sphinxhyphen{}0.086681    0.060144    0.000000    0.339986    0.339681    0.339681
+
+\end{description}
+
+\sphinxAtStartPar
+—\sphinxhyphen{}(end output)———\sphinxhyphen{}
+
+\end{fulllineitems}
+
+\index{esp\_atomic\_charges() (in module fcdft.solvent.esp)@\spxentry{esp\_atomic\_charges()}\spxextra{in module fcdft.solvent.esp}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.esp.esp_atomic_charges}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.esp.}}\sphinxbfcode{\sphinxupquote{esp\_atomic\_charges}}}
+{\sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}}\sphinxparamcomma \sphinxparam{\DUrole{n}{options\_dict}\DUrole{o}{=}\DUrole{default_value}{\{\}}}\sphinxparamcomma \sphinxparam{\DUrole{n}{verbose}\DUrole{o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{gpu\_accel}\DUrole{o}{=}\DUrole{default_value}{False}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Estimate (R)ESP atomic charges
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mol}} (\sphinxstyleliteralemphasis{\sphinxupquote{pyscf.gto.Mole}}\sphinxstyleliteralemphasis{\sphinxupquote{(}}\sphinxstyleliteralemphasis{\sphinxupquote{)}})
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{dm}} (\sphinxstyleliteralemphasis{\sphinxupquote{density matrix}})
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{options\_dict\{\}}} (\sphinxstyleliteralemphasis{\sphinxupquote{dict}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} dictionary of user’s defined options
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{verbose}} (\sphinxstyleliteralemphasis{\sphinxupquote{0}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}})
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+\sphinxstylestrong{charges}
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+list
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{esp\_esp() (in module fcdft.solvent.esp)@\spxentry{esp\_esp()}\spxextra{in module fcdft.solvent.esp}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.esp.esp_esp}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.esp.}}\sphinxbfcode{\sphinxupquote{esp\_esp}}}
+{\sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}}\sphinxparamcomma \sphinxparam{\DUrole{n}{coords}}\sphinxparamcomma \sphinxparam{\DUrole{n}{gpu\_accel}\DUrole{o}{=}\DUrole{default_value}{False}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Estimate the electrostatic potential (ESP) at each grid point and atomic site as the second step.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{pyscf.Mole}}\sphinxstyleliteralstrong{\sphinxupquote{(}}\sphinxstyleliteralstrong{\sphinxupquote{)}} (\sphinxstyleliteralemphasis{\sphinxupquote{mol =}})
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{Matrix}} (\sphinxstyleliteralemphasis{\sphinxupquote{dm  = density}})
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{(}}\sphinxstyleliteralstrong{\sphinxupquote{ngrid}} (\sphinxstyleliteralemphasis{\sphinxupquote{coords = np.array}})
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{3}}\sphinxstyleliteralstrong{\sphinxupquote{)}} (\sphinxstyleliteralemphasis{\sphinxupquote{grid point}})
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+\sphinxstylestrong{Vnuc \sphinxhyphen{} Vele}
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+np.array : the ESP value at each grid
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{esp\_fit() (in module fcdft.solvent.esp)@\spxentry{esp\_fit()}\spxextra{in module fcdft.solvent.esp}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.esp.esp_fit}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.esp.}}\sphinxbfcode{\sphinxupquote{esp\_fit}}}
+{\sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{grids}}\sphinxparamcomma \sphinxparam{\DUrole{n}{grids\_val}}\sphinxparamcomma \sphinxparam{\DUrole{n}{restraint}}\sphinxparamcomma \sphinxparam{\DUrole{n}{hfree}}\sphinxparamcomma \sphinxparam{\DUrole{n}{resp\_a}}\sphinxparamcomma \sphinxparam{\DUrole{n}{resp\_b}}\sphinxparamcomma \sphinxparam{\DUrole{n}{maxiter}}\sphinxparamcomma \sphinxparam{\DUrole{n}{tolerance}}\sphinxparamcomma \sphinxparam{\DUrole{n}{verbose}}}
+{}
+\pysigstopsignatures\begin{description}
+\sphinxlineitem{Fitting procedure for (R)ESP atomic charges}
+\sphinxAtStartPar
+In case of RESP, a penalty function is a hyperbolic form:
+penalty funciton = resp\_a sum\_i (q\_i*q\_i \sphinxhyphen{} resp\_b*resp\_b)**0.5 \sphinxhyphen{} resp\_b)
+
+\end{description}
+
+
+\paragraph{Parameters:}
+\label{\detokenize{fcdft.solvent:parameters}}
+\sphinxAtStartPar
+mol : pyscf.Mole()
+grids : np.array (ngrid, 3), grid coordinates
+grids\_val : np.array (ngrid), the V at grid point
+restraint : bool
+\begin{quote}
+
+\sphinxAtStartPar
+whether restraint included
+\end{quote}
+\begin{description}
+\sphinxlineitem{hfree}{[}bool{]}
+\sphinxAtStartPar
+whether hydrogen atoms excluded or included in restraint
+
+\sphinxlineitem{resp\_a}{[}float{]}
+\sphinxAtStartPar
+restraint scale
+
+\sphinxlineitem{resp\_b}{[}float{]}
+\sphinxAtStartPar
+restraint parabola tightness
+
+\sphinxlineitem{maxiter}{[}int{]}
+\sphinxAtStartPar
+maximum number of interactions
+
+\sphinxlineitem{tolerance}{[}float,{]}
+\sphinxAtStartPar
+tolerance for charges in the fitting
+
+\sphinxlineitem{verbose}{[}int{]}
+\sphinxAtStartPar
+print out message
+
+\end{description}
+
+\sphinxAtStartPar
+Returns:
+qf : list
+\begin{quote}
+
+\sphinxAtStartPar
+(R)ESP atomic charges
+\end{quote}
+
+\end{fulllineitems}
+
+\index{esp\_grid() (in module fcdft.solvent.esp)@\spxentry{esp\_grid()}\spxextra{in module fcdft.solvent.esp}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.esp.esp_grid}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.esp.}}\sphinxbfcode{\sphinxupquote{esp\_grid}}}
+{\sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{rcut}\DUrole{o}{=}\DUrole{default_value}{3.0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{ngrids}\DUrole{o}{=}\DUrole{default_value}{49}}\sphinxparamcomma \sphinxparam{\DUrole{n}{probe}\DUrole{o}{=}\DUrole{default_value}{0.7}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Generate grid points as the first step. This function was modified for better performance.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mol}} (\sphinxstyleliteralemphasis{\sphinxupquote{gto.Mole}}\sphinxstyleliteralemphasis{\sphinxupquote{(}}\sphinxstyleliteralemphasis{\sphinxupquote{) }}\sphinxstyleliteralemphasis{\sphinxupquote{: provides the coordinates and atomic numbers.}})
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{rcut}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} A cut\sphinxhyphen{}off distance in A for the solvent accessible region around the molecule
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{ngrids}} (\sphinxstyleliteralemphasis{\sphinxupquote{integer}}) \textendash{} The number of grid points along each axis
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{probe}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} A radius in A determining the envolope around the molecule
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+\sphinxstylestrong{grids}
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+np.array (float)
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{get\_esp\_radii() (in module fcdft.solvent.esp)@\spxentry{get\_esp\_radii()}\spxextra{in module fcdft.solvent.esp}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.esp.get_esp_radii}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.esp.}}\sphinxbfcode{\sphinxupquote{get\_esp\_radii}}}
+{\sphinxparam{\DUrole{n}{probe}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Obtain Solvent Inaccessible Radii
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{probe}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{ (}}\sphinxstyleliteralemphasis{\sphinxupquote{in A}}\sphinxstyleliteralemphasis{\sphinxupquote{)}}) \textendash{} A radius in A determining the envelope around the molecule
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+\sphinxstylestrong{ESP\_RADII}
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+np.array(float)
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{make\_rdm1\_with\_orbital\_response() (in module fcdft.solvent.esp)@\spxentry{make\_rdm1\_with\_orbital\_response()}\spxextra{in module fcdft.solvent.esp}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.esp.make_rdm1_with_orbital_response}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.esp.}}\sphinxbfcode{\sphinxupquote{make\_rdm1\_with\_orbital\_response}}}
+{\sphinxparam{\DUrole{n}{mp}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+
+
+\subsubsection{fcdft.solvent.pbe module}
+\label{\detokenize{fcdft.solvent:module-fcdft.solvent.pbe}}\label{\detokenize{fcdft.solvent:fcdft-solvent-pbe-module}}\index{module@\spxentry{module}!fcdft.solvent.pbe@\spxentry{fcdft.solvent.pbe}}\index{fcdft.solvent.pbe@\spxentry{fcdft.solvent.pbe}!module@\spxentry{module}}\index{Grids (class in fcdft.solvent.pbe)@\spxentry{Grids}\spxextra{class in fcdft.solvent.pbe}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.Grids}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{fcdft.solvent.pbe.}}\sphinxbfcode{\sphinxupquote{Grids}}}
+{\sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{ngrids}\DUrole{o}{=}\DUrole{default_value}{97}}\sphinxparamcomma \sphinxparam{\DUrole{n}{length}\DUrole{o}{=}\DUrole{default_value}{20}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Bases: \sphinxcode{\sphinxupquote{Cube}}
+\index{build() (fcdft.solvent.pbe.Grids method)@\spxentry{build()}\spxextra{fcdft.solvent.pbe.Grids method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.Grids.build}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{build}}}
+{\sphinxparam{\DUrole{n}{mol}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{o}{*}\DUrole{n}{args}}\sphinxparamcomma \sphinxparam{\DUrole{o}{**}\DUrole{n}{kwargs}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{dump\_flags() (fcdft.solvent.pbe.Grids method)@\spxentry{dump\_flags()}\spxextra{fcdft.solvent.pbe.Grids method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.Grids.dump_flags}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{dump\_flags}}}
+{\sphinxparam{\DUrole{n}{verbose}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{get\_coords() (fcdft.solvent.pbe.Grids method)@\spxentry{get\_coords()}\spxextra{fcdft.solvent.pbe.Grids method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.Grids.get_coords}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{get\_coords}}}
+{}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Result: set of coordinates to compute a field which is to be stored
+in the file.
+
+\end{fulllineitems}
+
+\index{reset() (fcdft.solvent.pbe.Grids method)@\spxentry{reset()}\spxextra{fcdft.solvent.pbe.Grids method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.Grids.reset}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{reset}}}
+{\sphinxparam{\DUrole{n}{mol}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+
+\end{fulllineitems}
+
+\index{PBE (class in fcdft.solvent.pbe)@\spxentry{PBE}\spxextra{class in fcdft.solvent.pbe}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{fcdft.solvent.pbe.}}\sphinxbfcode{\sphinxupquote{PBE}}}
+{\sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{cb}\DUrole{o}{=}\DUrole{default_value}{0.0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{cation\_rad}\DUrole{o}{=}\DUrole{default_value}{4.3}}\sphinxparamcomma \sphinxparam{\DUrole{n}{anion\_rad}\DUrole{o}{=}\DUrole{default_value}{4.3}}\sphinxparamcomma \sphinxparam{\DUrole{n}{T}\DUrole{o}{=}\DUrole{default_value}{298.15}}\sphinxparamcomma \sphinxparam{\DUrole{n}{stern\_mol}\DUrole{o}{=}\DUrole{default_value}{0.44}}\sphinxparamcomma \sphinxparam{\DUrole{n}{stern\_sam}\DUrole{o}{=}\DUrole{default_value}{8.1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{equiv}\DUrole{o}{=}\DUrole{default_value}{11}}\sphinxparamcomma \sphinxparam{\DUrole{o}{**}\DUrole{n}{kwargs}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Bases: \sphinxcode{\sphinxupquote{ddCOSMO}}
+\index{build() (fcdft.solvent.pbe.PBE method)@\spxentry{build()}\spxextra{fcdft.solvent.pbe.PBE method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE.build}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{build}}}
+{}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{dump\_flags() (fcdft.solvent.pbe.PBE method)@\spxentry{dump\_flags()}\spxextra{fcdft.solvent.pbe.PBE method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE.dump_flags}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{dump\_flags}}}
+{\sphinxparam{\DUrole{n}{verbose}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{energy\_osm() (fcdft.solvent.pbe.PBE method)@\spxentry{energy\_osm()}\spxextra{fcdft.solvent.pbe.PBE method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE.energy_osm}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{energy\_osm}}}
+{\sphinxparam{\DUrole{n}{phi\_tot}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{cb}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{lambda\_r}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{T}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{spacing}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{equiv}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{grad() (fcdft.solvent.pbe.PBE method)@\spxentry{grad()}\spxextra{fcdft.solvent.pbe.PBE method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE.grad}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{grad}}}
+{\sphinxparam{\DUrole{n}{dm}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Computes the Jacobian for the energy associated with the solvent,
+including the derivatives of the solvent itsself and the interactions
+between the solvent and the charge density of the solute.
+
+\end{fulllineitems}
+
+\index{make\_eps() (fcdft.solvent.pbe.PBE method)@\spxentry{make\_eps()}\spxextra{fcdft.solvent.pbe.PBE method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE.make_eps}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{make\_eps}}}
+{\sphinxparam{\DUrole{n}{coords}}\sphinxparamcomma \sphinxparam{\DUrole{n}{eps\_sam}}\sphinxparamcomma \sphinxparam{\DUrole{n}{eps}}\sphinxparamcomma \sphinxparam{\DUrole{n}{stern\_sam}}\sphinxparamcomma \sphinxparam{\DUrole{n}{delta1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{sas}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Calculates the dielectric function.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{coords}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D numpy.ndarray}}) \textendash{} Cartesian coordinates
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{eps\_sam}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Dielectric constant of the self\sphinxhyphen{}assembled monolayer
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{eps}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Dielectric constant of the bulk solvent.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{stern\_sam}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Stern layer length of the self\sphinxhyphen{}assembled monolayer in atomic unit.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{delta1}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Broadening constant of error functions.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{sas}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D numpy.ndarray}}) \textendash{} Solvent\sphinxhyphen{}accessible surface.
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Dielectric function
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+1D numpy.ndarray
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{make\_grad\_eps() (fcdft.solvent.pbe.PBE method)@\spxentry{make\_grad\_eps()}\spxextra{fcdft.solvent.pbe.PBE method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE.make_grad_eps}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{make\_grad\_eps}}}
+{\sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{coords}}\sphinxparamcomma \sphinxparam{\DUrole{n}{eps\_sam}}\sphinxparamcomma \sphinxparam{\DUrole{n}{eps}}\sphinxparamcomma \sphinxparam{\DUrole{n}{probe}}\sphinxparamcomma \sphinxparam{\DUrole{n}{stern\_sam}}\sphinxparamcomma \sphinxparam{\DUrole{n}{delta1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{delta2}}\sphinxparamcomma \sphinxparam{\DUrole{n}{atomic\_radii}}\sphinxparamcomma \sphinxparam{\DUrole{n}{sas}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Generates analytic gradient of the dielectric function.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mol}} (\sphinxstyleliteralemphasis{\sphinxupquote{pyscf.gto.Mole}}) \textendash{} Mole object.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{coords}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D numpy.ndarray}}) \textendash{} Cartesian coordinates.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{eps\_sam}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Dielectric constant of the self\sphinxhyphen{}assembled monolayer.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{eps}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Dielectric constant of the bulk solvent.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{probe}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Probe radius.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{stern\_sam}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Thickness of the Stern layer formed by the self\sphinxhyphen{}assembled monolayer.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{delta1}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Width of error function along z\sphinxhyphen{}axis.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{delta2}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Width of error function used for molecular part.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{atomic\_radii}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D numpy.ndarray}}) \textendash{} Atomic radii.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{sas}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D numpy.ndarray}}) \textendash{} Solvent\sphinxhyphen{}accessible surface.
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Gradient of the dielectric function.
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+2D numpy.ndarray
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{make\_lambda() (fcdft.solvent.pbe.PBE method)@\spxentry{make\_lambda()}\spxextra{fcdft.solvent.pbe.PBE method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE.make_lambda}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{make\_lambda}}}
+{\sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{probe}}\sphinxparamcomma \sphinxparam{\DUrole{n}{stern\_mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{stern\_sam}}\sphinxparamcomma \sphinxparam{\DUrole{n}{coords}}\sphinxparamcomma \sphinxparam{\DUrole{n}{delta1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{delta2}}\sphinxparamcomma \sphinxparam{\DUrole{n}{atomic\_radii}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Ion\sphinxhyphen{}exclusion function.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mol}} (\sphinxstyleliteralemphasis{\sphinxupquote{pyscf.gto.Mole}}) \textendash{} Mole object.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{probe}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Probe radius in a.u..
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{stern\_mol}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Molecular Stern layer thickness in a.u..
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{stern\_sam}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} SAM Stern layer thickness in a.u..
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{coords}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D numpy.ndarray}}) \textendash{} Cartesian coordinates.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{delta1}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Broadening constant in error functions used for the molecular part.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{delta2}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Broadening constant in error functions used for the SAM part.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{atomic\_radii}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D numpy.ndarray}}) \textendash{} Atomic radii
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Ion\sphinxhyphen{}exclusion function
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+1D array
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{make\_phi() (fcdft.solvent.pbe.PBE method)@\spxentry{make\_phi()}\spxextra{fcdft.solvent.pbe.PBE method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE.make_phi}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{make\_phi}}}
+{\sphinxparam{\DUrole{n}{bias}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{phi\_sol}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{rho\_sol}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Non\sphinxhyphen{}linear Poisson\sphinxhyphen{}Boltzmann equation driver.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{solvent\_obj}} \textendash{} An instance of {\hyperref[\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE}]{\sphinxcrossref{\sphinxcode{\sphinxupquote{PBE}}}}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{bias}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} Bias potential in atomic unit. Defaults to None.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{phi\_sol}} (\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} Solute potential in vacuum. Defaults to None.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{rho\_sol}} (\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} Solute charge density in vacuum. Defaults to None.
+
+\end{itemize}
+
+\sphinxlineitem{Raises}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{RuntimeError}} \textendash{} Infinite ion charge density.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{RuntimeError}} \textendash{} PBE self\sphinxhyphen{}consistent cycle fails to converge.
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Total potential, ion charge density, and polarization charge density.
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+numpy.ndarray, numpy.ndarray, numpy.ndarray
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{make\_phi\_sol() (fcdft.solvent.pbe.PBE method)@\spxentry{make\_phi\_sol()}\spxextra{fcdft.solvent.pbe.PBE method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE.make_phi_sol}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{make\_phi\_sol}}}
+{\sphinxparam{\DUrole{n}{dm}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{coords}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Generates solute potential in vacuum.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{solvent\_obj}} ({\hyperref[\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE}]{\sphinxcrossref{\sphinxcode{\sphinxupquote{PBE}}}}}) \textendash{} Solvent object.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{dm}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D numpy.ndarray}}) \textendash{} Density matrix
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{coords}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D numpy.ndarray}}) \textendash{} Cartesian grids.
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Solute electrostatic potential.
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+numpy tag\_array
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{make\_rho\_sol() (fcdft.solvent.pbe.PBE method)@\spxentry{make\_rho\_sol()}\spxextra{fcdft.solvent.pbe.PBE method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE.make_rho_sol}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{make\_rho\_sol}}}
+{\sphinxparam{\DUrole{n}{phi\_sol}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{ngrids}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{spacing}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Solute charge density by solving the Poisson equation.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{solvent\_obj}} ({\hyperref[\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE}]{\sphinxcrossref{\sphinxcode{\sphinxupquote{PBE}}}}}) \textendash{} Solvent object.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{phi\_sol}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D numpy.ndarray}}) \textendash{} Electrostatic potential of the solute molecule.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{ngrids}} (\sphinxstyleliteralemphasis{\sphinxupquote{int}}) \textendash{} Number of grid points along each axis.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{spacing}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Grid spacing
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Solute charge density
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+1D numpy.ndarray
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{make\_sas() (fcdft.solvent.pbe.PBE method)@\spxentry{make\_sas()}\spxextra{fcdft.solvent.pbe.PBE method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE.make_sas}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{make\_sas}}}
+{\sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{probe}}\sphinxparamcomma \sphinxparam{\DUrole{n}{coords}}\sphinxparamcomma \sphinxparam{\DUrole{n}{delta2}}\sphinxparamcomma \sphinxparam{\DUrole{n}{atomic\_radii}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Generating solvent\sphinxhyphen{}accessible surface
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mol}} (\sphinxstyleliteralemphasis{\sphinxupquote{pyscf.gto.Mole}}) \textendash{} Mole object.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{probe}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} probe radius in a.u..
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{coords}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D numpy.ndarray}}) \textendash{} Cartesian coordinates.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{delta2}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} broadening constant in a.u..
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{atomic\_radii}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D numpy.ndarray}}) \textendash{} Atomic radii
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Solvent\sphinxhyphen{}accessible surface
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+1D numpy.ndarray
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{nuc\_grad\_method() (fcdft.solvent.pbe.PBE method)@\spxentry{nuc\_grad\_method()}\spxextra{fcdft.solvent.pbe.PBE method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE.nuc_grad_method}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{nuc\_grad\_method}}}
+{\sphinxparam{\DUrole{n}{grad\_method}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+For grad\_method in vacuum, add nuclear gradients of solvent
+
+\end{fulllineitems}
+
+\index{reset() (fcdft.solvent.pbe.PBE method)@\spxentry{reset()}\spxextra{fcdft.solvent.pbe.PBE method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE.reset}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{reset}}}
+{\sphinxparam{\DUrole{n}{mol}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Reset mol and clean up relevant attributes for scanner mode
+
+\end{fulllineitems}
+
+\index{to\_gpu() (fcdft.solvent.pbe.PBE method)@\spxentry{to\_gpu()}\spxextra{fcdft.solvent.pbe.PBE method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE.to_gpu}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{to\_gpu}}}
+{}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Convert a method to its corresponding GPU variant, and recursively
+converts all attributes of a method to cupy objects or gpu4pyscf objects.
+
+\end{fulllineitems}
+
+
+\end{fulllineitems}
+
+\index{gen\_pbe\_solver() (in module fcdft.solvent.pbe)@\spxentry{gen\_pbe\_solver()}\spxextra{in module fcdft.solvent.pbe}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.gen_pbe_solver}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.pbe.}}\sphinxbfcode{\sphinxupquote{gen\_pbe\_solver}}}
+{\sphinxparam{\DUrole{n}{solvent\_obj}}\sphinxparamcomma \sphinxparam{\DUrole{n}{verbose}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{make\_eps() (in module fcdft.solvent.pbe)@\spxentry{make\_eps()}\spxextra{in module fcdft.solvent.pbe}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.make_eps}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.pbe.}}\sphinxbfcode{\sphinxupquote{make\_eps}}}
+{\sphinxparam{\DUrole{n}{solvent\_obj}}\sphinxparamcomma \sphinxparam{\DUrole{n}{coords}}\sphinxparamcomma \sphinxparam{\DUrole{n}{eps\_sam}}\sphinxparamcomma \sphinxparam{\DUrole{n}{eps}}\sphinxparamcomma \sphinxparam{\DUrole{n}{stern\_sam}}\sphinxparamcomma \sphinxparam{\DUrole{n}{delta1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{sas}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Calculates the dielectric function.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{coords}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D numpy.ndarray}}) \textendash{} Cartesian coordinates
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{eps\_sam}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Dielectric constant of the self\sphinxhyphen{}assembled monolayer
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{eps}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Dielectric constant of the bulk solvent.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{stern\_sam}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Stern layer length of the self\sphinxhyphen{}assembled monolayer in atomic unit.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{delta1}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Broadening constant of error functions.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{sas}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D numpy.ndarray}}) \textendash{} Solvent\sphinxhyphen{}accessible surface.
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Dielectric function
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+1D numpy.ndarray
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{make\_grad\_eps() (in module fcdft.solvent.pbe)@\spxentry{make\_grad\_eps()}\spxextra{in module fcdft.solvent.pbe}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.make_grad_eps}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.pbe.}}\sphinxbfcode{\sphinxupquote{make\_grad\_eps}}}
+{\sphinxparam{\DUrole{n}{solvent\_obj}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{coords}}\sphinxparamcomma \sphinxparam{\DUrole{n}{eps\_sam}}\sphinxparamcomma \sphinxparam{\DUrole{n}{eps}}\sphinxparamcomma \sphinxparam{\DUrole{n}{probe}}\sphinxparamcomma \sphinxparam{\DUrole{n}{stern\_sam}}\sphinxparamcomma \sphinxparam{\DUrole{n}{delta1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{delta2}}\sphinxparamcomma \sphinxparam{\DUrole{n}{atomic\_radii}}\sphinxparamcomma \sphinxparam{\DUrole{n}{sas}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Generates analytic gradient of the dielectric function.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mol}} (\sphinxstyleliteralemphasis{\sphinxupquote{pyscf.gto.Mole}}) \textendash{} Mole object.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{coords}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D numpy.ndarray}}) \textendash{} Cartesian coordinates.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{eps\_sam}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Dielectric constant of the self\sphinxhyphen{}assembled monolayer.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{eps}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Dielectric constant of the bulk solvent.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{probe}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Probe radius.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{stern\_sam}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Thickness of the Stern layer formed by the self\sphinxhyphen{}assembled monolayer.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{delta1}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Width of error function along z\sphinxhyphen{}axis.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{delta2}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Width of error function used for molecular part.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{atomic\_radii}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D numpy.ndarray}}) \textendash{} Atomic radii.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{sas}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D numpy.ndarray}}) \textendash{} Solvent\sphinxhyphen{}accessible surface.
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Gradient of the dielectric function.
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+2D numpy.ndarray
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{make\_lambda() (in module fcdft.solvent.pbe)@\spxentry{make\_lambda()}\spxextra{in module fcdft.solvent.pbe}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.make_lambda}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.pbe.}}\sphinxbfcode{\sphinxupquote{make\_lambda}}}
+{\sphinxparam{\DUrole{n}{solvent\_obj}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{probe}}\sphinxparamcomma \sphinxparam{\DUrole{n}{stern\_mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{stern\_sam}}\sphinxparamcomma \sphinxparam{\DUrole{n}{coords}}\sphinxparamcomma \sphinxparam{\DUrole{n}{delta1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{delta2}}\sphinxparamcomma \sphinxparam{\DUrole{n}{atomic\_radii}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Ion\sphinxhyphen{}exclusion function.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mol}} (\sphinxstyleliteralemphasis{\sphinxupquote{pyscf.gto.Mole}}) \textendash{} Mole object.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{probe}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Probe radius in a.u..
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{stern\_mol}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Molecular Stern layer thickness in a.u..
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{stern\_sam}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} SAM Stern layer thickness in a.u..
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{coords}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D numpy.ndarray}}) \textendash{} Cartesian coordinates.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{delta1}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Broadening constant in error functions used for the molecular part.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{delta2}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Broadening constant in error functions used for the SAM part.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{atomic\_radii}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D numpy.ndarray}}) \textendash{} Atomic radii
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Ion\sphinxhyphen{}exclusion function
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+1D array
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{make\_phi() (in module fcdft.solvent.pbe)@\spxentry{make\_phi()}\spxextra{in module fcdft.solvent.pbe}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.make_phi}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.pbe.}}\sphinxbfcode{\sphinxupquote{make\_phi}}}
+{\sphinxparam{\DUrole{n}{solvent\_obj}}\sphinxparamcomma \sphinxparam{\DUrole{n}{bias}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{phi\_sol}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{rho\_sol}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Non\sphinxhyphen{}linear Poisson\sphinxhyphen{}Boltzmann equation driver.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{solvent\_obj}} \textendash{} An instance of {\hyperref[\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE}]{\sphinxcrossref{\sphinxcode{\sphinxupquote{PBE}}}}}
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{bias}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} Bias potential in atomic unit. Defaults to None.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{phi\_sol}} (\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} Solute potential in vacuum. Defaults to None.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{rho\_sol}} (\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} Solute charge density in vacuum. Defaults to None.
+
+\end{itemize}
+
+\sphinxlineitem{Raises}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{RuntimeError}} \textendash{} Infinite ion charge density.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{RuntimeError}} \textendash{} PBE self\sphinxhyphen{}consistent cycle fails to converge.
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Total potential, ion charge density, and polarization charge density.
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+numpy.ndarray, numpy.ndarray, numpy.ndarray
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{make\_phi\_sol() (in module fcdft.solvent.pbe)@\spxentry{make\_phi\_sol()}\spxextra{in module fcdft.solvent.pbe}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.make_phi_sol}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.pbe.}}\sphinxbfcode{\sphinxupquote{make\_phi\_sol}}}
+{\sphinxparam{\DUrole{n}{solvent\_obj}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{coords}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Generates solute potential in vacuum.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{solvent\_obj}} ({\hyperref[\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE}]{\sphinxcrossref{\sphinxcode{\sphinxupquote{PBE}}}}}) \textendash{} Solvent object.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{dm}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D numpy.ndarray}}) \textendash{} Density matrix
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{coords}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D numpy.ndarray}}) \textendash{} Cartesian grids.
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Solute electrostatic potential.
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+numpy tag\_array
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{make\_rho\_sol() (in module fcdft.solvent.pbe)@\spxentry{make\_rho\_sol()}\spxextra{in module fcdft.solvent.pbe}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.make_rho_sol}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.pbe.}}\sphinxbfcode{\sphinxupquote{make\_rho\_sol}}}
+{\sphinxparam{\DUrole{n}{solvent\_obj}}\sphinxparamcomma \sphinxparam{\DUrole{n}{phi\_sol}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{ngrids}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{spacing}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Solute charge density by solving the Poisson equation.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{solvent\_obj}} ({\hyperref[\detokenize{fcdft.solvent:fcdft.solvent.pbe.PBE}]{\sphinxcrossref{\sphinxcode{\sphinxupquote{PBE}}}}}) \textendash{} Solvent object.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{phi\_sol}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D numpy.ndarray}}) \textendash{} Electrostatic potential of the solute molecule.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{ngrids}} (\sphinxstyleliteralemphasis{\sphinxupquote{int}}) \textendash{} Number of grid points along each axis.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{spacing}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Grid spacing
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Solute charge density
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+1D numpy.ndarray
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{make\_sas() (in module fcdft.solvent.pbe)@\spxentry{make\_sas()}\spxextra{in module fcdft.solvent.pbe}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.make_sas}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.pbe.}}\sphinxbfcode{\sphinxupquote{make\_sas}}}
+{\sphinxparam{\DUrole{n}{solvent\_obj}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{probe}}\sphinxparamcomma \sphinxparam{\DUrole{n}{coords}}\sphinxparamcomma \sphinxparam{\DUrole{n}{delta2}}\sphinxparamcomma \sphinxparam{\DUrole{n}{atomic\_radii}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Generating solvent\sphinxhyphen{}accessible surface
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mol}} (\sphinxstyleliteralemphasis{\sphinxupquote{pyscf.gto.Mole}}) \textendash{} Mole object.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{probe}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} probe radius in a.u..
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{coords}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D numpy.ndarray}}) \textendash{} Cartesian coordinates.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{delta2}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} broadening constant in a.u..
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{atomic\_radii}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D numpy.ndarray}}) \textendash{} Atomic radii
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Solvent\sphinxhyphen{}accessible surface
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+1D numpy.ndarray
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{pbe\_for\_scf() (in module fcdft.solvent.pbe)@\spxentry{pbe\_for\_scf()}\spxextra{in module fcdft.solvent.pbe}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.solvent:fcdft.solvent.pbe.pbe_for_scf}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.solvent.pbe.}}\sphinxbfcode{\sphinxupquote{pbe\_for\_scf}}}
+{\sphinxparam{\DUrole{n}{mf}}\sphinxparamcomma \sphinxparam{\DUrole{n}{solvent\_obj}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+
+
+\subsubsection{fcdft.solvent.pbe\_grad module}
+\label{\detokenize{fcdft.solvent:fcdft-solvent-pbe-grad-module}}
+
+\subsubsection{fcdft.solvent.radii module}
+\label{\detokenize{fcdft.solvent:module-fcdft.solvent.radii}}\label{\detokenize{fcdft.solvent:fcdft-solvent-radii-module}}\index{module@\spxentry{module}!fcdft.solvent.radii@\spxentry{fcdft.solvent.radii}}\index{fcdft.solvent.radii@\spxentry{fcdft.solvent.radii}!module@\spxentry{module}}
+
+\subsubsection{Module contents}
+\label{\detokenize{fcdft.solvent:module-fcdft.solvent}}\label{\detokenize{fcdft.solvent:module-contents}}\index{module@\spxentry{module}!fcdft.solvent@\spxentry{fcdft.solvent}}\index{fcdft.solvent@\spxentry{fcdft.solvent}!module@\spxentry{module}}
+\sphinxstepscope
+
+
+\subsection{fcdft.tools package}
+\label{\detokenize{fcdft.tools:fcdft-tools-package}}\label{\detokenize{fcdft.tools::doc}}
+
+\subsubsection{Submodules}
+\label{\detokenize{fcdft.tools:submodules}}
+
+\subsubsection{fcdft.tools.addons module}
+\label{\detokenize{fcdft.tools:module-fcdft.tools.addons}}\label{\detokenize{fcdft.tools:fcdft-tools-addons-module}}\index{module@\spxentry{module}!fcdft.tools.addons@\spxentry{fcdft.tools.addons}}\index{fcdft.tools.addons@\spxentry{fcdft.tools.addons}!module@\spxentry{module}}\index{frac\_occ() (in module fcdft.tools.addons)@\spxentry{frac\_occ()}\spxextra{in module fcdft.tools.addons}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.tools:fcdft.tools.addons.frac_occ}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.tools.addons.}}\sphinxbfcode{\sphinxupquote{frac\_occ}}}
+{\sphinxparam{\DUrole{n}{mf}}\sphinxparamcomma \sphinxparam{\DUrole{n}{nelec}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Direct deposition of fractional electrons.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mf}} (\sphinxstyleliteralemphasis{\sphinxupquote{pyscf.dft.RKS}}) \textendash{} Restricted KS\sphinxhyphen{}DFT object.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{nelec}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Total number of electrons.
+
+\end{itemize}
+
+\sphinxlineitem{Raises}
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{AttributeError}} \textendash{} Only RKS supported.
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Updated RKS object allowing fractional electrons.
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+mf
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{frac\_occ\_() (in module fcdft.tools.addons)@\spxentry{frac\_occ\_()}\spxextra{in module fcdft.tools.addons}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.tools:fcdft.tools.addons.frac_occ_}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.tools.addons.}}\sphinxbfcode{\sphinxupquote{frac\_occ\_}}}
+{\sphinxparam{\DUrole{n}{mf}}\sphinxparamcomma \sphinxparam{\DUrole{n}{nelec}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Direct deposition of fractional electrons.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mf}} (\sphinxstyleliteralemphasis{\sphinxupquote{pyscf.dft.RKS}}) \textendash{} Restricted KS\sphinxhyphen{}DFT object.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{nelec}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}) \textendash{} Total number of electrons.
+
+\end{itemize}
+
+\sphinxlineitem{Raises}
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{AttributeError}} \textendash{} Only RKS supported.
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Updated RKS object allowing fractional electrons.
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+mf
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+
+
+\subsubsection{fcdft.tools.molden module}
+\label{\detokenize{fcdft.tools:module-fcdft.tools.molden}}\label{\detokenize{fcdft.tools:fcdft-tools-molden-module}}\index{module@\spxentry{module}!fcdft.tools.molden@\spxentry{fcdft.tools.molden}}\index{fcdft.tools.molden@\spxentry{fcdft.tools.molden}!module@\spxentry{module}}\index{dump\_freq() (in module fcdft.tools.molden)@\spxentry{dump\_freq()}\spxextra{in module fcdft.tools.molden}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.tools:fcdft.tools.molden.dump_freq}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.tools.molden.}}\sphinxbfcode{\sphinxupquote{dump\_freq}}}
+{\sphinxparam{\DUrole{n}{mf}}\sphinxparamcomma \sphinxparam{\DUrole{n}{freq\_info}}\sphinxparamcomma \sphinxparam{\DUrole{n}{filename}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Dump the frequency information to a molden file.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mf}} (\sphinxstyleliteralemphasis{\sphinxupquote{\_type\_}}) \textendash{} Either a SCF or Mole object.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{freq\_info}} (\sphinxstyleliteralemphasis{\sphinxupquote{\_type\_}}) \textendash{} Vibrational frequency information.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{filename}} (\sphinxstyleliteralemphasis{\sphinxupquote{\_type\_}}) \textendash{} Output file name.
+
+\end{itemize}
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+
+
+\subsubsection{Module contents}
+\label{\detokenize{fcdft.tools:module-fcdft.tools}}\label{\detokenize{fcdft.tools:module-contents}}\index{module@\spxentry{module}!fcdft.tools@\spxentry{fcdft.tools}}\index{fcdft.tools@\spxentry{fcdft.tools}!module@\spxentry{module}}
+\sphinxstepscope
+
+
+\subsection{fcdft.wbl package}
+\label{\detokenize{fcdft.wbl:fcdft-wbl-package}}\label{\detokenize{fcdft.wbl::doc}}
+\sphinxAtStartPar
+Wide\sphinxhyphen{}Band Limit (WBL) approximation for DFT at electrode interfaces.
+
+\sphinxAtStartPar
+This package implements DFT calculations on molecules coupled to electrode contacts
+using the WBL approximation. The WBL model treats the self\sphinxhyphen{}energy as an imaginary self\sphinxhyphen{}energy.
+
+
+\subsubsection{Submodules}
+\label{\detokenize{fcdft.wbl:submodules}}
+
+\subsubsection{fcdft.wbl.rks module}
+\label{\detokenize{fcdft.wbl:fcdft-wbl-rks-module}}
+\sphinxAtStartPar
+Restricted Kohn\sphinxhyphen{}Sham with WBL for closed\sphinxhyphen{}shell electrochemical systems.
+\index{module@\spxentry{module}!fcdft.wbl.rks@\spxentry{fcdft.wbl.rks}}\index{fcdft.wbl.rks@\spxentry{fcdft.wbl.rks}!module@\spxentry{module}}\index{WBLBase (class in fcdft.wbl.rks)@\spxentry{WBLBase}\spxextra{class in fcdft.wbl.rks}}\phantomsection\label{\detokenize{fcdft.wbl:module-fcdft.wbl.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLBase}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{fcdft.wbl.rks.}}\sphinxbfcode{\sphinxupquote{WBLBase}}}
+{\sphinxparam{\DUrole{n}{broad}\DUrole{o}{=}\DUrole{default_value}{0.0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{smear}\DUrole{o}{=}\DUrole{default_value}{0.2}}\sphinxparamcomma \sphinxparam{\DUrole{n}{inner\_cycle}\DUrole{o}{=}\DUrole{default_value}{1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{ref\_pot}\DUrole{o}{=}\DUrole{default_value}{5.51}}\sphinxparamcomma \sphinxparam{\DUrole{n}{nelectron}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Bases: \sphinxcode{\sphinxupquote{object}}
+\index{build() (fcdft.wbl.rks.WBLBase method)@\spxentry{build()}\spxextra{fcdft.wbl.rks.WBLBase method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLBase.build}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{build}}}
+{\sphinxparam{\DUrole{n}{mol}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{dump\_flags() (fcdft.wbl.rks.WBLBase method)@\spxentry{dump\_flags()}\spxextra{fcdft.wbl.rks.WBLBase method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLBase.dump_flags}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{dump\_flags}}}
+{\sphinxparam{\DUrole{n}{verbose}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{eig() (fcdft.wbl.rks.WBLBase method)@\spxentry{eig()}\spxextra{fcdft.wbl.rks.WBLBase method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLBase.eig}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{eig}}}
+{\sphinxparam{\DUrole{n}{h}}\sphinxparamcomma \sphinxparam{\DUrole{n}{s}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{get\_fermi\_level() (fcdft.wbl.rks.WBLBase method)@\spxentry{get\_fermi\_level()}\spxextra{fcdft.wbl.rks.WBLBase method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLBase.get_fermi_level}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{get\_fermi\_level}}}
+{\sphinxparam{\DUrole{n}{nelec}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{pot\_cycle}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{broad}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_energy}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{fermi}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{verbose}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{get\_grad() (fcdft.wbl.rks.WBLBase method)@\spxentry{get\_grad()}\spxextra{fcdft.wbl.rks.WBLBase method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLBase.get_grad}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{get\_grad}}}
+{\sphinxparam{\DUrole{n}{mo\_coeff}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}}\sphinxparamcomma \sphinxparam{\DUrole{n}{fock}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{init\_guess\_by\_chkfile() (fcdft.wbl.rks.WBLBase method)@\spxentry{init\_guess\_by\_chkfile()}\spxextra{fcdft.wbl.rks.WBLBase method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLBase.init_guess_by_chkfile}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{init\_guess\_by\_chkfile}}}
+{\sphinxparam{\DUrole{n}{chkfile}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{project}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{nuc\_grad\_method() (fcdft.wbl.rks.WBLBase method)@\spxentry{nuc\_grad\_method()}\spxextra{fcdft.wbl.rks.WBLBase method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLBase.nuc_grad_method}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{nuc\_grad\_method}}}
+{}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+
+\end{fulllineitems}
+
+\index{WBLMoleculeRKS (class in fcdft.wbl.rks)@\spxentry{WBLMoleculeRKS}\spxextra{class in fcdft.wbl.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLMoleculeRKS}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{class\DUrole{w}{ }}}\sphinxcode{\sphinxupquote{fcdft.wbl.rks.}}\sphinxbfcode{\sphinxupquote{WBLMoleculeRKS}}}
+{\sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{xc}\DUrole{o}{=}\DUrole{default_value}{\textquotesingle{}LDA,VWN\textquotesingle{}}}\sphinxparamcomma \sphinxparam{\DUrole{n}{broad}\DUrole{o}{=}\DUrole{default_value}{0.0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{smear}\DUrole{o}{=}\DUrole{default_value}{0.2}}\sphinxparamcomma \sphinxparam{\DUrole{n}{inner\_cycle}\DUrole{o}{=}\DUrole{default_value}{1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{ref\_pot}\DUrole{o}{=}\DUrole{default_value}{5.51}}\sphinxparamcomma \sphinxparam{\DUrole{n}{nelectron}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Bases: {\hyperref[\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLBase}]{\sphinxcrossref{\sphinxcode{\sphinxupquote{WBLBase}}}}}, \sphinxcode{\sphinxupquote{RKS}}
+\index{Gradients() (fcdft.wbl.rks.WBLMoleculeRKS method)@\spxentry{Gradients()}\spxextra{fcdft.wbl.rks.WBLMoleculeRKS method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLMoleculeRKS.Gradients}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{Gradients}}}
+{}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{density\_fit() (fcdft.wbl.rks.WBLMoleculeRKS method)@\spxentry{density\_fit()}\spxextra{fcdft.wbl.rks.WBLMoleculeRKS method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLMoleculeRKS.density_fit}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{density\_fit}}}
+{\sphinxparam{\DUrole{n}{auxbasis}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{with\_df}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{only\_dfj}\DUrole{o}{=}\DUrole{default_value}{False}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{dump\_flags() (fcdft.wbl.rks.WBLMoleculeRKS method)@\spxentry{dump\_flags()}\spxextra{fcdft.wbl.rks.WBLMoleculeRKS method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLMoleculeRKS.dump_flags}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{dump\_flags}}}
+{\sphinxparam{\DUrole{n}{verbose}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{energy\_elec() (fcdft.wbl.rks.WBLMoleculeRKS method)@\spxentry{energy\_elec()}\spxextra{fcdft.wbl.rks.WBLMoleculeRKS method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLMoleculeRKS.energy_elec}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{energy\_elec}}}
+{\sphinxparam{\DUrole{n}{dm}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{h1e}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{vhf}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Electronic part of RKS energy.
+
+\sphinxAtStartPar
+Note this function has side effects which cause mf.scf\_summary updated.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{ks}} \textendash{} an instance of DFT class
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{dm}} \textendash{} 2D ndarray
+one\sphinxhyphen{}particle density matrix
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{h1e}} \textendash{} 2D ndarray
+Core hamiltonian
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+RKS electronic energy and the 2\sphinxhyphen{}electron contribution
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{get\_fock() (fcdft.wbl.rks.WBLMoleculeRKS method)@\spxentry{get\_fock()}\spxextra{fcdft.wbl.rks.WBLMoleculeRKS method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLMoleculeRKS.get_fock}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{get\_fock}}}
+{\sphinxparam{\DUrole{n}{h1e}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{s1e}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{vhf}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{cycle}\DUrole{o}{=}\DUrole{default_value}{\sphinxhyphen{}1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{diis}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{diis\_start\_cycle}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{level\_shift\_factor}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{damp\_factor}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{fock\_last}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+F = h\textasciicircum{}\{core\} + V\textasciicircum{}\{HF\}
+
+\sphinxAtStartPar
+Special treatment (damping, DIIS, or level shift) will be applied to the
+Fock matrix if diis and cycle is specified (The two parameters are passed
+to get\_fock function during the SCF iteration)
+\begin{description}
+\sphinxlineitem{Kwargs:}\begin{description}
+\sphinxlineitem{h1e}{[}2D ndarray{]}
+\sphinxAtStartPar
+Core hamiltonian
+
+\sphinxlineitem{s1e}{[}2D ndarray{]}
+\sphinxAtStartPar
+Overlap matrix, for DIIS
+
+\sphinxlineitem{vhf}{[}2D ndarray{]}
+\sphinxAtStartPar
+HF potential matrix
+
+\sphinxlineitem{dm}{[}2D ndarray{]}
+\sphinxAtStartPar
+Density matrix, for DIIS
+
+\sphinxlineitem{cycle}{[}int{]}
+\sphinxAtStartPar
+Then present SCF iteration step, for DIIS
+
+\sphinxlineitem{diis}{[}an object of \sphinxcode{\sphinxupquote{SCF.DIIS}} class{]}
+\sphinxAtStartPar
+DIIS object to hold intermediate Fock and error vectors
+
+\sphinxlineitem{diis\_start\_cycle}{[}int{]}
+\sphinxAtStartPar
+The step to start DIIS.  Default is 0.
+
+\sphinxlineitem{level\_shift\_factor}{[}float or int{]}
+\sphinxAtStartPar
+Level shift (in AU) for virtual space.  Default is 0.
+
+\end{description}
+
+\end{description}
+
+\end{fulllineitems}
+
+\index{get\_occ() (fcdft.wbl.rks.WBLMoleculeRKS method)@\spxentry{get\_occ()}\spxextra{fcdft.wbl.rks.WBLMoleculeRKS method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLMoleculeRKS.get_occ}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{get\_occ}}}
+{\sphinxparam{\DUrole{n}{mo\_energy}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_coeff}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Occupation matrix through numerical integration
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mo\_energy}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D numpy.ndarray}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} MO energies. Defaults to None.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mo\_coeff}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D numpy.ndarray}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} MO coefficients. Defaults to None.
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+MO occupation
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+1D numpy.ndarray
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{get\_sigmaR() (fcdft.wbl.rks.WBLMoleculeRKS method)@\spxentry{get\_sigmaR()}\spxextra{fcdft.wbl.rks.WBLMoleculeRKS method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLMoleculeRKS.get_sigmaR}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{get\_sigmaR}}}
+{\sphinxparam{\DUrole{n}{mol}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{s1e}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{get\_veff() (fcdft.wbl.rks.WBLMoleculeRKS method)@\spxentry{get\_veff()}\spxextra{fcdft.wbl.rks.WBLMoleculeRKS method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLMoleculeRKS.get_veff}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{get\_veff}}}
+{\sphinxparam{\DUrole{n}{mol}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm\_last}\DUrole{o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{vhf\_last}\DUrole{o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{hermi}\DUrole{o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{o}{*}\DUrole{n}{args}}\sphinxparamcomma \sphinxparam{\DUrole{o}{**}\DUrole{n}{kwargs}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Construct the effective potential for the WBLMolecule Hamiltonian.
+
+\end{fulllineitems}
+
+\index{make\_rdm1() (fcdft.wbl.rks.WBLMoleculeRKS method)@\spxentry{make\_rdm1()}\spxextra{fcdft.wbl.rks.WBLMoleculeRKS method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLMoleculeRKS.make_rdm1}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{make\_rdm1}}}
+{\sphinxparam{\DUrole{n}{mo\_coeff}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{o}{**}\DUrole{n}{kwargs}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Reduced density matrix of non\sphinxhyphen{}hermitian Hamiltonian
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mo\_coeff}} (\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}) \textendash{} MO coefficients
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mo\_occ}} (\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}) \textendash{} MO occupations
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Reduced density matrix
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+numpy.ndarray
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{nuc\_grad\_method() (fcdft.wbl.rks.WBLMoleculeRKS method)@\spxentry{nuc\_grad\_method()}\spxextra{fcdft.wbl.rks.WBLMoleculeRKS method}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.WBLMoleculeRKS.nuc_grad_method}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxbfcode{\sphinxupquote{nuc\_grad\_method}}}
+{}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Hook to create object for analytical nuclear gradients.
+
+\end{fulllineitems}
+
+
+\end{fulllineitems}
+
+\index{eig() (in module fcdft.wbl.rks)@\spxentry{eig()}\spxextra{in module fcdft.wbl.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.eig}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.wbl.rks.}}\sphinxbfcode{\sphinxupquote{eig}}}
+{\sphinxparam{\DUrole{n}{h}}\sphinxparamcomma \sphinxparam{\DUrole{n}{s}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Eigensolver for nonhermitian Hamiltonian.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{h}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D numpy.ndarray}}) \textendash{} Fock matrix
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{s}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D numpy.ndarray}}) \textendash{} Overlap matrix
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+mo energies and mo coefficients
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+e, c
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{energy\_elec() (in module fcdft.wbl.rks)@\spxentry{energy\_elec()}\spxextra{in module fcdft.wbl.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.energy_elec}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.wbl.rks.}}\sphinxbfcode{\sphinxupquote{energy\_elec}}}
+{\sphinxparam{\DUrole{n}{mf}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{h1e}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{vhf}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{get\_fermi\_level() (in module fcdft.wbl.rks)@\spxentry{get\_fermi\_level()}\spxextra{in module fcdft.wbl.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.get_fermi_level}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.wbl.rks.}}\sphinxbfcode{\sphinxupquote{get\_fermi\_level}}}
+{\sphinxparam{\DUrole{n}{mf}}\sphinxparamcomma \sphinxparam{\DUrole{n}{nelec\_a}}\sphinxparamcomma \sphinxparam{\DUrole{n}{pot\_cycle}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{broad}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_energy}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{fermi}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{verbose}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Calculates the Fermi level by the Newton\sphinxhyphen{}Raphson method.
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mf}} (\sphinxcode{\sphinxupquote{WBLMolecule}}) \textendash{} WBLMolecule object.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{pot\_cycle}} (\sphinxstyleliteralemphasis{\sphinxupquote{int}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} Maximum cycle for the Newton\sphinxhyphen{}Raphson method. Defaults to 50.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{broad}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} Broadening parameter. Defaults to None.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mo\_energy}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D numpy.ndarray}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} MO energies. Defaults to None.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{fermi}} (\sphinxstyleliteralemphasis{\sphinxupquote{float}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} Guess Fermi level. Defaults to None.
+
+\end{itemize}
+
+\sphinxlineitem{Raises}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{RuntimeError}} \textendash{} Failure of the Gaussian quadrature method.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{RuntimeError}} \textendash{} Infinite Fermi level detected.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{RuntimeError}} \textendash{} Failed to converge in the maximum cycle.
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Fermi level and MO occupancy
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+float, 1D numpy.ndarray
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{get\_fock() (in module fcdft.wbl.rks)@\spxentry{get\_fock()}\spxextra{in module fcdft.wbl.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.get_fock}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.wbl.rks.}}\sphinxbfcode{\sphinxupquote{get\_fock}}}
+{\sphinxparam{\DUrole{n}{mf}}\sphinxparamcomma \sphinxparam{\DUrole{n}{h1e}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{s1e}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{vhf}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{cycle}\DUrole{o}{=}\DUrole{default_value}{\sphinxhyphen{}1}}\sphinxparamcomma \sphinxparam{\DUrole{n}{diis}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{diis\_start\_cycle}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{level\_shift\_factor}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{damp\_factor}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{fock\_last}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{get\_grad() (in module fcdft.wbl.rks)@\spxentry{get\_grad()}\spxextra{in module fcdft.wbl.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.get_grad}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.wbl.rks.}}\sphinxbfcode{\sphinxupquote{get\_grad}}}
+{\sphinxparam{\DUrole{n}{mo\_coeff}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}}\sphinxparamcomma \sphinxparam{\DUrole{n}{fock\_ao}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Fractional orbital gradients. Seems that this is meaningless in FC\sphinxhyphen{}DFT?
+
+\end{fulllineitems}
+
+\index{get\_occ() (in module fcdft.wbl.rks)@\spxentry{get\_occ()}\spxextra{in module fcdft.wbl.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.get_occ}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.wbl.rks.}}\sphinxbfcode{\sphinxupquote{get\_occ}}}
+{\sphinxparam{\DUrole{n}{mf}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_energy}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_coeff}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Occupation matrix through numerical integration
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mo\_energy}} (\sphinxstyleliteralemphasis{\sphinxupquote{1D numpy.ndarray}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} MO energies. Defaults to None.
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mo\_coeff}} (\sphinxstyleliteralemphasis{\sphinxupquote{2D numpy.ndarray}}\sphinxstyleliteralemphasis{\sphinxupquote{, }}\sphinxstyleliteralemphasis{\sphinxupquote{optional}}) \textendash{} MO coefficients. Defaults to None.
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+MO occupation
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+1D numpy.ndarray
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{get\_sigmaR() (in module fcdft.wbl.rks)@\spxentry{get\_sigmaR()}\spxextra{in module fcdft.wbl.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.get_sigmaR}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.wbl.rks.}}\sphinxbfcode{\sphinxupquote{get\_sigmaR}}}
+{\sphinxparam{\DUrole{n}{mf}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mol}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{s1e}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+WBL\sphinxhyphen{}Molecule self\sphinxhyphen{}energy + Hamiltonian correction by bias voltage.
+\begin{quote}\begin{description}
+\sphinxlineitem{Raises}
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{AttributeError}} \textendash{} No atom detected to apply the bias voltage.
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Self\sphinxhyphen{}energy + voltage correction
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+2D numpy.ndarray
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+\index{get\_veff() (in module fcdft.wbl.rks)@\spxentry{get\_veff()}\spxextra{in module fcdft.wbl.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.get_veff}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.wbl.rks.}}\sphinxbfcode{\sphinxupquote{get\_veff}}}
+{\sphinxparam{\DUrole{n}{mf}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mol}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm}\DUrole{o}{=}\DUrole{default_value}{None}}\sphinxparamcomma \sphinxparam{\DUrole{n}{dm\_last}\DUrole{o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{vhf\_last}\DUrole{o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{n}{hermi}\DUrole{o}{=}\DUrole{default_value}{0}}\sphinxparamcomma \sphinxparam{\DUrole{o}{*}\DUrole{n}{args}}\sphinxparamcomma \sphinxparam{\DUrole{o}{**}\DUrole{n}{kwargs}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Construct the effective potential for the WBLMolecule Hamiltonian.
+
+\end{fulllineitems}
+
+\index{init\_guess\_by\_chkfile() (in module fcdft.wbl.rks)@\spxentry{init\_guess\_by\_chkfile()}\spxextra{in module fcdft.wbl.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.init_guess_by_chkfile}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.wbl.rks.}}\sphinxbfcode{\sphinxupquote{init\_guess\_by\_chkfile}}}
+{\sphinxparam{\DUrole{n}{mol}}\sphinxparamcomma \sphinxparam{\DUrole{n}{chkfile\_name}}\sphinxparamcomma \sphinxparam{\DUrole{n}{project}\DUrole{o}{=}\DUrole{default_value}{None}}}
+{}
+\pysigstopsignatures
+\end{fulllineitems}
+
+\index{make\_rdm1() (in module fcdft.wbl.rks)@\spxentry{make\_rdm1()}\spxextra{in module fcdft.wbl.rks}}
+
+\begin{fulllineitems}
+\phantomsection\label{\detokenize{fcdft.wbl:fcdft.wbl.rks.make_rdm1}}
+\pysigstartsignatures
+\pysiglinewithargsret
+{\sphinxcode{\sphinxupquote{fcdft.wbl.rks.}}\sphinxbfcode{\sphinxupquote{make\_rdm1}}}
+{\sphinxparam{\DUrole{n}{mo\_coeff}}\sphinxparamcomma \sphinxparam{\DUrole{n}{mo\_occ}}\sphinxparamcomma \sphinxparam{\DUrole{o}{**}\DUrole{n}{kwargs}}}
+{}
+\pysigstopsignatures
+\sphinxAtStartPar
+Reduced density matrix of non\sphinxhyphen{}hermitian Hamiltonian
+\begin{quote}\begin{description}
+\sphinxlineitem{Parameters}\begin{itemize}
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mo\_coeff}} (\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}) \textendash{} MO coefficients
+
+\item {} 
+\sphinxAtStartPar
+\sphinxstyleliteralstrong{\sphinxupquote{mo\_occ}} (\sphinxstyleliteralemphasis{\sphinxupquote{numpy.ndarray}}) \textendash{} MO occupations
+
+\end{itemize}
+
+\sphinxlineitem{Returns}
+\sphinxAtStartPar
+Reduced density matrix
+
+\sphinxlineitem{Return type}
+\sphinxAtStartPar
+numpy.ndarray
+
+\end{description}\end{quote}
+
+\end{fulllineitems}
+
+
+
+\subsubsection{Module contents}
+\label{\detokenize{fcdft.wbl:module-fcdft.wbl}}\label{\detokenize{fcdft.wbl:module-contents}}\index{module@\spxentry{module}!fcdft.wbl@\spxentry{fcdft.wbl}}\index{fcdft.wbl@\spxentry{fcdft.wbl}!module@\spxentry{module}}
+
+\section{Module Contents}
+\label{\detokenize{fcdft:module-fcdft}}\label{\detokenize{fcdft:module-contents}}\index{module@\spxentry{module}!fcdft@\spxentry{fcdft}}\index{fcdft@\spxentry{fcdft}!module@\spxentry{module}}
 
 \chapter{Indices and tables}
 \label{\detokenize{index:indices-and-tables}}\begin{itemize}
@@ -328,6 +3844,37 @@ Please open a thread on the \sphinxhref{https://github.com/Yang-Laboratory/FC-DF
 \end{itemize}
 
 
+\renewcommand{\indexname}{Python Module Index}
+\begin{sphinxtheindex}
+\let\bigletter\sphinxstyleindexlettergroup
+\bigletter{f}
+\item\relax\sphinxstyleindexentry{fcdft}\sphinxstyleindexpageref{fcdft:\detokenize{module-fcdft}}
+\item\relax\sphinxstyleindexentry{fcdft.dft}\sphinxstyleindexpageref{fcdft.dft:\detokenize{module-fcdft.dft}}
+\item\relax\sphinxstyleindexentry{fcdft.dft.numint}\sphinxstyleindexpageref{fcdft.dft:\detokenize{module-fcdft.dft.numint}}
+\item\relax\sphinxstyleindexentry{fcdft.grad}\sphinxstyleindexpageref{fcdft.grad:\detokenize{module-fcdft.grad}}
+\item\relax\sphinxstyleindexentry{fcdft.grad.lifcdft}\sphinxstyleindexpageref{fcdft.grad:\detokenize{module-fcdft.grad.lifcdft}}
+\item\relax\sphinxstyleindexentry{fcdft.grad.rks}\sphinxstyleindexpageref{fcdft.grad:\detokenize{module-fcdft.grad.rks}}
+\item\relax\sphinxstyleindexentry{fcdft.grad.uks}\sphinxstyleindexpageref{fcdft.grad:\detokenize{module-fcdft.grad.uks}}
+\item\relax\sphinxstyleindexentry{fcdft.hessian}\sphinxstyleindexpageref{fcdft.hessian:\detokenize{module-fcdft.hessian}}
+\item\relax\sphinxstyleindexentry{fcdft.hessian.lifcdft}\sphinxstyleindexpageref{fcdft.hessian:\detokenize{module-fcdft.hessian.lifcdft}}
+\item\relax\sphinxstyleindexentry{fcdft.hessian.numhess}\sphinxstyleindexpageref{fcdft.hessian:\detokenize{module-fcdft.hessian.numhess}}
+\item\relax\sphinxstyleindexentry{fcdft.jellium}\sphinxstyleindexpageref{fcdft.jellium:\detokenize{module-fcdft.jellium}}
+\item\relax\sphinxstyleindexentry{fcdft.jellium.jellium}\sphinxstyleindexpageref{fcdft.jellium:\detokenize{module-fcdft.jellium.jellium}}
+\item\relax\sphinxstyleindexentry{fcdft.lib}\sphinxstyleindexpageref{fcdft.lib:\detokenize{module-fcdft.lib}}
+\item\relax\sphinxstyleindexentry{fcdft.lib.misc}\sphinxstyleindexpageref{fcdft.lib:\detokenize{module-fcdft.lib.misc}}
+\item\relax\sphinxstyleindexentry{fcdft.lifcdft}\sphinxstyleindexpageref{fcdft.lifcdft:\detokenize{module-fcdft.lifcdft}}
+\item\relax\sphinxstyleindexentry{fcdft.lifcdft.lifcdft}\sphinxstyleindexpageref{fcdft.lifcdft:\detokenize{module-fcdft.lifcdft.lifcdft}}
+\item\relax\sphinxstyleindexentry{fcdft.solvent}\sphinxstyleindexpageref{fcdft.solvent:\detokenize{module-fcdft.solvent}}
+\item\relax\sphinxstyleindexentry{fcdft.solvent.calculus\_helper}\sphinxstyleindexpageref{fcdft.solvent:\detokenize{module-fcdft.solvent.calculus_helper}}
+\item\relax\sphinxstyleindexentry{fcdft.solvent.esp}\sphinxstyleindexpageref{fcdft.solvent:\detokenize{module-fcdft.solvent.esp}}
+\item\relax\sphinxstyleindexentry{fcdft.solvent.pbe}\sphinxstyleindexpageref{fcdft.solvent:\detokenize{module-fcdft.solvent.pbe}}
+\item\relax\sphinxstyleindexentry{fcdft.solvent.radii}\sphinxstyleindexpageref{fcdft.solvent:\detokenize{module-fcdft.solvent.radii}}
+\item\relax\sphinxstyleindexentry{fcdft.tools}\sphinxstyleindexpageref{fcdft.tools:\detokenize{module-fcdft.tools}}
+\item\relax\sphinxstyleindexentry{fcdft.tools.addons}\sphinxstyleindexpageref{fcdft.tools:\detokenize{module-fcdft.tools.addons}}
+\item\relax\sphinxstyleindexentry{fcdft.tools.molden}\sphinxstyleindexpageref{fcdft.tools:\detokenize{module-fcdft.tools.molden}}
+\item\relax\sphinxstyleindexentry{fcdft.wbl}\sphinxstyleindexpageref{fcdft.wbl:\detokenize{module-fcdft.wbl}}
+\item\relax\sphinxstyleindexentry{fcdft.wbl.rks}\sphinxstyleindexpageref{fcdft.wbl:\detokenize{module-fcdft.wbl.rks}}
+\end{sphinxtheindex}
 
 \renewcommand{\indexname}{Index}
 \printindex

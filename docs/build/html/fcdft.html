@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fcdft package &#8212; FC-DFT 1.0.0 documentation</title>
+    <title>fcdft package &#8212; FC-DFT 1.1.5 documentation</title>
   
   
   
@@ -38,13 +38,15 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/documentation_options.js?v=a48ae3df"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'fcdft';</script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="fcdft.dft package" href="fcdft.dft.html" />
+    <link rel="prev" title="About" href="about.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -109,7 +111,7 @@
   
   
   
-    <p class="title logo__title">FC-DFT 1.0.0 documentation</p>
+    <p class="title logo__title">FC-DFT 1.1.5 documentation</p>
   
 </a></div>
     
@@ -140,6 +142,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="about.html">
     About
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    fcdft package
   </a>
 </li>
 
@@ -249,6 +258,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="about.html">
     About
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    fcdft package
   </a>
 </li>
 
@@ -364,6 +380,41 @@
                   
   <section id="fcdft-package">
 <h1>fcdft package<a class="headerlink" href="#fcdft-package" title="Link to this heading">#</a></h1>
+<p>FC-DFT is a Python package for DFT calculations at electrochemical interfaces.
+It combines the wide-band limit (WBL) approximation for electrode coupling with
+continuum solvation models to study molecules at electrode/liquid interfaces under
+applied potential.</p>
+</section>
+<section id="core-modules">
+<h1>Core Modules<a class="headerlink" href="#core-modules" title="Link to this heading">#</a></h1>
+<p><strong>Wide-Band Limit (WBL)</strong>: Couples molecules to electrode contacts via complex self-energy</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">fcdft.wbl.rks</span></code> — Restricted Kohn-Sham with WBL (RKS + electrode coupling)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fcdft.wbl.uks</span></code> — Unrestricted Kohn-Sham with WBL</p></li>
+</ul>
+<p><strong>Solvation</strong>: Non-linear Poisson-Boltzmann for electrode/liquid interfaces</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">fcdft.solvent.pbe</span></code> — Poisson-Boltzmann electrolyte model</p></li>
+<li><p>Stern layers and self-assembled monolayers (SAM) support</p></li>
+<li><p>Analytic gradients included</p></li>
+</ul>
+<p><strong>Gradients</strong>: Analytic nuclear forces for geometry optimization</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">fcdft.grad.rks</span></code> — Gradients for WBL (RKS)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fcdft.grad.uks</span></code> — Gradients for WBL (UKS)</p></li>
+</ul>
+<p><strong>Hessian</strong>: Numerical Hessians for vibrational analysis</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">fcdft.hessian.numhess</span></code> — Numerical second derivatives via finite differences</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fcdft.hessian.thermo</span></code> — Thermochemistry analysis from Hessians</p></li>
+</ul>
+<p><strong>Additional</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">fcdft.lifcdft</span></code> — Linear-interaction FC-DFT for charge analysis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fcdft.jellium</span></code> — Jellium electrode models</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fcdft.dft</span></code> — DFT numerics (grids, numerical integration)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fcdft.tools</span></code> — Utilities (Molden export, etc.)</p></li>
+</ul>
 <section id="subpackages">
 <h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading">#</a></h2>
 <div class="toctree-wrapper compound">
@@ -371,12 +422,7 @@
 <li class="toctree-l1"><a class="reference internal" href="fcdft.dft.html">fcdft.dft package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="fcdft.dft.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fcdft.dft.html#module-fcdft.dft.numint">fcdft.dft.numint module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.dft.html#fcdft.dft.numint.NumInt"><code class="docutils literal notranslate"><span class="pre">NumInt</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.dft.html#fcdft.dft.numint.NumInt._gen_rho_evaluator"><code class="docutils literal notranslate"><span class="pre">NumInt._gen_rho_evaluator()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.dft.html#fcdft.dft.numint._contract_rho"><code class="docutils literal notranslate"><span class="pre">_contract_rho()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.dft.html#fcdft.dft.numint._dot_ao_dm"><code class="docutils literal notranslate"><span class="pre">_dot_ao_dm()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fcdft.dft.html#fcdft.dft.numint.NumInt"><code class="docutils literal notranslate"><span class="pre">NumInt</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.dft.html#fcdft.dft.numint.eval_rho"><code class="docutils literal notranslate"><span class="pre">eval_rho()</span></code></a></li>
 </ul>
 </li>
@@ -387,7 +433,6 @@
 <li class="toctree-l2"><a class="reference internal" href="fcdft.grad.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fcdft.grad.html#module-fcdft.grad.lifcdft">fcdft.grad.lifcdft module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.grad.html#fcdft.grad.lifcdft.Gradients"><code class="docutils literal notranslate"><span class="pre">Gradients</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.grad.html#fcdft.grad.lifcdft.Gradients._finalize"><code class="docutils literal notranslate"><span class="pre">Gradients._finalize()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.grad.html#fcdft.grad.lifcdft.Gradients.kernel"><code class="docutils literal notranslate"><span class="pre">Gradients.kernel()</span></code></a></li>
 </ul>
 </li>
@@ -397,6 +442,7 @@
 <li class="toctree-l3"><a class="reference internal" href="fcdft.grad.html#fcdft.grad.rks.Gradients"><code class="docutils literal notranslate"><span class="pre">Gradients</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.grad.html#fcdft.grad.rks.Gradients.get_veff"><code class="docutils literal notranslate"><span class="pre">Gradients.get_veff()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.grad.html#fcdft.grad.rks.Gradients.grad_elec"><code class="docutils literal notranslate"><span class="pre">Gradients.grad_elec()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="fcdft.grad.html#fcdft.grad.rks.Gradients.kernel"><code class="docutils literal notranslate"><span class="pre">Gradients.kernel()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.grad.html#fcdft.grad.rks.Gradients.make_rdm1e"><code class="docutils literal notranslate"><span class="pre">Gradients.make_rdm1e()</span></code></a></li>
 </ul>
 </li>
@@ -407,11 +453,13 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.grad.html#fcdft.grad.rks.get_jk"><code class="docutils literal notranslate"><span class="pre">get_jk()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fcdft.grad.html#fcdft.grad.rks.get_mo_occ_grad"><code class="docutils literal notranslate"><span class="pre">get_mo_occ_grad()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.grad.html#fcdft.grad.rks.get_nlc_vxc"><code class="docutils literal notranslate"><span class="pre">get_nlc_vxc()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.grad.html#fcdft.grad.rks.get_veff"><code class="docutils literal notranslate"><span class="pre">get_veff()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.grad.html#fcdft.grad.rks.get_vxc"><code class="docutils literal notranslate"><span class="pre">get_vxc()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.grad.html#fcdft.grad.rks.grad_elec"><code class="docutils literal notranslate"><span class="pre">grad_elec()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.grad.html#fcdft.grad.rks.make_rdm1e"><code class="docutils literal notranslate"><span class="pre">make_rdm1e()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fcdft.grad.html#fcdft.grad.rks.test_grad_elec"><code class="docutils literal notranslate"><span class="pre">test_grad_elec()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="fcdft.grad.html#module-fcdft.grad.uks">fcdft.grad.uks module</a><ul>
@@ -473,25 +521,12 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="fcdft.lib.html">fcdft.lib package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="fcdft.lib.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fcdft.lib.html#module-fcdft.lib.fcdft_helper">fcdft.lib.fcdft_helper module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.lib.html#fcdft.lib.fcdft_helper.quadrature"><code class="docutils literal notranslate"><span class="pre">quadrature()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.lib.html#fcdft.lib.fcdft_helper.roots_legendre"><code class="docutils literal notranslate"><span class="pre">roots_legendre()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="fcdft.lib.html#fcdft-lib-fcdft-helper-module">fcdft.lib.fcdft_helper module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fcdft.lib.html#module-fcdft.lib.misc">fcdft.lib.misc module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.lib.html#fcdft.lib.misc.load_library"><code class="docutils literal notranslate"><span class="pre">load_library()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="fcdft.lib.html#module-fcdft.lib.pbe_helper">fcdft.lib.pbe_helper module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.lib.html#fcdft.lib.pbe_helper.db_force_helper"><code class="docutils literal notranslate"><span class="pre">db_force_helper()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.lib.html#fcdft.lib.pbe_helper.distance_calculator"><code class="docutils literal notranslate"><span class="pre">distance_calculator()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.lib.html#fcdft.lib.pbe_helper.grad_eps"><code class="docutils literal notranslate"><span class="pre">grad_eps()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.lib.html#fcdft.lib.pbe_helper.lap_sas"><code class="docutils literal notranslate"><span class="pre">lap_sas()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.lib.html#fcdft.lib.pbe_helper.product_atom_vector_scalar"><code class="docutils literal notranslate"><span class="pre">product_atom_vector_scalar()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.lib.html#fcdft.lib.pbe_helper.product_vector_scalar"><code class="docutils literal notranslate"><span class="pre">product_vector_scalar()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.lib.html#fcdft.lib.pbe_helper.product_vector_vector"><code class="docutils literal notranslate"><span class="pre">product_vector_vector()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="fcdft.lib.html#fcdft-lib-pbe-helper-module">fcdft.lib.pbe_helper module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fcdft.lib.html#module-fcdft.lib">Module contents</a></li>
 </ul>
 </li>
@@ -500,7 +535,6 @@
 <li class="toctree-l2"><a class="reference internal" href="fcdft.lifcdft.html#module-fcdft.lifcdft.lifcdft">fcdft.lifcdft.lifcdft module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.lifcdft.html#fcdft.lifcdft.lifcdft.LIFCDFT"><code class="docutils literal notranslate"><span class="pre">LIFCDFT</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.lifcdft.html#fcdft.lifcdft.lifcdft.LIFCDFT.Hessian"><code class="docutils literal notranslate"><span class="pre">LIFCDFT.Hessian()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.lifcdft.html#fcdft.lifcdft.lifcdft.LIFCDFT._finalize"><code class="docutils literal notranslate"><span class="pre">LIFCDFT._finalize()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.lifcdft.html#fcdft.lifcdft.lifcdft.LIFCDFT.build"><code class="docutils literal notranslate"><span class="pre">LIFCDFT.build()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.lifcdft.html#fcdft.lifcdft.lifcdft.LIFCDFT.dump_flags"><code class="docutils literal notranslate"><span class="pre">LIFCDFT.dump_flags()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.lifcdft.html#fcdft.lifcdft.lifcdft.LIFCDFT.kernel"><code class="docutils literal notranslate"><span class="pre">LIFCDFT.kernel()</span></code></a></li>
@@ -517,6 +551,7 @@
 <li class="toctree-l1"><a class="reference internal" href="fcdft.solvent.html">fcdft.solvent package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="fcdft.solvent.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fcdft.solvent.html#module-fcdft.solvent.calculus_helper">fcdft.solvent.calculus_helper module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.calculus_helper.dirichlet_gradient"><code class="docutils literal notranslate"><span class="pre">dirichlet_gradient()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.calculus_helper.gradient"><code class="docutils literal notranslate"><span class="pre">gradient()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.calculus_helper.poisson"><code class="docutils literal notranslate"><span class="pre">poisson()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.calculus_helper.vectorize_grad"><code class="docutils literal notranslate"><span class="pre">vectorize_grad()</span></code></a></li>
@@ -541,27 +576,23 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE"><code class="docutils literal notranslate"><span class="pre">PBE</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE._get_v"><code class="docutils literal notranslate"><span class="pre">PBE._get_v()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE._get_vind"><code class="docutils literal notranslate"><span class="pre">PBE._get_vind()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE._get_vmat"><code class="docutils literal notranslate"><span class="pre">PBE._get_vmat()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE._keys"><code class="docutils literal notranslate"><span class="pre">PBE._keys</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.build"><code class="docutils literal notranslate"><span class="pre">PBE.build()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.dump_flags"><code class="docutils literal notranslate"><span class="pre">PBE.dump_flags()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.get_rho_ions"><code class="docutils literal notranslate"><span class="pre">PBE.get_rho_ions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.energy_osm"><code class="docutils literal notranslate"><span class="pre">PBE.energy_osm()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.grad"><code class="docutils literal notranslate"><span class="pre">PBE.grad()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.make_eps"><code class="docutils literal notranslate"><span class="pre">PBE.make_eps()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.make_grad_eps"><code class="docutils literal notranslate"><span class="pre">PBE.make_grad_eps()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.make_lambda"><code class="docutils literal notranslate"><span class="pre">PBE.make_lambda()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.make_phi"><code class="docutils literal notranslate"><span class="pre">PBE.make_phi()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.make_phi_sol"><code class="docutils literal notranslate"><span class="pre">PBE.make_phi_sol()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.make_rho_sol"><code class="docutils literal notranslate"><span class="pre">PBE.make_rho_sol()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.make_sas"><code class="docutils literal notranslate"><span class="pre">PBE.make_sas()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.nuc_grad_method"><code class="docutils literal notranslate"><span class="pre">PBE.nuc_grad_method()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.reset"><code class="docutils literal notranslate"><span class="pre">PBE.reset()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.PBE.to_gpu"><code class="docutils literal notranslate"><span class="pre">PBE.to_gpu()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.bc_grad"><code class="docutils literal notranslate"><span class="pre">bc_grad()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.bc_laplacian"><code class="docutils literal notranslate"><span class="pre">bc_laplacian()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.gen_pbe_solver"><code class="docutils literal notranslate"><span class="pre">gen_pbe_solver()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.get_rho_ions"><code class="docutils literal notranslate"><span class="pre">get_rho_ions()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.impose_bc"><code class="docutils literal notranslate"><span class="pre">impose_bc()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.make_eps"><code class="docutils literal notranslate"><span class="pre">make_eps()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.make_grad_eps"><code class="docutils literal notranslate"><span class="pre">make_grad_eps()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.make_lambda"><code class="docutils literal notranslate"><span class="pre">make_lambda()</span></code></a></li>
@@ -570,24 +601,9 @@
 <li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.make_rho_sol"><code class="docutils literal notranslate"><span class="pre">make_rho_sol()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.make_sas"><code class="docutils literal notranslate"><span class="pre">make_sas()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.pbe_for_scf"><code class="docutils literal notranslate"><span class="pre">pbe_for_scf()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe.phi_a_finder"><code class="docutils literal notranslate"><span class="pre">phi_a_finder()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="fcdft.solvent.html#module-fcdft.solvent.pbe_grad">fcdft.solvent.pbe_grad module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe_grad.WithSolventGrad"><code class="docutils literal notranslate"><span class="pre">WithSolventGrad</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe_grad.WithSolventGrad._finalize"><code class="docutils literal notranslate"><span class="pre">WithSolventGrad._finalize()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe_grad.WithSolventGrad._keys"><code class="docutils literal notranslate"><span class="pre">WithSolventGrad._keys</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe_grad.WithSolventGrad.kernel"><code class="docutils literal notranslate"><span class="pre">WithSolventGrad.kernel()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe_grad.WithSolventGrad.undo_solvent"><code class="docutils literal notranslate"><span class="pre">WithSolventGrad.undo_solvent()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe_grad.db_force"><code class="docutils literal notranslate"><span class="pre">db_force()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe_grad.ib_force"><code class="docutils literal notranslate"><span class="pre">ib_force()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe_grad.kernel"><code class="docutils literal notranslate"><span class="pre">kernel()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe_grad.make_grad_object"><code class="docutils literal notranslate"><span class="pre">make_grad_object()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.solvent.html#fcdft.solvent.pbe_grad.rf_force"><code class="docutils literal notranslate"><span class="pre">rf_force()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="fcdft.solvent.html#fcdft-solvent-pbe-grad-module">fcdft.solvent.pbe_grad module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fcdft.solvent.html#module-fcdft.solvent.radii">fcdft.solvent.radii module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fcdft.solvent.html#module-fcdft.solvent">Module contents</a></li>
 </ul>
@@ -608,10 +624,8 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="fcdft.wbl.html">fcdft.wbl package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="fcdft.wbl.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fcdft.wbl.html#module-fcdft.wbl.rks">fcdft.wbl.rks module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fcdft.wbl.html#fcdft-wbl-rks-module">fcdft.wbl.rks module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLBase"><code class="docutils literal notranslate"><span class="pre">WBLBase</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLBase._eig"><code class="docutils literal notranslate"><span class="pre">WBLBase._eig()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLBase._keys"><code class="docutils literal notranslate"><span class="pre">WBLBase._keys</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLBase.build"><code class="docutils literal notranslate"><span class="pre">WBLBase.build()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLBase.dump_flags"><code class="docutils literal notranslate"><span class="pre">WBLBase.dump_flags()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLBase.eig"><code class="docutils literal notranslate"><span class="pre">WBLBase.eig()</span></code></a></li>
@@ -622,9 +636,10 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS._finalize"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS._finalize()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS._get_veff"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS._get_veff()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS.Gradients"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS.Gradients()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS.density_fit"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS.density_fit()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS.dump_flags"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS.dump_flags()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS.energy_elec"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS.energy_elec()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS.get_fock"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS.get_fock()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS.get_occ"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS.get_occ()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS.get_sigmaR"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS.get_sigmaR()</span></code></a></li>
@@ -633,8 +648,8 @@
 <li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.WBLMoleculeRKS.nuc_grad_method"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeRKS.nuc_grad_method()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks._make_rdm1"><code class="docutils literal notranslate"><span class="pre">_make_rdm1()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.eig"><code class="docutils literal notranslate"><span class="pre">eig()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.energy_elec"><code class="docutils literal notranslate"><span class="pre">energy_elec()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.get_fermi_level"><code class="docutils literal notranslate"><span class="pre">get_fermi_level()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.get_fock"><code class="docutils literal notranslate"><span class="pre">get_fock()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.get_grad"><code class="docutils literal notranslate"><span class="pre">get_grad()</span></code></a></li>
@@ -645,29 +660,6 @@
 <li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.rks.make_rdm1"><code class="docutils literal notranslate"><span class="pre">make_rdm1()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="fcdft.wbl.html#module-fcdft.wbl.uks">fcdft.wbl.uks module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS._finalize"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS._finalize()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.eig"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.eig()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.get_fock"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.get_fock()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.get_grad"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.get_grad()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.get_occ"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.get_occ()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.get_sigmaR"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.get_sigmaR()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.get_veff"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.get_veff()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.make_rdm1"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.make_rdm1()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.nuc_grad_method"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.nuc_grad_method()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.WBLMoleculeUKS.spin_square"><code class="docutils literal notranslate"><span class="pre">WBLMoleculeUKS.spin_square()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.get_fock"><code class="docutils literal notranslate"><span class="pre">get_fock()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.get_grad"><code class="docutils literal notranslate"><span class="pre">get_grad()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.get_occ"><code class="docutils literal notranslate"><span class="pre">get_occ()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.get_sigmaR"><code class="docutils literal notranslate"><span class="pre">get_sigmaR()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.get_veff"><code class="docutils literal notranslate"><span class="pre">get_veff()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.make_rdm1"><code class="docutils literal notranslate"><span class="pre">make_rdm1()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="fcdft.wbl.html#fcdft.wbl.uks.spin_square"><code class="docutils literal notranslate"><span class="pre">spin_square()</span></code></a></li>
-</ul>
-</li>
 <li class="toctree-l2"><a class="reference internal" href="fcdft.wbl.html#module-fcdft.wbl">Module contents</a></li>
 </ul>
 </li>
@@ -675,7 +667,7 @@
 </div>
 </section>
 <section id="module-fcdft">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-fcdft" title="Link to this heading">#</a></h2>
+<span id="module-contents"></span><h2>Module Contents<a class="headerlink" href="#module-fcdft" title="Link to this heading">#</a></h2>
 </section>
 </section>
 
@@ -689,6 +681,24 @@
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="about.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">About</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="fcdft.dft.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">fcdft.dft package</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -708,9 +718,14 @@
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">fcdft package</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#core-modules">Core Modules</a><ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#subpackages">Subpackages</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-fcdft">Module contents</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-fcdft">Module Contents</a></li>
 </ul>
+</li>
+</ul>
+
   </nav></div>
 
   <div class="sidebar-secondary-item">
@@ -747,7 +762,7 @@
 
   <p class="copyright">
     
-      © Copyright 2025, Jun-Hyeong Kim.
+      © Copyright 2026, Jun-Hyeong Kim.
       <br/>
     
   </p>
@@ -756,7 +771,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     <br/>
   </p>
 </div>

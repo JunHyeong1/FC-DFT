@@ -24,6 +24,12 @@ Fractional Charge Density Functional Theory
 
    about
 
+.. toctree::
+   :maxdepth: 3
+   :caption: API Reference
+
+   fcdft
+
 Indices and tables
 ==================
 
