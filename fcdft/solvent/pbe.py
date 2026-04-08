@@ -166,6 +166,73 @@ def make_sas(solvent_obj, mol, probe, coords, delta2, atomic_radii):
     S = numpy.prod(erf_list, axis=0)
     return S
 
+def make_grad_sas(solvent_obj, mol, probe, coords, delta2, atomic_radii):
+    # mol = solvent_obj.mol
+    # coords = solvent_obj.grids.coords
+    ngrids = solvent_obj.grids.ngrids
+    # atomic_radii = solvent_obj.get_atomic_radii()
+    # probe = solvent_obj.probe/ BOHR
+    # delta2 = solvent_obj.delta2 / BOHR
+    atom_coords = mol.atom_coords()
+    natm = mol.natm
+
+    r = atom_coords[:,None,:]
+    rp = coords - r
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
+    x = (dist - atomic_radii[:,None] - probe) / delta2
+    _erf = scipy.special.erf(x)
+    erf_list = 0.5e0 * (1.0e0 + _erf)
+    er = rp / dist[:,:,None]
+    gauss = numpy.exp(-x**2)
+    grad_list = numpy.multiply(er, gauss[:,:,None], out=er) / (delta2 * numpy.sqrt(PI))
+
+    drv = libpbe.grad_sas_drv
+    grad_sas = numpy.empty((ngrids**3, 3), dtype=numpy.float64, order='C')
+    c_erf_list = erf_list.ctypes.data_as(ctypes.c_void_p)
+    c_grad_list = grad_list.ctypes.data_as(ctypes.c_void_p)
+    c_delta2 = ctypes.c_double(delta2)
+    c_ngrids = ctypes.c_int(ngrids)
+    c_natm = ctypes.c_int(natm)
+    c_grad_sas = grad_sas.ctypes.data_as(ctypes.c_void_p)
+    drv(c_erf_list, c_grad_list, c_delta2, c_ngrids, c_natm, c_grad_sas)
+
+    return grad_sas
+
+def make_lap_sas(solvent_obj, mol, probe, coords, delta2, atomic_radii):
+    # mol = solvent_obj.mol
+    # coords = solvent_obj.grids.coords
+    ngrids = solvent_obj.grids.ngrids
+    # atomic_radii = solvent_obj.get_atomic_radii()
+    # probe = solvent_obj.probe / BOHR
+    # delta2 = solvent_obj.delta2 / BOHR
+    atom_coords = mol.atom_coords()
+    natm = mol.natm
+
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
+    x = (dist - atomic_radii[:,None] - probe) / delta2
+    _erf = scipy.special.erf(x)
+    erf_list = 0.5e0 * (1.0e0 + _erf)
+
+    r = atom_coords[:,None,:]
+    rp = coords - r
+    er = rp / dist[:,:,None]
+    gauss = numpy.exp(-x**2)
+    grad_list = numpy.multiply(er, gauss[:,:,None], out=er) / (delta2 * numpy.sqrt(PI))
+
+    drv = libpbe.lap_sas_drv
+    lap_sas = numpy.empty(ngrids**3, dtype=numpy.float64, order='C')
+    c_erf_list = erf_list.ctypes.data_as(ctypes.c_void_p)
+    c_grad_list = grad_list.ctypes.data_as(ctypes.c_void_p)
+    c_x = x.ctypes.data_as(ctypes.c_void_p)
+    c_delta2 = ctypes.c_double(delta2)
+    c_ngrids = ctypes.c_int(ngrids)
+    c_natm = ctypes.c_int(natm)
+    c_lap_sas = lap_sas.ctypes.data_as(ctypes.c_void_p)
+    
+    drv(c_erf_list, c_grad_list, c_x, c_delta2, c_ngrids, c_natm, c_lap_sas)
+
+    return lap_sas
+
 def make_eps(solvent_obj, coords, eps_sam, eps, stern_sam, delta1, sas):
     """
     Compute position-dependent dielectric function.
@@ -455,9 +522,9 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
     phi_tot = numpy.zeros(tot_ngrids, dtype=numpy.float64)
     impose_bc, bc_grad, bc_lap = solvent_obj._gen_boundary_conditions()
     bc, phi_z, slope= impose_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, 
-                                solvent_obj.eps_sam, solvent_obj.eps, sas, pzc, ref_pot, jump_coeff)
-    grad_bc, grad_phi_z, grad_sas = bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas)
-    lap_bc = bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, grad_sas)
+                                solvent_obj.eps_sam, solvent_obj.eps, pzc, ref_pot, jump_coeff)
+    grad_bc, grad_phi_z = bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z)
+    lap_bc = bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z)
 
     phi_tot += bc
 
@@ -812,6 +879,8 @@ class PBE(ddcosmo.DDCOSMO):
 
         lambda_r = self.make_lambda(mol, probe, stern_mol, stern_sam, coords, delta1, delta2, atomic_radii)
         sas = self.make_sas(mol, probe, coords, delta2, atomic_radii)
+        grad_sas = self.make_grad_sas(mol, probe, coords, delta2, atomic_radii)
+        lap_sas = self.make_lap_sas(mol, probe, coords, delta2, atomic_radii)
         eps = self.make_eps(coords, eps_sam, eps_bulk, stern_sam, delta1, sas)
         grad_eps = self.make_grad_eps(mol, coords, eps_sam, eps_bulk, probe, stern_sam, delta1, delta2, atomic_radii, sas)
 
@@ -824,7 +893,9 @@ class PBE(ddcosmo.DDCOSMO):
             'lambda_r': lambda_r,
             'eps': eps,
             'grad_eps': grad_eps,
-            'sas': sas
+            'sas': sas,
+            'grad_sas': grad_sas,
+            'lap_sas': lap_sas
         }
         if self.solver == 'fft2d':
             from fcdft.solvent.solver import fft2d
@@ -909,6 +980,8 @@ class PBE(ddcosmo.DDCOSMO):
     
     make_lambda = make_lambda
     make_sas = make_sas
+    make_grad_sas = make_grad_sas
+    make_lap_sas = make_lap_sas
     make_eps = make_eps
     make_grad_eps = make_grad_eps
     make_phi_sol = make_phi_sol
