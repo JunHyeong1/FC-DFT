@@ -49,6 +49,13 @@ double occ_grad_drv(double sampling, double moe_energy, double fermi, double bro
     return dist * (1 - dist) * broad / (a*a + b*b) / TWO_PI / smear;
 }
 
+double occ_lap_drv(double sampling, double moe_energy, double fermi, double broad, double smear) {
+    double dist = 1 / (exp((sampling - fermi)/smear) + 1);
+    double a = sampling - moe_energy;
+    double b = broad / 2.0;
+    return dist * (1 - dist) * (1 - 2.0*dist) * broad / (a*a + b*b) / TWO_PI / smear / smear;
+}
+
 void fermi_level_drv(double *moe_energy, double *abscissas, double *weights, double fermi, double broad, double smear, double window, int pts, int nbas, double *mo_occ, double *mo_grad) {
     int i, n;
     double sampling;
@@ -98,6 +105,19 @@ void occupation_grad_drv(double *moe_energy, double *abscissas, double *weights,
     }        
 }
 
+void occupation_lap_drv(double *moe_energy, double *abscissas, double *weights, double fermi, double broad, double smear, double window, int pts, int nbas, double *occ_lap) {
+    int i, n;
+    double sampling;
+    #pragma omp parallel for private(n, sampling)
+    for (i = 0; i < nbas; i++) {
+        occ_lap[i] = 0;
+        for (n = 0; n < pts; n++) {
+            sampling = abscissas[n] * window + moe_energy[i];
+            occ_lap[i] += window * weights[n] * occ_lap_drv(sampling, moe_energy[i], fermi, broad, smear);
+        }
+    }        
+}
+
 struct occ_params {
     double moe_energy;
     double fermi;
@@ -129,6 +149,19 @@ double gsl_occ_grad_drv(double x, void *p) {
     double a = x - moe_energy;
     double b = broad / 2.0;
     return dist * (1 - dist) * broad / (a*a + b*b) / TWO_PI / smear;
+}
+
+double gsl_occ_lap_drv(double x, void *p) {
+    struct occ_params *params = (struct occ_params *)p;
+    double moe_energy = params->moe_energy;
+    double fermi = params->fermi;
+    double broad = params->broad;
+    double smear = params->smear;
+
+    double dist = 1 / (exp((x - fermi)/smear) + 1);
+    double a = x - moe_energy;
+    double b = broad / 2.0;
+    return dist * (1 - dist) * (1 - 2.0*dist) * broad / (a*a + b*b) / TWO_PI / smear / smear;
 }
 
 void gsl_occupation_drv(double *moe_energy, double fermi, double broad, double smear, int nbas, double *mo_occ) {
@@ -215,6 +248,50 @@ void gsl_occupation_grad_drv(double *moe_energy, double fermi, double broad, dou
         gsl_integration_qagiu(&F, pts[3], 1e-12, 1e-11, quad_order, w, &result2, &error2);
         gsl_integration_qagp(&F, pts, 4, 1e-12, 1e-11, quad_order, w, &result3, &error3);
         occ_grad[i] = result1 + result2 + result3;
+    }
+    gsl_integration_workspace_free(w);
+}
+
+void gsl_occupation_lap_drv(double *moe_energy, double fermi, double broad, double smear, int nbas, double *occ_lap) {
+    struct occ_params params;
+    params.fermi = fermi;
+    params.broad = broad;
+    params.smear = smear;
+
+    double result1, error1;
+    double result2, error2;
+    double result3, error3;
+
+    int quad_order = 2000;
+
+    gsl_integration_workspace *w = gsl_integration_workspace_alloc(quad_order);
+    gsl_function F;
+    F.function = &gsl_occ_lap_drv;
+    F.params = &params;
+
+    // offset for avoiding singulartity
+    double smear_offset = 2000*smear;
+    double broad_offset = 2000*broad;
+    double pts[4];
+
+    for (int i = 0; i < nbas; i++) {
+        params.moe_energy = moe_energy[i];
+        if (fermi < moe_energy[i]) {
+            pts[0] = fermi - smear_offset;
+            pts[1] = fermi;
+            pts[2] = moe_energy[i];
+            pts[3] = moe_energy[i] + broad_offset;
+        }
+        else {
+            pts[0] = moe_energy[i] - broad_offset;
+            pts[1] = moe_energy[i];
+            pts[2] = fermi;
+            pts[3] = fermi + smear_offset;
+        }
+        gsl_integration_qagil(&F, pts[0], 1e-12, 1e-11, quad_order, w, &result1, &error1);
+        gsl_integration_qagiu(&F, pts[3], 1e-12, 1e-11, quad_order, w, &result2, &error2);
+        gsl_integration_qagp(&F, pts, 4, 1e-12, 1e-11, quad_order, w, &result3, &error3);
+        occ_lap[i] = result1 + result2 + result3;
     }
     gsl_integration_workspace_free(w);
 }
