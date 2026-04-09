@@ -181,28 +181,30 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
             if numpy.any(mo_occ > 1.0e0):
                 raise RuntimeError('Numerical integration failed. Integration window: %s eV' % (window*HARTREE2EV))
             nelec_last = mo_occ.sum()
+            nelec_grad = mo_grad.value
             
-            delta = (nelec_a - nelec_last) / mo_grad.value
+            delta = (nelec_a - nelec_last) / nelec_grad
 
+            # Adaptive Damping
             if delta_last is not None:
                 if delta * delta_last < 0:
-                    damp = min(0.95, damp + 0.1)
+                    damp = min(0.9, damp + 0.1)
                 elif abs(delta) < abs(delta_last):
                     damp = max(0.0, damp - 0.05)
 
             delta_last = delta
 
+            # Step Clamping
             if delta > 1.0e0:
-                fermi += 10**(numpy.log10(delta) - int(numpy.log10(delta)) - 1)
+                delta =  10**(numpy.log10( delta) - int(numpy.log10( delta)) - 1)
             elif delta < -1.0e0:
-                fermi -= 10**(numpy.log10(-delta) - int(numpy.log10(-delta)) - 1)
-            else:
-                fermi = fermi_last + delta
+                delta = -10**(numpy.log10(-delta) - int(numpy.log10(-delta)) - 1)
+
+            fermi += (1.0 - damp) * delta
+
             if abs(fermi) == numpy.inf:
                 raise RuntimeError('Infinity chemical potential detected. Adjust the damping factor.')
-            # elif abs(nelec_a - nelec_last) > 5.0e-1:
-            #     fermi = pot_damp*fermi_last + (1.0e0-pot_damp)*fermi
-            fermi = damp * fermi_last + (1 - damp) * fermi
+
             if verbose >= logger.INFO:
                 if isinstance(mf, rks.RKS):
                     logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last*2)
@@ -239,8 +241,9 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
             if numpy.any(mo_occ > 1.0e0):
                 raise RuntimeError('Numerical integration failed. Integration window: %s eV' % (window*HARTREE2EV))
             nelec_last = mo_occ.sum()
+            nelec_grad = mo_grad.sum()
             
-            delta = (nelec_a - nelec_last) / mo_grad.sum()
+            delta = (nelec_a - nelec_last) / nelec_grad
 
             # Adaptive Damping
             if delta_last is not None:
@@ -253,21 +256,18 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
 
             # Step Clamping
             if delta > 1.0e0:
-                fermi += 10**(numpy.log10(delta) - int(numpy.log10(delta)) - 1)
+                delta =  10**(numpy.log10( delta) - int(numpy.log10( delta)) - 1)
             elif delta < -1.0e0:
-                fermi -= 10**(numpy.log10(-delta) - int(numpy.log10(-delta)) - 1)
-            else:
-                fermi = fermi_last + delta
+                delta = -10**(numpy.log10(-delta) - int(numpy.log10(-delta)) - 1)
 
-            # Divergence Test
+            fermi += (1.0 - damp) * delta
+
             if abs(fermi) == numpy.inf:
                 raise RuntimeError('Infinity chemical potential detected. Adjust the damping factor.')
 
-            fermi = damp * fermi_last + (1 - damp) * fermi
-
             if verbose >= logger.INFO:
                 if isinstance(mf, rks.RKS):
-                    logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last*2)
+                    logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g, %.10g', cycle+1, fermi, nelec_last*2, damp)
                 else:
                     logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last)
             if abs(fermi - fermi_last) < 1e-11:
