@@ -170,6 +170,8 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
         fermi_last = None
         delta_last = None
         damp = pot_damp
+        bisect = False
+        fmin, fmax = -numpy.inf, numpy.inf        
 
         for cycle in range(pot_cycle):
             fermi_last = fermi
@@ -185,22 +187,36 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
             
             delta = (nelec_a - nelec_last) / nelec_grad
 
-            # Adaptive Damping
-            if delta_last is not None:
+            if (nelec_a - nelec_last) > 0:
+                fmin = max(fmin, fermi)
+            else:
+                fmax = min(fmax, fermi)
+
+            if cycle >= 50 and delta_last is not None:
                 if delta * delta_last < 0:
-                    damp = min(0.9, damp + 0.1)
-                elif abs(delta) < abs(delta_last):
-                    damp = max(0.0, damp - 0.05)
+                    bisect = True
 
-            delta_last = delta
+            if bisect:
+                fermi = (fmin + fmax) / 2.0
+                delta_last = delta
 
-            # Step Clamping
-            if delta > 1.0e0:
-                delta =  10**(numpy.log10( delta) - int(numpy.log10( delta)) - 1)
-            elif delta < -1.0e0:
-                delta = -10**(numpy.log10(-delta) - int(numpy.log10(-delta)) - 1)
+            else:
+                # Adaptive Damping
+                if delta_last is not None:
+                    if delta * delta_last < 0:
+                        damp = min(0.9, damp + 0.1)
+                    elif abs(delta) < abs(delta_last):
+                        damp = max(0.0, damp - 0.05)
 
-            fermi += (1.0 - damp) * delta
+                delta_last = delta
+
+                # Step Clamping
+                if delta > 1.0e0:
+                    delta =  10**(numpy.log10( delta) - int(numpy.log10( delta)) - 1)
+                elif delta < -1.0e0:
+                    delta = -10**(numpy.log10(-delta) - int(numpy.log10(-delta)) - 1)
+
+                fermi += (1.0 - damp) * delta
 
             if abs(fermi) == numpy.inf:
                 raise RuntimeError('Infinity chemical potential detected. Adjust the damping factor.')
@@ -230,6 +246,8 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
         fermi_last = None
         delta_last = None
         damp = pot_damp
+        bisect = False
+        fmin, fmax = -numpy.inf, numpy.inf
 
         for cycle in range(pot_cycle):
             fermi_last = fermi
@@ -245,29 +263,43 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
             
             delta = (nelec_a - nelec_last) / nelec_grad
 
-            # Adaptive Damping
-            if delta_last is not None:
+            if (nelec_a - nelec_last) > 0:
+                fmin = max(fmin, fermi)
+            else:
+                fmax = min(fmax, fermi)
+
+            if cycle >= 50 and delta_last is not None:
                 if delta * delta_last < 0:
-                    damp = min(0.9, damp + 0.1)
-                elif abs(delta) < abs(delta_last):
-                    damp = max(0.0, damp - 0.05)
+                    bisect = True
 
-            delta_last = delta
+            if bisect:
+                fermi = (fmin + fmax) / 2.0
+                delta_last = delta
 
-            # Step Clamping
-            if delta > 1.0e0:
-                delta =  10**(numpy.log10( delta) - int(numpy.log10( delta)) - 1)
-            elif delta < -1.0e0:
-                delta = -10**(numpy.log10(-delta) - int(numpy.log10(-delta)) - 1)
+            else:
+                # Adaptive Damping
+                if delta_last is not None:
+                    if delta * delta_last < 0:
+                        damp = min(0.9, damp + 0.1)
+                    elif abs(delta) < abs(delta_last):
+                        damp = max(0.0, damp - 0.05)
 
-            fermi += (1.0 - damp) * delta
+                delta_last = delta
+
+                # Step Clamping
+                if delta > 1.0e0:
+                    delta =  10**(numpy.log10( delta) - int(numpy.log10( delta)) - 1)
+                elif delta < -1.0e0:
+                    delta = -10**(numpy.log10(-delta) - int(numpy.log10(-delta)) - 1)
+
+                fermi += (1.0 - damp) * delta
 
             if abs(fermi) == numpy.inf:
                 raise RuntimeError('Infinity chemical potential detected. Adjust the damping factor.')
 
             if verbose >= logger.INFO:
                 if isinstance(mf, rks.RKS):
-                    logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g, %.10g', cycle+1, fermi, nelec_last*2, damp)
+                    logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last*2)
                 else:
                     logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last)
             if abs(fermi - fermi_last) < 1e-11:
@@ -759,7 +791,7 @@ N        0.0819851974      0.3199013851      7.1972568519
 S        0.0000000000      0.0000000000      0.0000000000
 H        1.3390319419     -0.0095801980     -0.2157234144''',
         charge=0, basis='6-31g**', verbose=5)
-    wblmf = WBLMoleculeRKS(mol, xc='b3lyp', broad=0.01, smear=0.2, nelectron=70.00)
+    wblmf = WBLMoleculeRKS(mol, xc='b3lyp', broad=0.01, smear=0.2, nelectron=69.00)
     wblmf.conv_tol = 1e-8
-    wblmf.quad_method='QUADPACK'
+    wblmf.quad_method='gauss'
     wblmf.kernel()
