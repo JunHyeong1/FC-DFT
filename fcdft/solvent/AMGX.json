@@ -1,5 +1,6 @@
 {
     "config_version": 2,
+    "algorithm": "AGGREGATION",
     "solver": {
         "preconditioner": {
             "print_vis_data": 0,
