@@ -118,16 +118,14 @@ def make_lambda(solvent_obj, mol, probe, stern_mol, stern_sam, coords, delta1, d
     # Molecular Stern Layer
     dist = scipy.spatial.distance.cdist(atom_coords, coords)
     x = (dist - atomic_radii[:,None] - probe - stern_mol) / delta2
-    erf_list = 0.5e0*(1.0e0 + scipy.special.erf(x))
-    erf_list[x < -8.0e0*delta2] = 0.0e0
+    erf_list = 0.5 * (1.0 + scipy.special.erf(x))
     lambda_r = numpy.prod(erf_list, axis=0)
 
     # SAM Stern Layer
     zmin = coords[:,2].min()
     x = (coords[:,2] - zmin - (stern_sam + stern_mol)) / delta1
     _erf = scipy.special.erf(x)
-    _erf[x < -8.0e0*delta1] = -1.0e0 # Value suppression
-    lambda_z = 0.5e0 * (1.0e0 + _erf)
+    lambda_z = 0.5 * (1.0 + _erf)
     lambda_r = lambda_z * lambda_r
     return lambda_r
 
@@ -163,8 +161,8 @@ def make_sas(solvent_obj, mol, probe, coords, delta2, atomic_radii):
     x = (dist - atomic_radii[:,None] - probe) / delta2
     _erf = scipy.special.erf(x)
     erf_list = 0.5e0 * (1.0e0 + _erf)
-    S = numpy.prod(erf_list, axis=0)
-    return S
+    sas = numpy.prod(erf_list, axis=0)
+    return sas
 
 def make_grad_sas(solvent_obj, mol, probe, coords, delta2, atomic_radii):
     # mol = solvent_obj.mol
@@ -199,12 +197,7 @@ def make_grad_sas(solvent_obj, mol, probe, coords, delta2, atomic_radii):
     return grad_sas
 
 def make_lap_sas(solvent_obj, mol, probe, coords, delta2, atomic_radii):
-    # mol = solvent_obj.mol
-    # coords = solvent_obj.grids.coords
     ngrids = solvent_obj.grids.ngrids
-    # atomic_radii = solvent_obj.get_atomic_radii()
-    # probe = solvent_obj.probe / BOHR
-    # delta2 = solvent_obj.delta2 / BOHR
     atom_coords = mol.atom_coords()
     natm = mol.natm
 
@@ -268,7 +261,7 @@ def make_eps(solvent_obj, coords, eps_sam, eps, stern_sam, delta1, sas):
     zmin = coords[:,2].min()
     x = (coords[:,2] - zmin - stern_sam) / delta1
     _erf = scipy.special.erf(x)
-    eps_z = eps_sam + 0.5e0 * (eps - eps_sam) * (1.0e0 + _erf)
+    eps_z = eps_sam + 0.5 * (eps - eps_sam) * (1.0 + _erf)
     eps_r = 1.0e0 + (eps_z - 1.0e0) * sas
     return eps_r
 
@@ -365,7 +358,6 @@ def make_phi_sol(solvent_obj, dm=None, coords=None):
 
     tot_ngrids = solvent_obj.grids.get_ngrids()
     
-    logger.info(solvent_obj, 'Generating the solute electrostatic potential...')
     t0 = (logger.process_clock(), logger.perf_counter())
     mol = solvent_obj.mol
 
@@ -382,19 +374,21 @@ def make_phi_sol(solvent_obj, dm=None, coords=None):
     gpu_accel = solvent_obj.gpu_accel
 
     if gpu_accel:
-        logger.info(solvent_obj, 'Will utilize GPUs for computing the electrostatic potential.')
         import cupy
         nbatch = 256*256
         tot_ngrids = coords.shape[0]
         from gpu4pyscf.gto.int3c1e import int1e_grids
-        _dm = cupy.asarray(dms)
-        _Vele = cupy.zeros(tot_ngrids, order='C')
+        dms = cupy.asarray(dms)
+        Vele = cupy.zeros(tot_ngrids, order='C')
+        verbose= mol.verbose
+        mol.verbose = 0 # Disable unnecessary printing
         for ibatch in range(0, tot_ngrids, nbatch):
             max_grid = min(ibatch+nbatch, tot_ngrids)
-            _Vele[ibatch:max_grid] += int1e_grids(mol, coords[ibatch:max_grid], dm=_dm, direct_scf_tol=1e-14)
-        Vele = _Vele.get()
-        del _dm, _Vele,  cupy, int1e_grids # Release GPU memory
+            Vele[ibatch:max_grid] += int1e_grids(mol, coords[ibatch:max_grid], dm=dms, direct_scf_tol=1e-14)
+        Vele = Vele.get()
+        del dms, cupy, int1e_grids # Release GPU memory
         lib.num_threads(OMP_NUM_THREADS) # GPU4PySCF sets OMP_NUM_THREADS=4 when running.
+        mol.verbose = verbose # Resetting verbose
 
     else:
         Vele = numpy.empty(tot_ngrids, order='C')
@@ -451,7 +445,7 @@ def make_rho_sol(solvent_obj, phi_sol=None, ngrids=None, spacing=None):
     else:
         phik = None
 
-    rho_sol = -solver.laplacian(phi_sol, phik) / 4.0e0 / PI
+    rho_sol = -solver.laplacian(phi_sol, phik) / 4.0 / PI
 
     return rho_sol
 
@@ -517,8 +511,6 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
     eta = 0.6e0
     kappa = 0.2e0
 
-    t0 = (logger.process_clock(), logger.perf_counter())
-
     phi_tot = numpy.zeros(tot_ngrids, dtype=numpy.float64)
     impose_bc, bc_grad, bc_lap = solvent_obj._gen_boundary_conditions()
     bc, phi_z, slope= impose_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, 
@@ -527,8 +519,6 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
     lap_bc = bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z)
 
     phi_tot += bc
-
-    t0 = logger.timer(solvent_obj, 'bc', *t0)
 
     grad_lneps = grad_eps / eps[:,None]
     get_rho_ions = solvent_obj._gen_get_rho_ions()
@@ -546,6 +536,8 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
     max_cycle = solvent_obj.max_cycle
     iter = 0
     phik = None
+    t0 = (logger.process_clock(), logger.perf_counter())
+    
     while iter < max_cycle:
         phi_old = phi_tot
         rho_iter_old = rho_iter
@@ -567,7 +559,10 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
 
         rho_ions = get_rho_ions(solvent_obj, phi_tot, cb, lambda_r, T)
         if numpy.isnan(rho_ions).any():
-            raise RuntimeError('PBE solver encountered infinite ion charge density!')
+            logger.info(solvent_obj, 'Skipping PBE due to infinite ion charge density.')
+            logger.info(solvent_obj, 'This should be okay for initial SCF cycles,')
+            logger.info(solvent_obj, 'but not acceptable at the final iteration.')
+            return None, None, None
 
         rho_ions = kappa * rho_ions + (1.0e0 - kappa) * rho_ions_old
 
@@ -778,6 +773,10 @@ class PBE(ddcosmo.DDCOSMO):
         rho_sol = self.make_rho_sol(phi_sol, ngrids, spacing)
         self.rho_sol = rho_sol
         phi_tot, rho_ions, rho_pol = self.make_phi(bias, phi_sol, rho_sol)
+
+        if phi_tot is None:
+            return 0.0, numpy.zeros(dm.shape)
+        
         self.phi_tot = phi_tot
         self.rho_pol = rho_pol
         self.rho_ions = rho_ions
@@ -785,36 +784,23 @@ class PBE(ddcosmo.DDCOSMO):
         phi_pol = phi_tot - phi_sol
         self.phi_pol = phi_pol
 
-        # # Zero out the boundary values to eliminate error
-        # ngrids = self.grids.ngrids
-        # rho_sol = rho_sol.reshape((ngrids,)*3)
-        # idx = numpy.array([-4, -3, -2, -1, 0, 1, 2, 3])
-        # rho_sol[idx,:,:] = 0.0e0
-        # rho_sol[:,idx,:] = 0.0e0
-        # rho_sol[:,:,idx] = 0.0e0
-        # rho_sol = rho_sol.flatten()
-
-        # Reaction field contribution
-        Gsolv_elst = numpy.dot(rho_sol, phi_pol)*spacing**3
+        epbe = numpy.dot(rho_sol, phi_pol)*spacing**3
 
         # Dielectric contribution by Fisicaro
-        Gsolv_diel = -0.5e0*(numpy.dot(rho_sol, phi_pol)
-                           + numpy.dot(rho_ions, phi_tot))*spacing**3
+        epbe -= 0.5*(numpy.dot(rho_sol, phi_pol)
+                     + numpy.dot(rho_ions, phi_tot)) * spacing**3
 
         # Osmotic pressure contribution
         cb = self.cb * M2HARTREE
         lambda_r = self._intermediates['lambda_r']
         T = self.T
-        if self.cb == 0.0e0:
-            Gsolv_osm = 0.0e0
+        if self.cb == 0.0:
+            pass
         else:
-            Gsolv_osm = self.energy_osm(phi_tot, cb, lambda_r, T, spacing)
+            epbe += self.energy_osm(phi_tot, cb, lambda_r, T, spacing)
 
-        logger.info(self, "E_es= %.15g, E_diel= %.15g, E_osm= %.15g", Gsolv_elst, Gsolv_diel, Gsolv_osm)
-
-        Gsolv = Gsolv_elst + Gsolv_diel + Gsolv_osm
         vmat = self._get_vmat(phi_pol)
-        return Gsolv, vmat
+        return epbe, vmat
 
     def _get_vmat(self, phi_pol):
         logger.info(self, 'Constructing the correction to the Hamiltonian...')
@@ -1049,9 +1035,6 @@ H        1.3390319419     -0.0095801980     -0.2157234144''',
     mf = RKS(mol, xc='pbe')
     from fcdft.wbl.rks import *
     wblmf = WBLMoleculeRKS(mol, xc='pbe', broad=0.01, smear=0.2, nelectron=70.00, ref_pot=5.51)
-    # wblmf.pot_cycle=100
-    # wblmf.pot_damp=0.7
-    # wblmf.conv_tol=1e-7
     wblmf.max_cycle=1
     wblmf.kernel()
     cm = PBE(mol, cb=1.0, length=20, ngrids=41, stern_sam=8.1, equiv=11)
