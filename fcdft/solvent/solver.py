@@ -9,7 +9,7 @@ import ctypes
 
 PI = numpy.pi
 TWO_PI = 2.0e0*PI
-nproc = lib.num_threads()
+NPROC = lib.num_threads()
 libpbe = lib.load_library(os.path.join(fcdft.__path__[0], 'lib', 'libpbe'))
 
 def fft2d_solve(solver, rho, L, ngrids, spacing, kpts):
@@ -25,7 +25,7 @@ def fft2d_solve(solver, rho, L, ngrids, spacing, kpts):
     """
     lap = -L / spacing**2
     # Charge density in the Fourier space
-    rhok = scipy.fft.fftn(rho.reshape((ngrids,)*3), axes=(0,1), workers=nproc)
+    rhok = scipy.fft.fftn(rho.reshape((ngrids,)*3), axes=(0,1), workers=NPROC)
     # The sign convention below corresponds converting 4pi (make_phi) to -4pi
     rhok = -rhok.flatten()
     # Electrostatic potential in the Fourier space
@@ -46,7 +46,7 @@ def fft2d_solve(solver, rho, L, ngrids, spacing, kpts):
 
     if info.value != 0:
         raise RuntimeError('LAPACKE_dsyev failed.')
-    phi = scipy.fft.ifftn(phik.reshape((ngrids,)*3), axes=(0,1), workers=nproc)
+    phi = scipy.fft.ifftn(phik.reshape((ngrids,)*3), axes=(0,1), workers=NPROC)
 
     return phi.real.flatten(), phik
 
@@ -226,9 +226,9 @@ class fft2d(lib.StreamObject):
         grad_kz = ch.gradient(_phik)[2] / spacing
 
         # Gradient in the real space
-        grad_x = scipy.fft.ifftn(grad_kx, axes=(0,1), workers=nproc).real.flatten()
-        grad_y = scipy.fft.ifftn(grad_ky, axes=(0,1), workers=nproc).real.flatten()
-        grad_z = scipy.fft.ifftn(grad_kz, axes=(0,1), workers=nproc).real.flatten()
+        grad_x = scipy.fft.ifftn(grad_kx, axes=(0,1), workers=NPROC).real.flatten()
+        grad_y = scipy.fft.ifftn(grad_ky, axes=(0,1), workers=NPROC).real.flatten()
+        grad_z = scipy.fft.ifftn(grad_kz, axes=(0,1), workers=NPROC).real.flatten()
 
         dphi = numpy.hstack([grad_x.reshape(-1,1), grad_y.reshape(-1,1), grad_z.reshape(-1,1)])
         return dphi
@@ -260,7 +260,7 @@ class fft2d(lib.StreamObject):
 
         drv(c_phik, c_lap, c_ngrids, c_spacing, c_kpts, c_rhok)
 
-        rho = scipy.fft.ifftn(rhok.reshape((ngrids,)*3), axes=(0,1), workers=nproc).real
+        rho = scipy.fft.ifftn(rhok.reshape((ngrids,)*3), axes=(0,1), workers=NPROC).real
         return rho.flatten()
 
     def solve(self, rho, ngrids=None, spacing=None):

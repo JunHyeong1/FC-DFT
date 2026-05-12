@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Examples &#8212; FC-DFT 1.0.0 documentation</title>
+    <title>Examples &#8212; FC-DFT 1.1.5 documentation</title>
   
   
   
@@ -38,9 +38,10 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/documentation_options.js?v=a48ae3df"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'examples';</script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
@@ -111,7 +112,7 @@
   
   
   
-    <p class="title logo__title">FC-DFT 1.0.0 documentation</p>
+    <p class="title logo__title">FC-DFT 1.1.5 documentation</p>
   
 </a></div>
     
@@ -142,6 +143,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="about.html">
     About
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fcdft.html">
+    fcdft package
   </a>
 </li>
 
@@ -254,6 +262,13 @@
   </a>
 </li>
 
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fcdft.html">
+    fcdft package
+  </a>
+</li>
+
   </ul>
 </nav></div>
           
@@ -355,100 +370,148 @@
                   
   <section id="examples">
 <h1>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h1>
-<p>This chapter introduces brief exmaples of running FC-DFT and Poisson-Boltzmann solvation calculations</p>
-<section id="wide-band-limit">
-<h2>Wide-Band Limit<a class="headerlink" href="#wide-band-limit" title="Link to this heading">#</a></h2>
-<p>FC-DFT uses the wide-band limit (WBL) approximation. In particular, the WBL-Molecule approximation is adopted for simple but powerful implementation. WBL-Molecule requires users to provide the imaginary part of the self-energy in <code class="docutils literal notranslate"><span class="pre">WBLMolecule</span></code> object.
-Currently, spin-restricted version of FC-DFT (<code class="docutils literal notranslate"><span class="pre">fcdft.wbl.rks</span></code>) is supported. Below is a sample code, where the self-energy of 0.01 eV is attached to the sulfur atom of methanethiol with 25.95 electrons.</p>
+<p>This chapter introduces practical examples of running FC-DFT and Poisson-Boltzmann solvation calculations with the current implementation.</p>
+<section id="wide-band-limit-wbl-approximation">
+<h2>Wide-Band Limit (WBL) Approximation<a class="headerlink" href="#wide-band-limit-wbl-approximation" title="Link to this heading">#</a></h2>
+<p>FC-DFT implements the wide-band limit (WBL) approximation through the WBL-Molecule approach, which allows DFT calculations on molecules coupled to electrode contacts. The WBL-Molecule requires you to specify the imaginary part of the self-energy (broadening parameter, Γ_L) and the Fermi level (reference potential).</p>
+<p>The self-energy in WBL is defined as:</p>
+<div class="math notranslate nohighlight">
+\[\Sigma_L = \Lambda_L - \frac{i}{2}\Gamma_L S\]</div>
+<p>where Λ_L shifts the energy levels and Γ_L controls the level broadening (related to the <code class="docutils literal notranslate"><span class="pre">broad</span></code> parameter). The applied voltage is incorporated through a potential correction:</p>
+<div class="math notranslate nohighlight">
+\[[\Delta H_L]_{\mu\nu} = \Delta V_b [S]_{\mu\nu}\]</div>
+<p>where ΔV_b = -(μ - μ_ref) is the chemical potential difference from the reference electrode potential.</p>
+<p>Currently, the spin-restricted version (<code class="docutils literal notranslate"><span class="pre">fcdft.wbl.rks</span></code>) is supported. The example below shows how to perform a WBL calculation on methanethiol with a sulfur-electrode contact:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf</span><span class="w"> </span><span class="kn">import</span> <span class="n">gto</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf.dft</span><span class="w"> </span><span class="kn">import</span> <span class="n">RKS</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define molecular structure</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="gp">... </span><span class="s1">           C       -1.718553971     -0.000000250     -0.626147715</span>
-<span class="gp">... </span><span class="s1">           H       -2.739245971     -0.008907250     -0.227127715</span>
-<span class="gp">... </span><span class="s1">           H       -1.200493971     -0.879491250     -0.227127715</span>
-<span class="gp">... </span><span class="s1">           H       -1.215921971      0.888398750     -0.227127715</span>
-<span class="gp">... </span><span class="s1">           S       -1.718553971     -0.000000250     -2.396147715</span>
-<span class="gp">... </span><span class="s1">           H       -2.150082583      0.805150681     -2.710667448&#39;&#39;&#39;</span><span class="p">,</span>
-<span class="gp">... </span>       <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;6-31g**&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="s1">    C    -1.718553971    -0.000000250    -0.626147715</span>
+<span class="gp">... </span><span class="s1">    H    -2.739245971    -0.008907250    -0.227127715</span>
+<span class="gp">... </span><span class="s1">    H    -1.200493971    -0.879491250    -0.227127715</span>
+<span class="gp">... </span><span class="s1">    H    -1.215921971     0.888398750    -0.227127715</span>
+<span class="gp">... </span><span class="s1">    S    -1.718553971    -0.000000250    -2.396147715</span>
+<span class="gp">... </span><span class="s1">    H    -2.150082583     0.805150681    -2.710667448&#39;&#39;&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;6-31g**&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Standard DFT calculation</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">RKS</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">xc</span><span class="o">=</span><span class="s1">&#39;pbe&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fcdft.wbl.rks</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">wblmf</span> <span class="o">=</span> <span class="n">WBLMolecule</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">broad</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">nelectron</span><span class="o">=</span><span class="mf">25.95</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># WBL calculation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fcdft.wbl.rks</span><span class="w"> </span><span class="kn">import</span> <span class="n">WBLMoleculeRKS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wblmf</span> <span class="o">=</span> <span class="n">WBLMoleculeRKS</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">xc</span><span class="o">=</span><span class="s1">&#39;pbe&#39;</span><span class="p">,</span> <span class="n">broad</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">nelectron</span><span class="o">=</span><span class="mf">25.95</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wblmf</span><span class="o">.</span><span class="n">ref_pot</span> <span class="o">=</span> <span class="o">-</span><span class="mf">4.5</span>  <span class="c1"># Reference potential (e.g., electrode Fermi level) in eV</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">wblmf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">wblmf</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">()</span>  <span class="c1"># Density matrix at electrode contact</span>
 </pre></div>
 </div>
 </section>
-<section id="non-linear-poisson-boltzmann-solvation-model">
-<h2>Non-Linear Poisson-Boltzmann Solvation Model<a class="headerlink" href="#non-linear-poisson-boltzmann-solvation-model" title="Link to this heading">#</a></h2>
-<p>We provide the Poisson-Boltzmann solver for general purpose. <code class="docutils literal notranslate"><span class="pre">fcdft.solvent.pbe</span></code> module supports usual solvation energy calculations as what polarizable continuum model does.
-To do so, a few attributes of <code class="docutils literal notranslate"><span class="pre">PBE</span></code> needs to be controlled since it was originally intended to solve the electrostatic potential under the Gouy-Chapman-Stern theory:</p>
+<section id="poisson-boltzmann-solvation-model">
+<h2>Poisson-Boltzmann Solvation Model<a class="headerlink" href="#poisson-boltzmann-solvation-model" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">fcdft.solvent.pbe</span></code> module provides a non-linear Poisson-Boltzmann (PB) solver for modeling solvation at electrode/liquid interfaces. Unlike standard PCM models, this implementation can handle complex boundary conditions including Stern layers and is designed for electrochemical systems.</p>
+<p>The non-linear Poisson-Boltzmann equation is:</p>
+<div class="math notranslate nohighlight">
+\[\nabla \cdot (\epsilon(r)\nabla\phi^{\text{tot}}(r)) = -4\pi[\rho^{\text{sol}}(r) + \rho^{\text{ions}}(r)]\]</div>
+<p>where ε(r) is the position-dependent dielectric function, φ^tot(r) is the total electrostatic potential, ρ^sol(r) is the solute charge density, and ρ^ions(r) is the ion charge density. The dielectric function varies smoothly from the SAM (self-assembled monolayer) to the bulk solvent:</p>
+<div class="math notranslate nohighlight">
+\[\epsilon(z) = \epsilon_{\text{SAM}} + \frac{1}{2}(\epsilon_{\text{bulk}} - \epsilon_{\text{SAM}})\left[1 + \text{erf}\left(\frac{z-a}{\Delta_1}\right)\right]\]</div>
+<p><strong>Standard Solvation :</strong></p>
+<p>For standard continuum solvation without electrode effects:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf</span><span class="w"> </span><span class="kn">import</span> <span class="n">gto</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf.dft</span><span class="w"> </span><span class="kn">import</span> <span class="n">RKS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fcdft.solvent.pbe</span><span class="w"> </span><span class="kn">import</span> <span class="n">PBE</span><span class="p">,</span> <span class="n">pbe_for_scf</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Water molecule</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="gp">... </span><span class="s1">           O        0.152427064      0.959723218     -2.275350162</span>
-<span class="gp">... </span><span class="s1">           H        0.152427064      1.719060218     -1.679307162</span>
-<span class="gp">... </span><span class="s1">           H        0.152427064      0.200386218     -1.679307162&#39;&#39;&#39;</span><span class="p">,</span>
-<span class="gp">... </span>       <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;6-31g**&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="s1">    O    0.152427064    0.959723218   -2.275350162</span>
+<span class="gp">... </span><span class="s1">    H    0.152427064    1.719060218   -1.679307162</span>
+<span class="gp">... </span><span class="s1">    H    0.152427064    0.200386218   -1.679307162&#39;&#39;&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;6-31g**&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Standard DFT</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">RKS</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">xc</span><span class="o">=</span><span class="s1">&#39;b3lyp&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fcdft.solvent.pbe</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Setup PBE solvation model</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span> <span class="o">=</span> <span class="n">PBE</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">cb</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">ngrids</span><span class="o">=</span><span class="mi">41</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="mf">78.3553</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="o">.</span><span class="n">atom_bottom</span> <span class="o">=</span> <span class="s1">&#39;center&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="mf">78.3553</span>  <span class="c1"># Dielectric constant of water</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="o">.</span><span class="n">nelectron</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="mf">0.0e0</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="o">.</span><span class="n">surf</span> <span class="o">=</span> <span class="mf">0.0e0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="o">.</span><span class="n">atom_bottom</span> <span class="o">=</span> <span class="s1">&#39;center&#39;</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Solvated DFT calculation</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">solmf</span> <span class="o">=</span> <span class="n">pbe_for_scf</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">cm</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">solmf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>The following example introduces how to run the Poisson-Boltzmann solver under the Gouy-Chapman-Stern boundary values:</p>
+<p><strong>Electrochemical Solvation:</strong></p>
+<p>For electrochemical systems with a Stern layer and self-assembled monolayer (SAM), combine WBL and PBE solvation. The boundary conditions follow the Gouy-Chapman-Stern theory.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf</span><span class="w"> </span><span class="kn">import</span> <span class="n">gto</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf.dft</span><span class="w"> </span><span class="kn">import</span> <span class="n">RKS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fcdft.wbl.rks</span><span class="w"> </span><span class="kn">import</span> <span class="n">WBLMoleculeRKS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fcdft.solvent.pbe</span><span class="w"> </span><span class="kn">import</span> <span class="n">PBE</span><span class="p">,</span> <span class="n">pbe_for_scf</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Methanethiol molecule</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="gp">... </span><span class="s1">           C       -1.718553971     -0.000000250     -0.626147715</span>
-<span class="gp">... </span><span class="s1">           H       -2.739245971     -0.008907250     -0.227127715</span>
-<span class="gp">... </span><span class="s1">           H       -1.200493971     -0.879491250     -0.227127715</span>
-<span class="gp">... </span><span class="s1">           H       -1.215921971      0.888398750     -0.227127715</span>
-<span class="gp">... </span><span class="s1">           S       -1.718553971     -0.000000250     -2.396147715</span>
-<span class="gp">... </span><span class="s1">           H       -2.150082583      0.805150681     -2.710667448&#39;&#39;&#39;</span><span class="p">,</span>
-<span class="gp">... </span>       <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;6-31g**&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">RKS</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">xc</span><span class="o">=</span><span class="s1">&#39;pbe&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fcdft.wbl.rks</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">wblmf</span> <span class="o">=</span> <span class="n">WBLMolecule</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">broad</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">nelectron</span><span class="o">=</span><span class="mf">25.95</span><span class="p">)</span>
+<span class="gp">... </span><span class="s1">    C    -1.718553971    -0.000000250    -0.626147715</span>
+<span class="gp">... </span><span class="s1">    H    -2.739245971    -0.008907250    -0.227127715</span>
+<span class="gp">... </span><span class="s1">    H    -1.200493971    -0.879491250    -0.227127715</span>
+<span class="gp">... </span><span class="s1">    H    -1.215921971     0.888398750    -0.227127715</span>
+<span class="gp">... </span><span class="s1">    S    -1.718553971    -0.000000250    -2.396147715</span>
+<span class="gp">... </span><span class="s1">    H    -2.150082583     0.805150681    -2.710667448&#39;&#39;&#39;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s1">&#39;6-31g**&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Step 1: WBL calculation at fixed electrode potential</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wblmf</span> <span class="o">=</span> <span class="n">WBLMoleculeRKS</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">xc</span><span class="o">=</span><span class="s1">&#39;pbe&#39;</span><span class="p">,</span> <span class="n">broad</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">nelectron</span><span class="o">=</span><span class="mf">25.95</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wblmf</span><span class="o">.</span><span class="n">ref_pot</span> <span class="o">=</span> <span class="o">-</span><span class="mf">4.5</span>  <span class="c1"># Electrode Fermi level</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">wblmf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dm</span> <span class="o">=</span> <span class="n">wblmf</span><span class="o">.</span><span class="n">make_rdm1</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fcdft.solvent.pbe</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Step 2: Add solvation with SAM and Stern layer</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span> <span class="o">=</span> <span class="n">PBE</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">cb</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">ngrids</span><span class="o">=</span><span class="mi">41</span><span class="p">,</span> <span class="n">stern_sam</span><span class="o">=</span><span class="mf">3.0</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="mf">78.3553</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="o">.</span><span class="n">eps_sam</span> <span class="o">=</span> <span class="mf">2.284</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="o">.</span><span class="n">_dm</span> <span class="o">=</span> <span class="n">dm</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="mf">78.3553</span>        <span class="c1"># Water dielectric constant</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="o">.</span><span class="n">eps_sam</span> <span class="o">=</span> <span class="mf">2.284</span>      <span class="c1"># SAM dielectric constant</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="o">.</span><span class="n">nelectron</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cm</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">wblmf</span><span class="o">.</span><span class="n">bias</span>    <span class="c1"># Applied potential from WBL calculation</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># FC-DFT+ calculation</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">solmf</span> <span class="o">=</span> <span class="n">pbe_for_scf</span><span class="p">(</span><span class="n">wblmf</span><span class="p">,</span> <span class="n">cm</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">solmf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">solmf</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">dm0</span><span class="o">=</span><span class="n">dm</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="geometry-optimization">
 <h2>Geometry Optimization<a class="headerlink" href="#geometry-optimization" title="Link to this heading">#</a></h2>
-<p>Our code supports analytic nuclear gradients of FC-DFT as well as the Poisson-Boltzmann solvation model. We have tested geometry optimization using GeomeTRIC, an external geometry optimizer implemented in PySCF:</p>
+<p>FC-DFT supports analytic gradients for both WBL and solvation models. Geometry optimization can be performed using external optimizers like GeomeTRIC:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf.geomopt.geometric_solver</span><span class="w"> </span><span class="kn">import</span> <span class="n">optimize</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Optimize structure at fixed electrode potential</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">moleq</span> <span class="o">=</span> <span class="n">optimize</span><span class="p">(</span><span class="n">solmf</span><span class="p">,</span> <span class="n">maxstep</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Access optimized geometry and energies</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">moleq</span><span class="o">.</span><span class="n">atom_coords</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Final energy: </span><span class="si">{</span><span class="n">moleq</span><span class="o">.</span><span class="n">e_tot</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2"> Hartree&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
-<section id="thermochemistry">
-<h2>Thermochemistry<a class="headerlink" href="#thermochemistry" title="Link to this heading">#</a></h2>
-<p>We provide a code for numerical Hessian matrix constructed by analytic forces due to the non-Hermitian Hamiltonian resulted by the self-energy. Thermochemical properties can be calculated by utilizing <code class="docutils literal notranslate"><span class="pre">pyscf.hessian.thermo</span></code> module.
-<code class="docutils literal notranslate"><span class="pre">Hessian</span></code> offers three-point (default) and five-point finite difference method for calculating the Hessian matrix. The following code introduces how to obtain thermochemical properties using <code class="docutils literal notranslate"><span class="pre">harmonic_analysis</span></code> function:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fcdft.hessian</span> <span class="n">numhess</span> <span class="kn">import</span><span class="w"> </span><span class="o">*</span>
+<section id="vibrational-analysis-and-thermochemistry">
+<h2>Vibrational Analysis and Thermochemistry<a class="headerlink" href="#vibrational-analysis-and-thermochemistry" title="Link to this heading">#</a></h2>
+<p>FC-DFT provides numerical Hessian calculations based on analytic forces. This is important for non-Hermitian Hamiltonians (WBL) where analytical Hessian is not readily available. The Hessian is constructed using finite differences:</p>
+<div class="math notranslate nohighlight">
+\[H_{ij} = \frac{1}{2\Delta x}\left[\frac{\partial^2 E}{\partial R_i \partial R_j}\right]\]</div>
+<p>where the derivatives are obtained from analytic nuclear gradients.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fcdft.hessian.numhess</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hessian</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf.hessian.thermo</span><span class="w"> </span><span class="kn">import</span> <span class="n">harmonic_analysis</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Calculate Hessian using finite differences of analytic gradients</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">hessmf</span> <span class="o">=</span> <span class="n">Hessian</span><span class="p">(</span><span class="n">solmf</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">hess</span> <span class="o">=</span> <span class="n">hessmf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">pyscf.hessian.thermo</span><span class="w"> </span><span class="kn">import</span> <span class="n">harmonic_analysis</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Analyze vibrational frequencies and thermochemistry</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">freq_info</span> <span class="o">=</span> <span class="n">harmonic_analysis</span><span class="p">(</span><span class="n">moleq</span><span class="p">,</span> <span class="n">hess</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Once the quantities are obtained, these can be saved into a molden format as implemented in <code class="docutils literal notranslate"><span class="pre">fcdft.tools.molden</span></code>:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fcdft.tools.molden</span><span class="w"> </span><span class="kn">import</span> <span class="n">dump_freq</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Save to Molden format for visualization</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">fcdft.tools.molden</span><span class="w"> </span><span class="kn">import</span> <span class="n">dump_freq</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dump_freq</span><span class="p">(</span><span class="n">moleq</span><span class="p">,</span> <span class="n">freq_info</span><span class="p">,</span> <span class="s1">&#39;freq.molden&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -502,10 +565,10 @@ To do so, a few attributes of <code class="docutils literal notranslate"><span c
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wide-band-limit">Wide-Band Limit</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#non-linear-poisson-boltzmann-solvation-model">Non-Linear Poisson-Boltzmann Solvation Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#wide-band-limit-wbl-approximation">Wide-Band Limit (WBL) Approximation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#poisson-boltzmann-solvation-model">Poisson-Boltzmann Solvation Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#geometry-optimization">Geometry Optimization</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#thermochemistry">Thermochemistry</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#vibrational-analysis-and-thermochemistry">Vibrational Analysis and Thermochemistry</a></li>
 </ul>
   </nav></div>
 
@@ -543,7 +606,7 @@ To do so, a few attributes of <code class="docutils literal notranslate"><span c
 
   <p class="copyright">
     
-      © Copyright 2025, Jun-Hyeong Kim.
+      © Copyright 2026, Jun-Hyeong Kim.
       <br/>
     
   </p>
@@ -552,7 +615,7 @@ To do so, a few attributes of <code class="docutils literal notranslate"><span c
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     <br/>
   </p>
 </div>

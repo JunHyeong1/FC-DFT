@@ -1,6 +1,7 @@
 import numpy
 import scipy
 import os
+import ctypes
 import fcdft
 import fcdft.solvent.calculus_helper as ch
 
@@ -9,11 +10,13 @@ from pyscf.solvent import ddcosmo
 from pyscf.tools import cubegen
 from pyscf import lib
 from pyscf.lib import logger
+from pyscf.lib import pack_tril
 from pyscf.data.nist import *
 from pyscf.data.radii import VDW
 from pyscf import df
 from pyscf import gto
-from fcdft.lib import pbe_helper
+
+libpbe = lib.load_library(os.path.join(fcdft.__path__[0], 'lib', 'libpbe'))
 
 try:
     OMP_NUM_THREADS = os.environ['OMP_NUM_THREADS']
@@ -24,85 +27,241 @@ KB2HARTREE = BOLTZMANN / HARTREE2J
 M2HARTREE = AVOGADRO*BOHR**3*1.e-27
 
 def pbe_for_scf(mf, solvent_obj=None, dm=None):
+    """
+    Attach PBE solvation model to a SCF object.
+
+    Creates a self-consistent-field calculator that includes solvation effects
+    via the non-linear Poisson-Boltzmann model.
+
+    Parameters
+    ----------
+    mf : pyscf.scf.RHF/RKS or pyscf.scf.UHF/UKS
+        PySCF SCF mean-field object.
+    solvent_obj : PBE, optional
+        PBE solvation object. If None, creates a default PBE(mf.mol).
+    dm : ndarray, optional
+        Initial density matrix for solvation. Default: None (computed from mf).
+
+    Returns
+    -------
+    solmf : pyscf.solvent.PCMSolver.SCFWithPolarization
+        SCF object with solvation effects included via PBE.
+
+    Examples
+    --------
+    >>> from pyscf import gto, dft
+    >>> from fcdft.solvent.pbe import PBE, pbe_for_scf
+    >>> mol = gto.M(atom='O 0 0 0; H 0 1 0; H 0 0 1', basis='6-31g')
+    >>> mf = dft.RKS(mol, xc='b3lyp')
+    >>> cm = PBE(mol, cb=1.0, length=15, ngrids=41)
+    >>> cm.eps = 78.3553  # Water
+    >>> solmf = pbe_for_scf(mf, cm)
+    >>> solmf.kernel()
+    """
     if solvent_obj is None:
         solvent_obj = PBE(mf.mol)
     return _attach_solvent._for_scf(mf, solvent_obj, dm)
 
 def gen_pbe_solver(solvent_obj, verbose=None):
+    """
+    Get the PBE solver driver function.
+
+    Parameters
+    ----------
+    solvent_obj : PBE
+        PBE solvation object.
+    verbose : int, optional
+        Logger verbosity.
+
+    Returns
+    -------
+    get_vind : callable
+        Function to compute solvation contribution to effective potential.
+    """
     return solvent_obj._get_vind
 
 def make_lambda(solvent_obj, mol, probe, stern_mol, stern_sam, coords, delta1, delta2, atomic_radii):
-    """Ion-exclusion function.
+    """
+    Ion-exclusion function for Stern layer region.
 
-    Args:
-        mol (pyscf.gto.Mole): Mole object.
-        probe (float): Probe radius in a.u..
-        stern_mol (float): Molecular Stern layer thickness in a.u..
-        stern_sam (float): SAM Stern layer thickness in a.u..
-        coords (2D numpy.ndarray): Cartesian coordinates.
-        delta1 (float): Broadening constant in error functions used for the molecular part.
-        delta2 (float): Broadening constant in error functions used for the SAM part.
-        atomic_radii (1D numpy.ndarray): Atomic radii
+    Constructs a smooth function λ(r) that transitions from 0 (no ions near molecule/SAM)
+    to 1 (bulk solution). Uses error function to smoothly interpolate across both the
+    molecular Stern layer and the SAM Stern layer.
 
-    Returns:
-        1D array: Ion-exclusion function
+    Parameters
+    ----------
+    solvent_obj : PBE
+        PBE solvation object.
+    mol : gto.Mole
+        Molecule specification.
+    probe : float
+        Solvent probe radius in a.u.
+    stern_mol : float
+        Stern layer thickness at molecule surface in a.u.
+    stern_sam : float
+        Stern layer thickness at SAM in a.u.
+    coords : ndarray, shape (n_grid, 3)
+        Grid point coordinates in Cartesian (a.u.).
+    delta1 : float
+        Broadening width for SAM Stern layer erf in a.u.
+    delta2 : float
+        Broadening width for molecular Stern layer erf in a.u.
+    atomic_radii : ndarray, shape (n_atoms,)
+        Atomic van der Waals radii in a.u.
+
+    Returns
+    -------
+    lambda_r : ndarray, shape (n_grid,)
+        Ion-exclusion function (0 in Stern, 1 in bulk).
     """
     atom_coords = mol.atom_coords()
     # Molecular Stern Layer
-    dist = pbe_helper.distance_calculator(coords, atom_coords)
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
     x = (dist - atomic_radii[:,None] - probe - stern_mol) / delta2
-    erf_list = 0.5e0*(1.0e0 + scipy.special.erf(x))
-    erf_list[x < -8.0e0*delta2] = 0.0e0
+    erf_list = 0.5 * (1.0 + scipy.special.erf(x))
     lambda_r = numpy.prod(erf_list, axis=0)
 
     # SAM Stern Layer
     zmin = coords[:,2].min()
     x = (coords[:,2] - zmin - (stern_sam + stern_mol)) / delta1
     _erf = scipy.special.erf(x)
-    _erf[x < -8.0e0*delta1] = -1.0e0 # Value suppression
-    lambda_z = 0.5e0 * (1.0e0 + _erf)
+    lambda_z = 0.5 * (1.0 + _erf)
     lambda_r = lambda_z * lambda_r
     return lambda_r
 
 def make_sas(solvent_obj, mol, probe, coords, delta2, atomic_radii):
-    """Generating solvent-accessible surface
+    """
+    Construct solvent-accessible surface (SAS) function.
 
-    Args:
-        mol (pyscf.gto.Mole): Mole object.
-        probe (float): probe radius in a.u..
-        coords (2D numpy.ndarray): Cartesian coordinates.
-        delta2 (float): broadening constant in a.u..
-        atomic_radii (1D numpy.ndarray): Atomic radii
+    Returns a smooth function that is 0 inside the SAS (within atomic radii + probe)
+    and 1 in the bulk solvent, with smooth transition via error function.
 
-    Returns:
-        1D numpy.ndarray: Solvent-accessible surface
+    Parameters
+    ----------
+    solvent_obj : PBE
+        PBE solvation object.
+    mol : gto.Mole
+        Molecule specification.
+    probe : float
+        Solvent probe radius (water: 1.4 Å = 2.64 a.u.) in a.u.
+    coords : ndarray, shape (n_grid, 3)
+        Grid point coordinates in Cartesian (a.u.).
+    delta2 : float
+        Broadening width for SAS erf in a.u.
+    atomic_radii : ndarray, shape (n_atoms,)
+        Atomic van der Waals radii in a.u.
+
+    Returns
+    -------
+    sas : ndarray, shape (n_grid,)
+        Solvent-accessible surface function (0=inside, 1=bulk).
     """
     atom_coords = mol.atom_coords()
-    dist = pbe_helper.distance_calculator(coords, atom_coords)
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
     x = (dist - atomic_radii[:,None] - probe) / delta2
     _erf = scipy.special.erf(x)
     erf_list = 0.5e0 * (1.0e0 + _erf)
-    S = numpy.prod(erf_list, axis=0)
-    return S
+    sas = numpy.prod(erf_list, axis=0)
+    return sas
+
+def make_grad_sas(solvent_obj, mol, probe, coords, delta2, atomic_radii):
+    # mol = solvent_obj.mol
+    # coords = solvent_obj.grids.coords
+    ngrids = solvent_obj.grids.ngrids
+    # atomic_radii = solvent_obj.get_atomic_radii()
+    # probe = solvent_obj.probe/ BOHR
+    # delta2 = solvent_obj.delta2 / BOHR
+    atom_coords = mol.atom_coords()
+    natm = mol.natm
+
+    r = atom_coords[:,None,:]
+    rp = coords - r
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
+    x = (dist - atomic_radii[:,None] - probe) / delta2
+    _erf = scipy.special.erf(x)
+    erf_list = 0.5e0 * (1.0e0 + _erf)
+    er = rp / dist[:,:,None]
+    gauss = numpy.exp(-x**2)
+    grad_list = numpy.multiply(er, gauss[:,:,None], out=er) / (delta2 * numpy.sqrt(PI))
+
+    drv = libpbe.grad_sas_drv
+    grad_sas = numpy.empty((ngrids**3, 3), dtype=numpy.float64, order='C')
+    c_erf_list = erf_list.ctypes.data_as(ctypes.c_void_p)
+    c_grad_list = grad_list.ctypes.data_as(ctypes.c_void_p)
+    c_delta2 = ctypes.c_double(delta2)
+    c_ngrids = ctypes.c_int(ngrids)
+    c_natm = ctypes.c_int(natm)
+    c_grad_sas = grad_sas.ctypes.data_as(ctypes.c_void_p)
+    drv(c_erf_list, c_grad_list, c_delta2, c_ngrids, c_natm, c_grad_sas)
+
+    return grad_sas
+
+def make_lap_sas(solvent_obj, mol, probe, coords, delta2, atomic_radii):
+    ngrids = solvent_obj.grids.ngrids
+    atom_coords = mol.atom_coords()
+    natm = mol.natm
+
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
+    x = (dist - atomic_radii[:,None] - probe) / delta2
+    _erf = scipy.special.erf(x)
+    erf_list = 0.5e0 * (1.0e0 + _erf)
+
+    r = atom_coords[:,None,:]
+    rp = coords - r
+    er = rp / dist[:,:,None]
+    gauss = numpy.exp(-x**2)
+    grad_list = numpy.multiply(er, gauss[:,:,None], out=er) / (delta2 * numpy.sqrt(PI))
+
+    drv = libpbe.lap_sas_drv
+    lap_sas = numpy.empty(ngrids**3, dtype=numpy.float64, order='C')
+    c_erf_list = erf_list.ctypes.data_as(ctypes.c_void_p)
+    c_grad_list = grad_list.ctypes.data_as(ctypes.c_void_p)
+    c_x = x.ctypes.data_as(ctypes.c_void_p)
+    c_delta2 = ctypes.c_double(delta2)
+    c_ngrids = ctypes.c_int(ngrids)
+    c_natm = ctypes.c_int(natm)
+    c_lap_sas = lap_sas.ctypes.data_as(ctypes.c_void_p)
+    
+    drv(c_erf_list, c_grad_list, c_x, c_delta2, c_ngrids, c_natm, c_lap_sas)
+
+    return lap_sas
 
 def make_eps(solvent_obj, coords, eps_sam, eps, stern_sam, delta1, sas):
-    """Calculates the dielectric function.
+    """
+    Compute position-dependent dielectric function.
 
-    Args:
-        coords (2D numpy.ndarray): Cartesian coordinates
-        eps_sam (float): Dielectric constant of the self-assembled monolayer
-        eps (float): Dielectric constant of the bulk solvent.
-        stern_sam (float): Stern layer length of the self-assembled monolayer in atomic unit.
-        delta1 (float): Broadening constant of error functions.
-        sas (1D numpy.ndarray): Solvent-accessible surface.
+    The dielectric varies smoothly from the SAM (ε_SAM) through the Stern layer
+    to the bulk solvent (ε_bulk) using an error function transition:
 
-    Returns:
-        1D numpy.ndarray: Dielectric function
+        ε(z) = ε_SAM + (ε_bulk - ε_SAM)/2 * (1 + erf((z - z_stern) / Δ_1))
+        ε(r) = ε_0 + (ε(z) - ε_0) * SAS
+
+    Parameters
+    ----------
+    solvent_obj : PBE
+        PBE solvation object.
+    coords : ndarray, shape (n_grid, 3)
+        Grid point coordinates in Cartesian (a.u.).
+    eps_sam : float
+        Dielectric constant of the SAM region.
+    eps : float
+        Dielectric constant of bulk solvent.
+    stern_sam : float
+        z-coordinate of SAM/Stern boundary in a.u.
+    delta1 : float
+        Broadening width of erf transition in a.u.
+    sas : ndarray, shape (n_grid,)
+        Solvent-accessible surface function.
+
+    Returns
+    -------
+    eps_r : ndarray, shape (n_grid,)
+        Position-dependent dielectric function at each grid point.
     """
     zmin = coords[:,2].min()
     x = (coords[:,2] - zmin - stern_sam) / delta1
     _erf = scipy.special.erf(x)
-    eps_z = eps_sam + 0.5e0 * (eps - eps_sam) * (1.0e0 + _erf)
+    eps_z = eps_sam + 0.5 * (eps - eps_sam) * (1.0 + _erf)
     eps_r = 1.0e0 + (eps_z - 1.0e0) * sas
     return eps_r
 
@@ -124,80 +283,157 @@ def make_grad_eps(solvent_obj, mol, coords, eps_sam, eps, probe, stern_sam, delt
     Returns:
         2D numpy.ndarray: Gradient of the dielectric function.
     """
+    ngrids = solvent_obj.grids.ngrids
+    natm = mol.natm
     atom_coords = mol.atom_coords()
-    return pbe_helper.grad_eps(atom_coords, coords, eps_sam, eps, probe, stern_sam, delta1, delta2, atomic_radii, sas)
+    zmin = coords[:,2].min()
+    x = (coords[:,2] - zmin - stern_sam) / delta1
+    _erf = scipy.special.erf(x)
+    eps_z = eps_sam + 0.5e0 * (eps - eps_sam) * (1.0e0 + _erf)
+    exp_z = numpy.exp(-x**2)
+
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
+    x = (dist - atomic_radii[:,None] - probe) / delta2
+    _erf = scipy.special.erf(x)
+    erf_list = 0.5e0 * (1.0e0 + _erf)
+
+    r = atom_coords[:,None,:]
+    rp = coords - r
+    x = (dist - atomic_radii[:,None] - probe) / delta2
+    _erf = scipy.special.erf(x)
+    erf_list = 0.5e0 * (1.0e0 + _erf)
+    er = rp / dist[:,:,None]
+    gauss = numpy.exp(-x**2)
+    grad_list = numpy.multiply(er, gauss[:,:,None], out=er) / (delta2 * numpy.sqrt(PI))
+
+    grad_eps = numpy.empty((ngrids**3, 3), dtype=numpy.float64, order='C')
+
+    drv = libpbe.grad_eps_drv
+    c_erf_list = erf_list.ctypes.data_as(ctypes.c_void_p)
+    c_grad_list = grad_list.ctypes.data_as(ctypes.c_void_p)
+    c_exp_z = exp_z.ctypes.data_as(ctypes.c_void_p)
+    c_eps_z = eps_z.ctypes.data_as(ctypes.c_void_p)
+    c_delta1 = ctypes.c_double(delta1)
+    c_delta2 = ctypes.c_double(delta2)
+    c_eps = ctypes.c_double(eps)
+    c_eps_sam = ctypes.c_double(eps_sam)
+    c_ngrids = ctypes.c_int(ngrids)
+    c_natm = ctypes.c_int(natm)
+    c_grad_eps = grad_eps.ctypes.data_as(ctypes.c_void_p)
+
+    drv(c_erf_list, c_grad_list, c_exp_z, c_eps_z, c_delta1, c_delta2,
+        c_eps, c_eps_sam, c_ngrids, c_natm, c_grad_eps)
+
+    return grad_eps
 
 def make_phi_sol(solvent_obj, dm=None, coords=None):
-    """Generates solute potential in vacuum.
+    """
+    Compute the solute (molecule) electrostatic potential in vacuum.
 
-    Args:
-        solvent_obj (:class:`PBE`): Solvent object.
-        dm (2D numpy.ndarray): Density matrix
-        coords (2D numpy.ndarray): Cartesian grids.
+    Solves Poisson's equation for the isolated molecule:
 
-    Returns:
-        numpy tag_array: Solute electrostatic potential.
+        φ_sol = φ_nuc + φ_elec
+
+    where φ_nuc is the nuclear potential and φ_elec is the electronic potential
+    computed from the density matrix.
+
+    Parameters
+    ----------
+    solvent_obj : PBE
+        PBE solvation object.
+    dm : ndarray, shape (n_ao, n_ao), optional
+        Density matrix. If None, uses solvent_obj._dm.
+        For UHF, shape (2, n_ao, n_ao); sums α + β.
+    coords : ndarray, shape (n_grid, 3), optional
+        Grid coordinates. If None, uses solvent_obj.grids.coords.
+
+    Returns
+    -------
+    phi_sol : ndarray, shape (n_grid,)
+        Solute potential at grid points (molecule in vacuum).
+        Tagged with attributes: Vnuc (nuclear), Vele (electronic).
     """
     if dm is None: dm = solvent_obj._dm
     if coords is None: coords = solvent_obj.grids.coords
 
     tot_ngrids = solvent_obj.grids.get_ngrids()
     
-    logger.info(solvent_obj, 'Generating the solute electrostatic potential...')
+    t0 = (logger.process_clock(), logger.perf_counter())
     mol = solvent_obj.mol
 
     atom_coords = mol.atom_coords()
     Z = mol.atom_charges()
-    dist = pbe_helper.distance_calculator(coords, atom_coords)
+    dist = scipy.spatial.distance.cdist(atom_coords, coords)
     dist[dist < 1.0e-100] = numpy.inf # Machine precision
     Vnuc = numpy.tensordot(1.0e0 / dist, Z, axes=([0], [0]))
 
     if dm.ndim == 3: # Spin-unrestricted
         dm = dm[0] + dm[1]
 
+    dms = numpy.asarray(dm.real)
     gpu_accel = solvent_obj.gpu_accel
 
     if gpu_accel:
-        logger.info(solvent_obj, 'Will utilize GPUs for computing the electrostatic potential.')
         import cupy
         nbatch = 256*256
         tot_ngrids = coords.shape[0]
         from gpu4pyscf.gto.int3c1e import int1e_grids
-        _dm = cupy.asarray(dm.real)
-        _Vele = cupy.zeros(tot_ngrids, order='C')
+        dms = cupy.asarray(dms)
+        Vele = cupy.zeros(tot_ngrids, order='C')
+        verbose= mol.verbose
+        mol.verbose = 0 # Disable unnecessary printing
         for ibatch in range(0, tot_ngrids, nbatch):
             max_grid = min(ibatch+nbatch, tot_ngrids)
-            _Vele[ibatch:max_grid] += int1e_grids(mol, coords[ibatch:max_grid], dm=_dm, direct_scf_tol=1e-14)
-        Vele = _Vele.get()
-        del _dm, _Vele,  cupy, int1e_grids # Release GPU memory
+            Vele[ibatch:max_grid] += int1e_grids(mol, coords[ibatch:max_grid], dm=dms, direct_scf_tol=1e-14)
+        Vele = Vele.get()
+        del dms, cupy, int1e_grids # Release GPU memory
         lib.num_threads(OMP_NUM_THREADS) # GPU4PySCF sets OMP_NUM_THREADS=4 when running.
+        mol.verbose = verbose # Resetting verbose
 
     else:
         Vele = numpy.empty(tot_ngrids, order='C')
         nao = mol.nao
+        dm_tril = pack_tril(dms + dms.T)
+        idx = numpy.arange(nao)
+        idx = idx * (idx + 1) // 2 + idx
+        dm_tril[idx] *= 0.5
         max_memory = solvent_obj.max_memory - lib.current_memory()[0] - Vele.nbytes*1e-6
-        blksize = int(max(max_memory*.9e6/8/nao**2, 400))
+        blksize = int(max(max_memory*.9e6/8/idx[-1], 400))
         cintopt = gto.moleintor.make_cintopt(mol._atm, mol._bas, mol._env, 'int3c2e')
         for p0, p1 in lib.prange(0, tot_ngrids, blksize):
             fakemol = gto.fakemol_for_charges(coords[p0:p1])
-            ints = df.incore.aux_e2(mol, fakemol, cintopt=cintopt)
-            Vele[p0:p1] = numpy.tensordot(ints, dm.real, axes=([1,0], [0,1]))
+            ints = df.incore.aux_e2(mol, fakemol, aosym='s2ij', cintopt=cintopt)
+            Vele[p0:p1] = dm_tril.dot(ints)
             del ints
 
     MEP = Vnuc - Vele
+    t0 = logger.timer(solvent_obj, 'phi_sol', *t0)
     return lib.tag_array(MEP, Vnuc=Vnuc, Vele=-Vele)
 
 def make_rho_sol(solvent_obj, phi_sol=None, ngrids=None, spacing=None):
-    """Solute charge density by solving the Poisson equation.
-    
-    Args:
-        solvent_obj (:class:`PBE`): Solvent object.
-        phi_sol (1D numpy.ndarray): Electrostatic potential of the solute molecule.
-        ngrids (int): Number of grid points along each axis.
-        spacing (float): Grid spacing
+    """
+    Compute solute charge density from electrostatic potential via Poisson's equation.
 
-    Returns:
-        1D numpy.ndarray: Solute charge density
+    Uses the Laplacian of φ_sol to recover the charge density:
+
+        ρ_sol = -∇²φ_sol / 4π
+
+    Parameters
+    ----------
+    solvent_obj : PBE
+        PBE solvation object.
+    phi_sol : ndarray, shape (n_grid,), optional
+        Solute potential. If None, uses solvent_obj.phi_sol.
+    ngrids : int, optional
+        Number of grid points along each axis (cubic grid).
+        If None, uses solvent_obj.grids.ngrids.
+    spacing : float, optional
+        Grid spacing in a.u. If None, uses solvent_obj.grids.spacing.
+
+    Returns
+    -------
+    rho_sol : ndarray, shape (n_grid,)
+        Solute charge density at grid points.
     """
     if phi_sol is None: phi_sol = solvent_obj.phi_sol
     if spacing is None: spacing = solvent_obj.grids.spacing
@@ -209,25 +445,48 @@ def make_rho_sol(solvent_obj, phi_sol=None, ngrids=None, spacing=None):
     else:
         phik = None
 
-    rho_sol = -solver.laplacian(phi_sol, phik) / 4.0e0 / PI
+    rho_sol = -solver.laplacian(phi_sol, phik) / 4.0 / PI
 
     return rho_sol
 
 def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
-    """Non-linear Poisson-Boltzmann equation driver.
+    """
+    Solve the non-linear Poisson-Boltzmann equation self-consistently.
 
-    Args:
-        solvent_obj : An instance of :class:`PBE`
-        bias (float, optional): Bias potential in atomic unit. Defaults to None.
-        phi_sol (numpy.ndarray, optional): Solute potential in vacuum. Defaults to None.
-        rho_sol (numpy.ndarray, optional): Solute charge density in vacuum. Defaults to None.
+    Iteratively solves:
 
-    Raises:
-        RuntimeError: Infinite ion charge density.
-        RuntimeError: PBE self-consistent cycle fails to converge.
+        ∇·(ε(r) ∇φ_tot) = -4π[ρ_sol(r) + ρ_ions(φ_tot, T)]
 
-    Returns:
-        numpy.ndarray, numpy.ndarray, numpy.ndarray: Total potential, ion charge density, and polarization charge density.
+    where ρ_ions are computed from Boltzmann statistics with ion exclusion in
+    Stern layers. Boundary conditions follow Gouy-Chapman-Stern theory at the
+    electrode surface.
+
+    Parameters
+    ----------
+    solvent_obj : PBE
+        PBE solvation object with built grids and intermediates.
+    bias : float, optional
+        Applied bias potential in a.u. If None, uses solvent_obj.bias.
+    phi_sol : ndarray, optional
+        Solute potential in vacuum. If None, computes from density matrix.
+    rho_sol : ndarray, optional
+        Solute charge density. If None, computes from phi_sol.
+
+    Returns
+    -------
+    phi_tot : ndarray, shape (n_grid,)
+        Total electrostatic potential (boundary condition + solution).
+    rho_ions : ndarray, shape (n_grid,)
+        Ion charge density at convergence.
+    rho_pol : ndarray, shape (n_grid,)
+        Polarization charge density (dielectric response).
+
+    Raises
+    ------
+    RuntimeError
+        If ion charge density becomes NaN (solver divergence).
+    RuntimeError
+        If PBE iteration fails to converge within max_cycle.
     """
     if solvent_obj._intermediates is None: solvent_obj.build()
     _intermediates = solvent_obj._intermediates
@@ -255,13 +514,13 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
     phi_tot = numpy.zeros(tot_ngrids, dtype=numpy.float64)
     impose_bc, bc_grad, bc_lap = solvent_obj._gen_boundary_conditions()
     bc, phi_z, slope= impose_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, 
-                                solvent_obj.eps_sam, solvent_obj.eps, sas, pzc, ref_pot, jump_coeff)
-    grad_bc, grad_phi_z, grad_sas = bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas)
-    lap_bc = bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, grad_sas)
+                                solvent_obj.eps_sam, solvent_obj.eps, pzc, ref_pot, jump_coeff)
+    grad_bc, grad_phi_z = bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z)
+    lap_bc = bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z)
 
     phi_tot += bc
 
-    grad_lneps = pbe_helper.product_vector_scalar(grad_eps, 1.0e0/eps)
+    grad_lneps = grad_eps / eps[:,None]
     get_rho_ions = solvent_obj._gen_get_rho_ions()
     rho_ions = get_rho_ions(solvent_obj, phi_tot, cb, lambda_r, T)
 
@@ -269,8 +528,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
     rho_iter = numpy.zeros(tot_ngrids)
     rho_pol = (1.0e0 - eps) / eps * rho_tot + rho_iter
 
-
-    rho_iter_bc = 0.25e0 / PI * pbe_helper.product_vector_vector(grad_lneps, grad_bc)
+    rho_iter_bc = 0.25e0 / PI * (grad_lneps * grad_bc).sum(axis=1)
 
     logger.info(solvent_obj, 'Bias vs. PZC = %.15f V', (bias - (ref_pot - pzc)) * HARTREE2EV)
     solver._initialize()
@@ -278,6 +536,8 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
     max_cycle = solvent_obj.max_cycle
     iter = 0
     phik = None
+    t0 = (logger.process_clock(), logger.perf_counter())
+    
     while iter < max_cycle:
         phi_old = phi_tot
         rho_iter_old = rho_iter
@@ -286,7 +546,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
 
         phi_opt = phi_old - bc
         dphi_opt = solver.gradient(phi_opt, phik, ngrids, spacing)
-        rho_iter = 0.25e0 / PI * pbe_helper.product_vector_vector(grad_lneps, dphi_opt)
+        rho_iter = 0.25e0 / PI * (grad_lneps * dphi_opt).sum(axis=1)
 
         rho_iter = eta * rho_iter + (1.0e0 - eta) * rho_iter_old
 
@@ -299,7 +559,10 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
 
         rho_ions = get_rho_ions(solvent_obj, phi_tot, cb, lambda_r, T)
         if numpy.isnan(rho_ions).any():
-            raise RuntimeError('PBE solver encountered infinite ion charge density!')
+            logger.info(solvent_obj, 'Skipping PBE due to infinite ion charge density.')
+            logger.info(solvent_obj, 'This should be okay for initial SCF cycles,')
+            logger.info(solvent_obj, 'but not acceptable at the final iteration.')
+            return None, None, None
 
         rho_ions = kappa * rho_ions + (1.0e0 - kappa) * rho_ions_old
 
@@ -311,6 +574,7 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
             logger.info(solvent_obj, 'PBE Converged, max|drho(pol)| = %4.3e, max|drho(ions)| = %4.3e',
                         drho_pol.max(), drho_ions.max())
             solver._finalize()
+            t0 = logger.timer(solvent_obj, 'phi_tot', *t0)
             return phi_tot, rho_ions, rho_pol
         iter += 1
     logger.info(solvent_obj, 'PBE failed to converge.')
@@ -318,8 +582,127 @@ def make_phi(solvent_obj, bias=None, phi_sol=None, rho_sol=None):
                        'Decreasing grid size might help convergence.')
 
 class PBE(ddcosmo.DDCOSMO):
-    _keys = {'cb', 'T', 'bias', 'stern_sam', 'delta1', 'delta2', 'eps_sam', 'probe', 'kappa', 'stern_mol', 'cation_rad', 'anion_rad', 'rho_sol', 'rho_ions', 'rho_pol', 'phi_pol', 'phi_tot', 'phi_sol', 'L', 'nelectron', 'phi_pol', 'thresh_pol', 'thresh_ions', 'thresh_amg', 'gpu_accel', 'cycle', 'atom_bottom', 'pzc', 'jump_coeff', 'ref_pot', 'solver', 'equiv'}
+    """
+    Poisson-Boltzmann Electrolyte (PBE) solvation model for electrochemical interfaces.
+
+    This class implements a non-linear PB solver for continuum solvation of molecules
+    at electrode/liquid interfaces. It models the electric double layer via:
+
+    1. **Dielectric function**: Position-dependent ε(r) from SAM through Stern layer to bulk
+    2. **Ion concentration**: From Boltzmann distribution at the applied potential
+    3. **Stern layers**: Excluded region near molecule and at SAM surface
+    4. **Boundary conditions**: Gouy-Chapman-Stern conditions at the electrode
+
+    Integrates with PySCF's DFT and wave function methods to compute solvation
+    contributions to the effective potential and energy.
+
+    Key Attributes
+    ---------------
+    mol : gto.Mole
+        Molecule specification.
+    grids : Grids
+        Cubic integration grid (defined in this module).
+    cb : float
+        Ion concentration (cation + anion) in mol/L. Default: 0.0 (no electrolyte).
+    T : float
+        Temperature in Kelvin. Default: 298.15 K.
+    eps : float
+        Bulk solvent dielectric constant. Default: 78.3553 (water).
+    eps_sam : float
+        SAM dielectric constant. Default: 2.284 (benzene-like).
+    stern_mol : float
+        Stern layer thickness at molecule surface in Å. Default: 0.44 Å.
+    stern_sam : float
+        Stern layer thickness at SAM in Å. Default: 8.1 Å.
+    probe : float
+        Solvent probe radius in Å. Default: 1.4 Å (water).
+    delta1, delta2 : float
+        Broadening widths for error function transitions in Å. Default: 0.265 Å.
+    cation_rad, anion_rad : float
+        Hydrated ion radii in Å. Default: 4.3 Å (1:1 electrolyte).
+    pzc : float
+        Potential of zero charge in eV. Default: -4.8 eV (Au electrode).
+    ref_pot : float
+        Reference potential (electrode Fermi level) in eV for bias calculation.
+    jump_coeff : float
+        Jump discontinuity coefficient at electrode. Default: 0.73115 (jellium + 1M salt).
+    nelectron : float
+        Number of electrons (from SCF). Set by pbe_for_scf().
+    bias : float
+        Applied bias potential in a.u. (set by WBL or user).
+
+    Parameters
+    ----------
+    mol : gto.Mole
+        Molecule specification.
+    cb : float, optional
+        Ion concentration in mol/L. Default: 0.0.
+    cation_rad : float, optional
+        Cation radius in Å. Default: 4.3.
+    anion_rad : float, optional
+        Anion radius in Å. Default: 4.3.
+    T : float, optional
+        Temperature in K. Default: 298.15.
+    stern_mol : float, optional
+        Stern layer at molecule in Å. Default: 0.44.
+    stern_sam : float, optional
+        Stern layer at SAM in Å. Default: 8.1.
+    equiv : int, optional
+        Equivalence distance (internal use). Default: 11.
+    **kwargs
+        Passed to Grids constructor (length, ngrids, spacing).
+
+    Examples
+    --------
+    Basic solvation with default settings:
+
+    >>> from pyscf import gto, dft
+    >>> from fcdft.solvent.pbe import PBE, pbe_for_scf
+    >>> mol = gto.M(atom='O 0 0 0; H 0 1 0; H 0 0 1', basis='6-31g')
+    >>> cm = PBE(mol)
+    >>> cm.eps = 78.3553  # Water
+    >>> mf = dft.RKS(mol, xc='b3lyp')
+    >>> solmf = pbe_for_scf(mf, cm)
+    >>> solmf.kernel()
+
+    Electrochemical setup with WBL and applied potential:
+
+    >>> from fcdft.wbl.rks import WBLMoleculeRKS
+    >>> wbl = WBLMoleculeRKS(mol, xc='pbe', broad=0.01, ref_pot=-4.5)
+    >>> wbl.kernel()
+    >>> cm = PBE(mol, cb=1.0, stern_sam=3.0)
+    >>> cm.eps = 78.3553
+    >>> cm.eps_sam = 2.284
+    >>> solmf = pbe_for_scf(wbl, cm)
+    >>> solmf.kernel()
+    """
+    _keys = {'cb', 'T', 'bias', 'stern_sam', 'delta1', 'delta2', 'eps_sam', 'probe', 'kappa', 'stern_mol', 'cation_rad', 'anion_rad', 'rho_sol', 'rho_ions', 'rho_pol', 'phi_pol', 'phi_tot', 'phi_sol', 'L', 'nelectron', 'phi_pol', 'thresh_pol', 'thresh_ions', 'thresh_amg', 'gpu_accel', 'cycle', 'atom_bottom', 'pzc', 'jump_coeff', 'ref_pot', 'solver', 'equiv', 'custom_shift'}
+
     def __init__(self, mol, cb=0.0, cation_rad=4.3, anion_rad=4.3, T=298.15, stern_mol=0.44, stern_sam=8.1, equiv=11, **kwargs):
+        """
+        Initialize PBE solvation model.
+
+        Parameters
+        ----------
+        mol : gto.Mole
+            Molecule specification.
+        cb : float, optional
+            Ion concentration in mol/L. Default: 0.0 (no electrolyte).
+        cation_rad : float, optional
+            Cation hydrated radius in Å. Default: 4.3.
+        anion_rad : float, optional
+            Anion hydrated radius in Å. Default: 4.3.
+        T : float, optional
+            Temperature in K. Default: 298.15.
+        stern_mol : float, optional
+            Stern layer thickness at molecule in Å. Default: 0.44.
+        stern_sam : float, optional
+            Stern layer thickness at SAM in Å. Default: 8.1.
+        equiv : int, optional
+            Equivalence distance (internal). Default: 11.
+        **kwargs
+            Additional arguments for Grids (length, ngrids, spacing, etc.).
+        """
         ddcosmo.DDCOSMO.__init__(self, mol)
         self.grids = Grids(mol, **kwargs)
         self.radii_table = VDW # in a.u.
@@ -355,6 +738,7 @@ class PBE(ddcosmo.DDCOSMO):
         self.gpu_accel = False
         self.atom_bottom = None
         self.solver = None
+        self.custom_shift = None # Should be given in angs
         
     def dump_flags(self, verbose=None):
         logger.info(self, '******** %s ********', self.__class__)
@@ -389,6 +773,10 @@ class PBE(ddcosmo.DDCOSMO):
         rho_sol = self.make_rho_sol(phi_sol, ngrids, spacing)
         self.rho_sol = rho_sol
         phi_tot, rho_ions, rho_pol = self.make_phi(bias, phi_sol, rho_sol)
+
+        if phi_tot is None:
+            return 0.0, numpy.zeros(dm.shape)
+        
         self.phi_tot = phi_tot
         self.rho_pol = rho_pol
         self.rho_ions = rho_ions
@@ -396,36 +784,23 @@ class PBE(ddcosmo.DDCOSMO):
         phi_pol = phi_tot - phi_sol
         self.phi_pol = phi_pol
 
-        # # Zero out the boundary values to eliminate error
-        # ngrids = self.grids.ngrids
-        # rho_sol = rho_sol.reshape((ngrids,)*3)
-        # idx = numpy.array([-4, -3, -2, -1, 0, 1, 2, 3])
-        # rho_sol[idx,:,:] = 0.0e0
-        # rho_sol[:,idx,:] = 0.0e0
-        # rho_sol[:,:,idx] = 0.0e0
-        # rho_sol = rho_sol.flatten()
-
-        # Reaction field contribution
-        Gsolv_elst = numpy.dot(rho_sol, phi_pol)*spacing**3
+        epbe = numpy.dot(rho_sol, phi_pol)*spacing**3
 
         # Dielectric contribution by Fisicaro
-        Gsolv_diel = -0.5e0*(numpy.dot(rho_sol, phi_pol)
-                           + numpy.dot(rho_ions, phi_tot))*spacing**3
+        epbe -= 0.5*(numpy.dot(rho_sol, phi_pol)
+                     + numpy.dot(rho_ions, phi_tot)) * spacing**3
 
         # Osmotic pressure contribution
         cb = self.cb * M2HARTREE
         lambda_r = self._intermediates['lambda_r']
         T = self.T
-        if self.cb == 0.0e0:
-            Gsolv_osm = 0.0e0
+        if self.cb == 0.0:
+            pass
         else:
-            Gsolv_osm = self.energy_osm(phi_tot, cb, lambda_r, T, spacing)
+            epbe += self.energy_osm(phi_tot, cb, lambda_r, T, spacing)
 
-        logger.info(self, "E_es= %.15g, E_diel= %.15g, E_osm= %.15g", Gsolv_elst, Gsolv_diel, Gsolv_osm)
-
-        Gsolv = Gsolv_elst + Gsolv_diel + Gsolv_osm
         vmat = self._get_vmat(phi_pol)
-        return Gsolv, vmat
+        return epbe, vmat
 
     def _get_vmat(self, phi_pol):
         logger.info(self, 'Constructing the correction to the Hamiltonian...')
@@ -433,15 +808,16 @@ class PBE(ddcosmo.DDCOSMO):
         coords = self.grids.coords
         spacing = self.grids.spacing
         nao = mol.nao
+        tot_ngrids = self.grids.get_ngrids()
 
         vmat = numpy.zeros([nao, nao], order='C')
         max_memory = self.max_memory - lib.current_memory()[0]
         blksize = int(max(max_memory*.9e6/8/nao, 400))
-        vmat = numpy.zeros([nao, nao], order='C')
-        for p0, p1 in lib.prange(0, phi_pol.size, blksize):
+        for p0, p1 in lib.prange(0, tot_ngrids, blksize):
             ao = mol.eval_gto('GTOval', coords[p0:p1])
-            vmat -= 0.5e0*numpy.dot(ao.T * phi_pol[p0:p1], ao)
-        vmat = vmat * spacing**3
+            buf = ao * phi_pol[p0:p1, None]
+            vmat -= 0.5*numpy.dot(buf.T, ao)
+        vmat *= spacing**3
         return vmat
     
     def _get_v(self):
@@ -468,6 +844,9 @@ class PBE(ddcosmo.DDCOSMO):
                 coords += shift - numpy.array([0.0e0, 0.0e0, r_atom_bottom])
                 self.grids.coords = coords
 
+            if self.custom_shift is not None:
+                self.grids.coords -= numpy.asarray(self.custom_shift)
+
         logger.info(self, 'Grid spacing = %.5f Angstrom', self.grids.spacing * BOHR)
 
         mol = self.mol
@@ -486,6 +865,8 @@ class PBE(ddcosmo.DDCOSMO):
 
         lambda_r = self.make_lambda(mol, probe, stern_mol, stern_sam, coords, delta1, delta2, atomic_radii)
         sas = self.make_sas(mol, probe, coords, delta2, atomic_radii)
+        grad_sas = self.make_grad_sas(mol, probe, coords, delta2, atomic_radii)
+        lap_sas = self.make_lap_sas(mol, probe, coords, delta2, atomic_radii)
         eps = self.make_eps(coords, eps_sam, eps_bulk, stern_sam, delta1, sas)
         grad_eps = self.make_grad_eps(mol, coords, eps_sam, eps_bulk, probe, stern_sam, delta1, delta2, atomic_radii, sas)
 
@@ -498,7 +879,9 @@ class PBE(ddcosmo.DDCOSMO):
             'lambda_r': lambda_r,
             'eps': eps,
             'grad_eps': grad_eps,
-            'sas': sas
+            'sas': sas,
+            'grad_sas': grad_sas,
+            'lap_sas': lap_sas
         }
         if self.solver == 'fft2d':
             from fcdft.solvent.solver import fft2d
@@ -583,6 +966,8 @@ class PBE(ddcosmo.DDCOSMO):
     
     make_lambda = make_lambda
     make_sas = make_sas
+    make_grad_sas = make_grad_sas
+    make_lap_sas = make_lap_sas
     make_eps = make_eps
     make_grad_eps = make_grad_eps
     make_phi_sol = make_phi_sol
@@ -650,13 +1035,9 @@ H        1.3390319419     -0.0095801980     -0.2157234144''',
     mf = RKS(mol, xc='pbe')
     from fcdft.wbl.rks import *
     wblmf = WBLMoleculeRKS(mol, xc='pbe', broad=0.01, smear=0.2, nelectron=70.00, ref_pot=5.51)
-    wblmf.pot_cycle=100
-    wblmf.pot_damp=0.7
-    wblmf.conv_tol=1e-7
+    wblmf.max_cycle=1
     wblmf.kernel()
-    dm = wblmf.make_rdm1()
     cm = PBE(mol, cb=1.0, length=20, ngrids=41, stern_sam=8.1, equiv=11)
-    cm._dm = dm
     cm.atom_bottom=12
     cm.solver = 'multigrid'
     solmf = pbe_for_scf(wblmf, cm)

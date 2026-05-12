@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fcdft.lib package &#8212; FC-DFT 1.0.0 documentation</title>
+    <title>fcdft.lib package &#8212; FC-DFT 1.1.5 documentation</title>
   
   
   
@@ -38,13 +38,15 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/documentation_options.js?v=a48ae3df"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'fcdft.lib';</script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="fcdft.lifcdft package" href="fcdft.lifcdft.html" />
+    <link rel="prev" title="fcdft.jellium package" href="fcdft.jellium.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -109,7 +111,7 @@
   
   
   
-    <p class="title logo__title">FC-DFT 1.0.0 documentation</p>
+    <p class="title logo__title">FC-DFT 1.1.5 documentation</p>
   
 </a></div>
     
@@ -140,6 +142,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="about.html">
     About
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="fcdft.html">
+    fcdft package
   </a>
 </li>
 
@@ -252,6 +261,13 @@
   </a>
 </li>
 
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="fcdft.html">
+    fcdft package
+  </a>
+</li>
+
   </ul>
 </nav></div>
           
@@ -345,6 +361,9 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
+    
+    <li class="breadcrumb-item"><a href="fcdft.html" class="nav-link">fcdft package</a></li>
+    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fcdft.lib package</span></li>
   </ul>
 </nav>
@@ -367,68 +386,20 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
 </section>
-<section id="module-fcdft.lib.fcdft_helper">
-<span id="fcdft-lib-fcdft-helper-module"></span><h2>fcdft.lib.fcdft_helper module<a class="headerlink" href="#module-fcdft.lib.fcdft_helper" title="Link to this heading">#</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.lib.fcdft_helper.quadrature">
-<span class="sig-prename descclassname"><span class="pre">fcdft.lib.fcdft_helper.</span></span><span class="sig-name descname"><span class="pre">quadrature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mo_energy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abscissas</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fermi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">broad</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lib.fcdft_helper.quadrature" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.lib.fcdft_helper.roots_legendre">
-<span class="sig-prename descclassname"><span class="pre">fcdft.lib.fcdft_helper.</span></span><span class="sig-name descname"><span class="pre">roots_legendre</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lib.fcdft_helper.roots_legendre" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
+<section id="fcdft-lib-fcdft-helper-module">
+<h2>fcdft.lib.fcdft_helper module<a class="headerlink" href="#fcdft-lib-fcdft-helper-module" title="Link to this heading">#</a></h2>
 </section>
 <section id="module-fcdft.lib.misc">
 <span id="fcdft-lib-misc-module"></span><h2>fcdft.lib.misc module<a class="headerlink" href="#module-fcdft.lib.misc" title="Link to this heading">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.lib.misc.load_library">
-<span class="sig-prename descclassname"><span class="pre">fcdft.lib.misc.</span></span><span class="sig-name descname"><span class="pre">load_library</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">libname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lib.misc.load_library" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.lib.misc.</span></span><span class="sig-name descname"><span class="pre">load_library</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">libname</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/lib/misc.html#load_library"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.lib.misc.load_library" title="Link to this definition">#</a></dt>
 <dd><p>Load C shared library</p>
 </dd></dl>
 
 </section>
-<section id="module-fcdft.lib.pbe_helper">
-<span id="fcdft-lib-pbe-helper-module"></span><h2>fcdft.lib.pbe_helper module<a class="headerlink" href="#module-fcdft.lib.pbe_helper" title="Link to this heading">#</a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.lib.pbe_helper.db_force_helper">
-<span class="sig-prename descclassname"><span class="pre">fcdft.lib.pbe_helper.</span></span><span class="sig-name descname"><span class="pre">db_force_helper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atom_coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps_sam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps_bulk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern_sam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vdw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dphi_opt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_bc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi_tot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ngrids</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lib.pbe_helper.db_force_helper" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.lib.pbe_helper.distance_calculator">
-<span class="sig-prename descclassname"><span class="pre">fcdft.lib.pbe_helper.</span></span><span class="sig-name descname"><span class="pre">distance_calculator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atom_coords</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lib.pbe_helper.distance_calculator" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.lib.pbe_helper.grad_eps">
-<span class="sig-prename descclassname"><span class="pre">fcdft.lib.pbe_helper.</span></span><span class="sig-name descname"><span class="pre">grad_eps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atom_coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coords</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps_sam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern_sam</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_vdw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sdiel</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lib.pbe_helper.grad_eps" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.lib.pbe_helper.lap_sas">
-<span class="sig-prename descclassname"><span class="pre">fcdft.lib.pbe_helper.</span></span><span class="sig-name descname"><span class="pre">lap_sas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">erf_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lib.pbe_helper.lap_sas" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.lib.pbe_helper.product_atom_vector_scalar">
-<span class="sig-prename descclassname"><span class="pre">fcdft.lib.pbe_helper.</span></span><span class="sig-name descname"><span class="pre">product_atom_vector_scalar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lib.pbe_helper.product_atom_vector_scalar" title="Link to this definition">#</a></dt>
-<dd><p>numpy.einsum(‘ijk,jk-&gt;ijk’)</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.lib.pbe_helper.product_vector_scalar">
-<span class="sig-prename descclassname"><span class="pre">fcdft.lib.pbe_helper.</span></span><span class="sig-name descname"><span class="pre">product_vector_scalar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lib.pbe_helper.product_vector_scalar" title="Link to this definition">#</a></dt>
-<dd><p>numpy.einsum(‘ij,i-&gt;ij’)</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="fcdft.lib.pbe_helper.product_vector_vector">
-<span class="sig-prename descclassname"><span class="pre">fcdft.lib.pbe_helper.</span></span><span class="sig-name descname"><span class="pre">product_vector_vector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lib.pbe_helper.product_vector_vector" title="Link to this definition">#</a></dt>
-<dd><p>numpy.einsum(‘ij,ij-&gt;i’)</p>
-</dd></dl>
-
+<section id="fcdft-lib-pbe-helper-module">
+<h2>fcdft.lib.pbe_helper module<a class="headerlink" href="#fcdft-lib-pbe-helper-module" title="Link to this heading">#</a></h2>
 </section>
 <section id="module-fcdft.lib">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-fcdft.lib" title="Link to this heading">#</a></h2>
@@ -445,6 +416,24 @@
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="fcdft.jellium.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">fcdft.jellium package</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="fcdft.lifcdft.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">fcdft.lifcdft package</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -465,25 +454,12 @@
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-fcdft.lib.fcdft_helper">fcdft.lib.fcdft_helper module</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.lib.fcdft_helper.quadrature"><code class="docutils literal notranslate"><span class="pre">quadrature()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.lib.fcdft_helper.roots_legendre"><code class="docutils literal notranslate"><span class="pre">roots_legendre()</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft-lib-fcdft-helper-module">fcdft.lib.fcdft_helper module</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-fcdft.lib.misc">fcdft.lib.misc module</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.lib.misc.load_library"><code class="docutils literal notranslate"><span class="pre">load_library()</span></code></a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-fcdft.lib.pbe_helper">fcdft.lib.pbe_helper module</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.lib.pbe_helper.db_force_helper"><code class="docutils literal notranslate"><span class="pre">db_force_helper()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.lib.pbe_helper.distance_calculator"><code class="docutils literal notranslate"><span class="pre">distance_calculator()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.lib.pbe_helper.grad_eps"><code class="docutils literal notranslate"><span class="pre">grad_eps()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.lib.pbe_helper.lap_sas"><code class="docutils literal notranslate"><span class="pre">lap_sas()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.lib.pbe_helper.product_atom_vector_scalar"><code class="docutils literal notranslate"><span class="pre">product_atom_vector_scalar()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.lib.pbe_helper.product_vector_scalar"><code class="docutils literal notranslate"><span class="pre">product_vector_scalar()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.lib.pbe_helper.product_vector_vector"><code class="docutils literal notranslate"><span class="pre">product_vector_vector()</span></code></a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft-lib-pbe-helper-module">fcdft.lib.pbe_helper module</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-fcdft.lib">Module contents</a></li>
 </ul>
   </nav></div>
@@ -522,7 +498,7 @@
 
   <p class="copyright">
     
-      © Copyright 2025, Jun-Hyeong Kim.
+      © Copyright 2026, Jun-Hyeong Kim.
       <br/>
     
   </p>
@@ -531,7 +507,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     <br/>
   </p>
 </div>

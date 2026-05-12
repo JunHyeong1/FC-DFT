@@ -1,4 +1,4 @@
-add_library(pbe SHARED boundary_condition.c poisson.c)
+add_library(pbe SHARED boundary_condition.c poisson.c pbe_grad.c)
 
 find_package(GSL REQUIRED)
 find_package(LAPACK REQUIRED)

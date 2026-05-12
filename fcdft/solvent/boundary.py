@@ -1,56 +1,16 @@
 import numpy
 import scipy
-from fcdft.solvent.pbe import HARTREE2EV, KB2HARTREE
+import fcdft
+import os
+import ctypes
+from fcdft.solvent.pbe import KB2HARTREE
 from pyscf.data.nist import BOHR
-from fcdft.lib import pbe_helper
+from pyscf import lib
+
+libpbe = lib.load_library(os.path.join(fcdft.__path__[0], 'lib', 'libpbe'))
 
 PI = numpy.pi
 SQRT3 = numpy.sqrt(3)
-
-def make_grad_sas(solvent_obj):
-    mol = solvent_obj.mol
-    coords = solvent_obj.grids.coords
-    atomic_radii = solvent_obj.get_atomic_radii()
-    probe = solvent_obj.probe/ BOHR
-    delta2 = solvent_obj.delta2 / BOHR
-    atom_coords = mol.atom_coords()
-    grad_sas = numpy.zeros_like(coords)
-    r = atom_coords[:,None,:]
-    rp = coords - r
-    dist = pbe_helper.distance_calculator(coords, atom_coords)
-    x = (dist - atomic_radii[:,None] - probe) / delta2
-    _erf = scipy.special.erf(x)
-    erf_list = 0.5e0 * (1.0e0 + _erf)
-    er = pbe_helper.product_atom_vector_scalar(rp, 1.0e0/dist)
-    for i in range(mol.natm):
-        mask = numpy.ones(mol.natm, dtype=bool)
-        mask[i] = False
-        erf = numpy.prod(erf_list[mask], axis=0)
-        gauss = numpy.exp(-x[i]**2)
-        coeff = 1.0e0 / delta2 / numpy.sqrt(PI) * gauss * erf
-        grad_sas += pbe_helper.product_vector_scalar(er[i], coeff)
-    return grad_sas
-
-def make_lap_sas(solvent_obj):
-    mol = solvent_obj.mol
-    coords = solvent_obj.grids.coords
-    atomic_radii = solvent_obj.get_atomic_radii()
-    probe = solvent_obj.probe / BOHR
-    delta2 = solvent_obj.delta2 / BOHR
-    atom_coords = mol.atom_coords()
-
-    r = atom_coords[:,None,:]
-    rp = coords - r
-    dist = pbe_helper.distance_calculator(coords, atom_coords)
-    x = (dist - atomic_radii[:,None] - probe) / delta2
-    _erf = scipy.special.erf(x)
-    erf_list = 0.5e0 * (1.0e0 + _erf)
-    er = pbe_helper.product_atom_vector_scalar(rp, 1.0e0/dist)
-    gauss = numpy.exp(-x**2)
-    grad_list = pbe_helper.product_atom_vector_scalar(er, 1.0e0/delta2/numpy.sqrt(PI)*gauss)
-    lap_sas = pbe_helper.lap_sas(erf_list, grad_list, x, delta2)
-
-    return lap_sas
 
 def phi_a_finder(cost_func, jac, bottom):
     # Bisection method for a good initial guess
@@ -61,7 +21,7 @@ def phi_a_finder(cost_func, jac, bottom):
                                   maxiter=1000)
     return phi_a
 
-def one_to_one_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps, sas, pzc, ref_pot, jump_coeff):
+def one_to_one_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps, pzc, ref_pot, jump_coeff):
     """Boundary condition generator for 1:1 electrolyte by the the Gouy-Chapman-Stern model.
 
     Args:
@@ -82,6 +42,7 @@ def one_to_one_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps
     bottom = jump_coeff * (bias - (ref_pot - pzc))
     phi_z = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
     kappa = solvent_obj.kappa
+    sas = solvent_obj._intermediates['sas']
     if bottom == 0.0e0:
         return phi_z.ravel()*sas, phi_z.ravel(), 0.0e0
 
@@ -106,7 +67,7 @@ def one_to_one_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps
 
     return phi_z*sas, phi_z, slope
 
-def one_to_one_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas):
+def one_to_one_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z):
     """Analytic gradient of the boundary conditions for 1:1 Electrolyte.
 
     Args:
@@ -116,7 +77,6 @@ def one_to_one_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas):
         T (float): Temperature.
         slope (float): Negative of electric field inside the Stern layer.
         phi_z (1D numpy.ndarray): Boundary value before applying the solvent-accessible surface.
-        sas (1D numpy.ndarray): Solvent-accessible surface.
 
     Returns:
         2D numpy.ndarray, 2D numpy.ndarray, 2D numpy.ndarray: Analytic gradient of the boundary values, 
@@ -126,6 +86,8 @@ def one_to_one_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas):
     dphidz = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
     _phi_z = phi_z.reshape((ngrids,)*3)
     stern_sam = solvent_obj.stern_sam / BOHR
+    sas = solvent_obj._intermediates['sas']
+    grad_sas = solvent_obj._intermediates['grad_sas']
 
     kappa = solvent_obj.kappa
     z = numpy.arange(ngrids, dtype=numpy.float64) * spacing
@@ -137,12 +99,12 @@ def one_to_one_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas):
     grad_phi_z = numpy.zeros((ngrids**3,3), dtype=numpy.float64)
     grad_phi_z[:,2] = dphidz
 
-    grad_sas = make_grad_sas(solvent_obj)
+    grad_bc = grad_phi_z * sas[:,None]
+    grad_bc += grad_sas * phi_z[:,None]
+    
+    return grad_bc, grad_phi_z
 
-    grad_bc = pbe_helper.product_vector_scalar(grad_phi_z, sas) + pbe_helper.product_vector_scalar(grad_sas, phi_z)
-    return grad_bc, grad_phi_z, grad_sas
-
-def one_to_one_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, grad_sas):
+def one_to_one_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z):
     """Laplacian of the boundary values for 1:1 Electrolyte.
 
     Args:
@@ -152,8 +114,6 @@ def one_to_one_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, g
         T (float): Temperature.
         phi_z (1D numpy.ndarray): Boundary value before applying the solvent-accessible surface.
         grad_phi_z (2D numpy.ndarray): Gradient of the boundary values before applying the solvent accessible surface.
-        sas (1D numpy.ndarray): Solvent-accessible surface.
-        grad_sas (2D numpy.ndarray): Gradient of the solvent-accessible surface.
 
     Returns:
         1D numpy.ndarray: Laplacian of the boundary values.
@@ -161,6 +121,9 @@ def one_to_one_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, g
     d2phidz2 = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
     _phi_z = phi_z.reshape((ngrids,)*3)
     _grad_phi_z = grad_phi_z[:,2].reshape((ngrids,)*3)
+    sas = solvent_obj._intermediates['sas']
+    grad_sas = solvent_obj._intermediates['grad_sas']
+    lap_sas = solvent_obj._intermediates['lap_sas']
 
     # Laplacian of phi(z)
     stern_sam = solvent_obj.stern_sam / BOHR
@@ -169,15 +132,17 @@ def one_to_one_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, g
     idx = z > stern_sam
     d2phidz2[:,:,idx] = -kappa*numpy.cosh(-_phi_z[:,:,idx]/2.0e0/KB2HARTREE/T)*_grad_phi_z[:,:,idx]
     d2phidz2 = d2phidz2.ravel()
-    lap_sas = make_lap_sas(solvent_obj)
-    lap_bc = d2phidz2*sas + phi_z*lap_sas + 2.0e0 * pbe_helper.product_vector_vector(grad_phi_z, grad_sas)
+
+    lap_bc = d2phidz2*sas + phi_z*lap_sas
+    lap_bc += 2.0*(grad_phi_z * grad_sas).sum(axis=1)
 
     return lap_bc
 
-def two_to_one_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps, sas, pzc, ref_pot, jump_coeff):
+def two_to_one_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps, pzc, ref_pot, jump_coeff):
     bottom = jump_coeff * (bias - (ref_pot - pzc))
     phi_z = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
     kappa = solvent_obj.kappa
+    sas = solvent_obj._intermediates['sas']
     if bottom == 0.0e0:
         return phi_z.ravel()*sas, phi_z.ravel(), 0.0e0
 
@@ -222,10 +187,12 @@ def two_to_one_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps
     phi_z = phi_z.ravel()
     return phi_z*sas, phi_z, slope
 
-def two_to_one_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas):
+def two_to_one_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z):
     dphidz = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
     _phi_z = phi_z.reshape((ngrids,)*3)
     stern_sam = solvent_obj.stern_sam / BOHR
+    sas = solvent_obj._intermediates['sas']
+    grad_sas = solvent_obj._intermediates['grad_sas']
 
     kappa = solvent_obj.kappa
     z = numpy.arange(ngrids, dtype=numpy.float64) * spacing
@@ -239,12 +206,12 @@ def two_to_one_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas):
     grad_phi_z = numpy.zeros((ngrids**3, 3), dtype=numpy.float64)
     grad_phi_z[:,2] = dphidz
 
-    grad_sas = make_grad_sas(solvent_obj)
+    grad_bc = grad_phi_z * sas[:,None]
+    grad_bc += grad_sas * phi_z[:,None]
 
-    grad_bc = pbe_helper.product_vector_scalar(grad_phi_z, sas) + pbe_helper.product_vector_scalar(grad_sas, phi_z)
-    return grad_bc, grad_phi_z, grad_sas
+    return grad_bc, grad_phi_z
 
-def two_to_one_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, grad_sas):
+def two_to_one_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z):
     """Laplacian of the boundary values.
 
     Args:
@@ -263,6 +230,9 @@ def two_to_one_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, g
     d2phidz2 = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
     _phi_z = phi_z.reshape((ngrids,)*3)
     _grad_phi_z = grad_phi_z[:,2].reshape((ngrids,)*3)
+    sas = solvent_obj._intermediates['sas']
+    grad_sas = solvent_obj._intermediates['grad_sas']
+    lap_sas = solvent_obj._intermediates['lap_sas']
 
     # Laplacian of phi(z)
     stern_sam = solvent_obj.stern_sam / BOHR
@@ -281,15 +251,17 @@ def two_to_one_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, g
     d2phidz2[:,:,idx] += (1/(s-SQRT3*kappa)+1/(s+SQRT3*kappa))*dsdz*dxdz
 
     d2phidz2 = d2phidz2.flatten()
-    lap_sas = make_lap_sas(solvent_obj)
-    lap_bc = d2phidz2*sas + phi_z*lap_sas + 2.0e0 * pbe_helper.product_vector_vector(grad_phi_z, grad_sas)
+
+    lap_bc = d2phidz2*sas + phi_z*lap_sas
+    lap_bc += 2.0*(grad_phi_z * grad_sas).sum(axis=1)
 
     return lap_bc
 
-def one_to_two_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps, sas, pzc, ref_pot, jump_coeff):
+def one_to_two_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps, pzc, ref_pot, jump_coeff):
     bottom = jump_coeff * (bias - (ref_pot - pzc))
     phi_z = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
     kappa = solvent_obj.kappa
+    sas = solvent_obj._intermediates['sas']
     if bottom == 0.0e0:
         return phi_z.ravel()*sas, phi_z.ravel(), 0.0e0
 
@@ -334,10 +306,12 @@ def one_to_two_bc(solvent_obj, ngrids, spacing, bias, stern_sam, T, eps_sam, eps
     phi_z = phi_z.ravel()
     return phi_z*sas, phi_z, slope
 
-def one_to_two_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas):
+def one_to_two_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z):
     dphidz = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
     _phi_z = phi_z.reshape((ngrids,)*3)
     stern_sam = solvent_obj.stern_sam / BOHR
+    sas = solvent_obj._intermediates['sas']
+    grad_sas = solvent_obj._intermediates['grad_sas']
 
     kappa = solvent_obj.kappa
     z = numpy.arange(ngrids, dtype=numpy.float64) * spacing
@@ -351,15 +325,18 @@ def one_to_two_bc_grad(solvent_obj, ngrids, spacing, T, slope, phi_z, sas):
     grad_phi_z = numpy.zeros((ngrids**3, 3), dtype=numpy.float64)
     grad_phi_z[:,2] = dphidz
 
-    grad_sas = make_grad_sas(solvent_obj)
+    grad_bc = grad_phi_z * sas[:,None]
+    grad_bc += grad_sas * phi_z[:,None]
 
-    grad_bc = pbe_helper.product_vector_scalar(grad_phi_z, sas) + pbe_helper.product_vector_scalar(grad_sas, phi_z)
-    return grad_bc, grad_phi_z, grad_sas
+    return grad_bc, grad_phi_z
 
-def one_to_two_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, grad_sas):
+def one_to_two_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z):
     d2phidz2 = numpy.zeros((ngrids,)*3, dtype=numpy.float64)
     _phi_z = phi_z.reshape((ngrids,)*3)
     _grad_phi_z = grad_phi_z[:,2].reshape((ngrids,)*3)
+    sas = solvent_obj._intermediates['sas']
+    grad_sas = solvent_obj._intermediates['grad_sas']
+    lap_sas = solvent_obj._intermediates['lap_sas']
 
     # Laplacian of phi(z)
     stern_sam = solvent_obj.stern_sam / BOHR
@@ -378,7 +355,8 @@ def one_to_two_bc_lap(solvent_obj, ngrids, spacing, T, phi_z, grad_phi_z, sas, g
     d2phidz2[:,:,idx] += (1/(s-SQRT3*kappa)+1/(s+SQRT3*kappa))*dsdz*dxdz
 
     d2phidz2 = d2phidz2.flatten()
-    lap_sas = make_lap_sas(solvent_obj)
-    lap_bc = d2phidz2*sas + phi_z*lap_sas + 2.0e0 * pbe_helper.product_vector_vector(grad_phi_z, grad_sas)
+
+    lap_bc = d2phidz2*sas + phi_z*lap_sas
+    lap_bc += 2.0*(grad_phi_z * grad_sas).sum(axis=1)
 
     return lap_bc

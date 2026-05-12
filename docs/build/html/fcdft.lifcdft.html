@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fcdft.lifcdft package &#8212; FC-DFT 1.0.0 documentation</title>
+    <title>fcdft.lifcdft package &#8212; FC-DFT 1.1.5 documentation</title>
   
   
   
@@ -38,13 +38,15 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/documentation_options.js?v=a48ae3df"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'fcdft.lifcdft';</script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="fcdft.solvent package" href="fcdft.solvent.html" />
+    <link rel="prev" title="fcdft.lib package" href="fcdft.lib.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -109,7 +111,7 @@
   
   
   
-    <p class="title logo__title">FC-DFT 1.0.0 documentation</p>
+    <p class="title logo__title">FC-DFT 1.1.5 documentation</p>
   
 </a></div>
     
@@ -140,6 +142,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="about.html">
     About
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="fcdft.html">
+    fcdft package
   </a>
 </li>
 
@@ -252,6 +261,13 @@
   </a>
 </li>
 
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="fcdft.html">
+    fcdft package
+  </a>
+</li>
+
   </ul>
 </nav></div>
           
@@ -345,6 +361,9 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
+    
+    <li class="breadcrumb-item"><a href="fcdft.html" class="nav-link">fcdft package</a></li>
+    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fcdft.lifcdft package</span></li>
   </ul>
 </nav>
@@ -371,7 +390,7 @@
 <span id="fcdft-lifcdft-lifcdft-module"></span><h2>fcdft.lifcdft.lifcdft module<a class="headerlink" href="#module-fcdft.lifcdft.lifcdft" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="fcdft.lifcdft.lifcdft.LIFCDFT">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fcdft.lifcdft.lifcdft.</span></span><span class="sig-name descname"><span class="pre">LIFCDFT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LDA,VWN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lifcdft.lifcdft.LIFCDFT" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fcdft.lifcdft.lifcdft.</span></span><span class="sig-name descname"><span class="pre">LIFCDFT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'LDA,VWN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/lifcdft/lifcdft.html#LIFCDFT"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.lifcdft.lifcdft.LIFCDFT" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">UKS</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="fcdft.lifcdft.lifcdft.LIFCDFT.Hessian">
@@ -380,24 +399,18 @@
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="fcdft.lifcdft.lifcdft.LIFCDFT._finalize">
-<span class="sig-name descname"><span class="pre">_finalize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lifcdft.lifcdft.LIFCDFT._finalize" title="Link to this definition">#</a></dt>
-<dd><p>Hook for dumping results and clearing up the object.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="fcdft.lifcdft.lifcdft.LIFCDFT.build">
-<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lifcdft.lifcdft.LIFCDFT.build" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/lifcdft/lifcdft.html#LIFCDFT.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.lifcdft.lifcdft.LIFCDFT.build" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fcdft.lifcdft.lifcdft.LIFCDFT.dump_flags">
-<span class="sig-name descname"><span class="pre">dump_flags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lifcdft.lifcdft.LIFCDFT.dump_flags" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">dump_flags</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/lifcdft/lifcdft.html#LIFCDFT.dump_flags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.lifcdft.lifcdft.LIFCDFT.dump_flags" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fcdft.lifcdft.lifcdft.LIFCDFT.kernel">
-<span class="sig-name descname"><span class="pre">kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dm0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lifcdft.lifcdft.LIFCDFT.kernel" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dm0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/lifcdft/lifcdft.html#LIFCDFT.kernel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.lifcdft.lifcdft.LIFCDFT.kernel" title="Link to this definition">#</a></dt>
 <dd><p>SCF main driver</p>
 <dl class="simple">
 <dt>Kwargs:</dt><dd><dl class="simple">
@@ -421,19 +434,19 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fcdft.lifcdft.lifcdft.LIFCDFT.newton">
-<span class="sig-name descname"><span class="pre">newton</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lifcdft.lifcdft.LIFCDFT.newton" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">newton</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/lifcdft/lifcdft.html#LIFCDFT.newton"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.lifcdft.lifcdft.LIFCDFT.newton" title="Link to this definition">#</a></dt>
 <dd><p>Create an SOSCF object based on the mean-field object</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fcdft.lifcdft.lifcdft.LIFCDFT.nuc_grad_method">
-<span class="sig-name descname"><span class="pre">nuc_grad_method</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lifcdft.lifcdft.LIFCDFT.nuc_grad_method" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">nuc_grad_method</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/lifcdft/lifcdft.html#LIFCDFT.nuc_grad_method"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.lifcdft.lifcdft.LIFCDFT.nuc_grad_method" title="Link to this definition">#</a></dt>
 <dd><p>Hook to create object for analytical nuclear gradients.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fcdft.lifcdft.lifcdft.LIFCDFT.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.lifcdft.lifcdft.LIFCDFT.reset" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/lifcdft/lifcdft.html#LIFCDFT.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.lifcdft.lifcdft.LIFCDFT.reset" title="Link to this definition">#</a></dt>
 <dd><p>Reset mol and relevant attributes associated to the old mol object</p>
 </dd></dl>
 
@@ -455,6 +468,24 @@
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="fcdft.lib.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">fcdft.lib package</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="fcdft.solvent.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">fcdft.solvent package</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -478,7 +509,6 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-fcdft.lifcdft.lifcdft">fcdft.lifcdft.lifcdft module</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.lifcdft.lifcdft.LIFCDFT"><code class="docutils literal notranslate"><span class="pre">LIFCDFT</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.lifcdft.lifcdft.LIFCDFT.Hessian"><code class="docutils literal notranslate"><span class="pre">LIFCDFT.Hessian()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.lifcdft.lifcdft.LIFCDFT._finalize"><code class="docutils literal notranslate"><span class="pre">LIFCDFT._finalize()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.lifcdft.lifcdft.LIFCDFT.build"><code class="docutils literal notranslate"><span class="pre">LIFCDFT.build()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.lifcdft.lifcdft.LIFCDFT.dump_flags"><code class="docutils literal notranslate"><span class="pre">LIFCDFT.dump_flags()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#fcdft.lifcdft.lifcdft.LIFCDFT.kernel"><code class="docutils literal notranslate"><span class="pre">LIFCDFT.kernel()</span></code></a></li>
@@ -527,7 +557,7 @@
 
   <p class="copyright">
     
-      © Copyright 2025, Jun-Hyeong Kim.
+      © Copyright 2026, Jun-Hyeong Kim.
       <br/>
     
   </p>
@@ -536,7 +566,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     <br/>
   </p>
 </div>

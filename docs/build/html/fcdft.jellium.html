@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fcdft.jellium package &#8212; FC-DFT 1.0.0 documentation</title>
+    <title>fcdft.jellium package &#8212; FC-DFT 1.1.5 documentation</title>
   
   
   
@@ -38,13 +38,15 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/documentation_options.js?v=a48ae3df"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'fcdft.jellium';</script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="fcdft.lib package" href="fcdft.lib.html" />
+    <link rel="prev" title="fcdft.hessian package" href="fcdft.hessian.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -109,7 +111,7 @@
   
   
   
-    <p class="title logo__title">FC-DFT 1.0.0 documentation</p>
+    <p class="title logo__title">FC-DFT 1.1.5 documentation</p>
   
 </a></div>
     
@@ -140,6 +142,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="about.html">
     About
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="fcdft.html">
+    fcdft package
   </a>
 </li>
 
@@ -252,6 +261,13 @@
   </a>
 </li>
 
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="fcdft.html">
+    fcdft package
+  </a>
+</li>
+
   </ul>
 </nav></div>
           
@@ -345,6 +361,9 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
+    
+    <li class="breadcrumb-item"><a href="fcdft.html" class="nav-link">fcdft package</a></li>
+    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fcdft.jellium package</span></li>
   </ul>
 </nav>
@@ -371,11 +390,11 @@
 <span id="fcdft-jellium-jellium-module"></span><h2>fcdft.jellium.jellium module<a class="headerlink" href="#module-fcdft.jellium.jellium" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="fcdft.jellium.jellium.Jellium">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fcdft.jellium.jellium.</span></span><span class="sig-name descname"><span class="pre">Jellium</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UM</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solvent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">55.6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.jellium.jellium.Jellium" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">fcdft.jellium.jellium.</span></span><span class="sig-name descname"><span class="pre">Jellium</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">UM</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solvent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">55.6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Ws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Wa</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/jellium/jellium.html#Jellium"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.jellium.jellium.Jellium" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="fcdft.jellium.jellium.Jellium.build">
-<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.jellium.jellium.Jellium.build" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/jellium/jellium.html#Jellium.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.jellium.jellium.Jellium.build" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -401,14 +420,14 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="fcdft.jellium.jellium.Jellium.kernel">
-<span class="sig-name descname"><span class="pre">kernel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.jellium.jellium.Jellium.kernel" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">kernel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/jellium/jellium.html#Jellium.kernel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.jellium.jellium.Jellium.kernel" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.jellium.jellium.bc">
-<span class="sig-prename descclassname"><span class="pre">fcdft.jellium.jellium.</span></span><span class="sig-name descname"><span class="pre">bc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ya</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yb</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.jellium.jellium.bc" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.jellium.jellium.</span></span><span class="sig-name descname"><span class="pre">bc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ya</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yb</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/jellium/jellium.html#bc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.jellium.jellium.bc" title="Link to this definition">#</a></dt>
 <dd><p>Dirichlet boundary condition.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -428,7 +447,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.jellium.jellium.eps_s">
-<span class="sig-prename descclassname"><span class="pre">fcdft.jellium.jellium.</span></span><span class="sig-name descname"><span class="pre">eps_s</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dUdX</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.jellium.jellium.eps_s" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.jellium.jellium.</span></span><span class="sig-name descname"><span class="pre">eps_s</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dUdX</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/jellium/jellium.html#eps_s"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.jellium.jellium.eps_s" title="Link to this definition">#</a></dt>
 <dd><p>Calculate the field-dependent dielectric function and its gradient.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -448,7 +467,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.jellium.jellium.fun">
-<span class="sig-prename descclassname"><span class="pre">fcdft.jellium.jellium.</span></span><span class="sig-name descname"><span class="pre">fun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.jellium.jellium.fun" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.jellium.jellium.</span></span><span class="sig-name descname"><span class="pre">fun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/jellium/jellium.html#fun"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.jellium.jellium.fun" title="Link to this definition">#</a></dt>
 <dd><p>Control equation of the Jellium+PBE model</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -468,7 +487,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.jellium.jellium.gamma">
-<span class="sig-prename descclassname"><span class="pre">fcdft.jellium.jellium.</span></span><span class="sig-name descname"><span class="pre">gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.jellium.jellium.gamma" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.jellium.jellium.</span></span><span class="sig-name descname"><span class="pre">gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ne</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/jellium/jellium.html#gamma"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.jellium.jellium.gamma" title="Link to this definition">#</a></dt>
 <dd><p>Orbital-Free Local Density Approximation</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -488,7 +507,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.jellium.jellium.init_guess">
-<span class="sig-prename descclassname"><span class="pre">fcdft.jellium.jellium.</span></span><span class="sig-name descname"><span class="pre">init_guess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jellium_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UM</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.jellium.jellium.init_guess" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.jellium.jellium.</span></span><span class="sig-name descname"><span class="pre">init_guess</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jellium_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">UM</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/jellium/jellium.html#init_guess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.jellium.jellium.init_guess" title="Link to this definition">#</a></dt>
 <dd><p>Generate the initial guess for the collocation method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -509,7 +528,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.jellium.jellium.kernel">
-<span class="sig-prename descclassname"><span class="pre">fcdft.jellium.jellium.</span></span><span class="sig-name descname"><span class="pre">kernel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.jellium.jellium.kernel" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.jellium.jellium.</span></span><span class="sig-name descname"><span class="pre">kernel</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/jellium/jellium.html#kernel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.jellium.jellium.kernel" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -528,6 +547,24 @@
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="fcdft.hessian.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">fcdft.hessian package</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="fcdft.lib.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">fcdft.lib package</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -601,7 +638,7 @@
 
   <p class="copyright">
     
-      © Copyright 2025, Jun-Hyeong Kim.
+      © Copyright 2026, Jun-Hyeong Kim.
       <br/>
     
   </p>
@@ -610,7 +647,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     <br/>
   </p>
 </div>

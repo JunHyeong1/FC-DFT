@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fcdft.tools package &#8212; FC-DFT 1.0.0 documentation</title>
+    <title>fcdft.tools package &#8212; FC-DFT 1.1.5 documentation</title>
   
   
   
@@ -38,13 +38,15 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/documentation_options.js?v=a48ae3df"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'fcdft.tools';</script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="fcdft.wbl package" href="fcdft.wbl.html" />
+    <link rel="prev" title="fcdft.solvent package" href="fcdft.solvent.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -109,7 +111,7 @@
   
   
   
-    <p class="title logo__title">FC-DFT 1.0.0 documentation</p>
+    <p class="title logo__title">FC-DFT 1.1.5 documentation</p>
   
 </a></div>
     
@@ -140,6 +142,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="about.html">
     About
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="fcdft.html">
+    fcdft package
   </a>
 </li>
 
@@ -252,6 +261,13 @@
   </a>
 </li>
 
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="fcdft.html">
+    fcdft package
+  </a>
+</li>
+
   </ul>
 </nav></div>
           
@@ -345,6 +361,9 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
+    
+    <li class="breadcrumb-item"><a href="fcdft.html" class="nav-link">fcdft package</a></li>
+    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fcdft.tools package</span></li>
   </ul>
 </nav>
@@ -394,7 +413,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.tools.addons.frac_occ_">
-<span class="sig-prename descclassname"><span class="pre">fcdft.tools.addons.</span></span><span class="sig-name descname"><span class="pre">frac_occ_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nelec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.tools.addons.frac_occ_" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.tools.addons.</span></span><span class="sig-name descname"><span class="pre">frac_occ_</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nelec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/tools/addons.html#frac_occ_"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.tools.addons.frac_occ_" title="Link to this definition">#</a></dt>
 <dd><p>Direct deposition of fractional electrons.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -420,7 +439,7 @@
 <span id="fcdft-tools-molden-module"></span><h2>fcdft.tools.molden module<a class="headerlink" href="#module-fcdft.tools.molden" title="Link to this heading">#</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="fcdft.tools.molden.dump_freq">
-<span class="sig-prename descclassname"><span class="pre">fcdft.tools.molden.</span></span><span class="sig-name descname"><span class="pre">dump_freq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#fcdft.tools.molden.dump_freq" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fcdft.tools.molden.</span></span><span class="sig-name descname"><span class="pre">dump_freq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_info</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/fcdft/tools/molden.html#dump_freq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fcdft.tools.molden.dump_freq" title="Link to this definition">#</a></dt>
 <dd><p>Dump the frequency information to a molden file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -449,6 +468,24 @@
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="fcdft.solvent.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">fcdft.solvent package</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="fcdft.wbl.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">fcdft.wbl package</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -516,7 +553,7 @@
 
   <p class="copyright">
     
-      © Copyright 2025, Jun-Hyeong Kim.
+      © Copyright 2026, Jun-Hyeong Kim.
       <br/>
     
   </p>
@@ -525,7 +562,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     <br/>
   </p>
 </div>

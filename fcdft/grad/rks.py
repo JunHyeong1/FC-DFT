@@ -7,14 +7,30 @@ from pyscf import lib
 from pyscf.lib import logger
 from pyscf.dft import numint, xc_deriv
 from pyscf.scf import _vhf
+from pyscf.data.nist import HARTREE2EV
 
 def grad_elec(mf_grad, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
-    '''
-    Electronic part of RHF/RKS gradients
+    """
+    Compute electronic contribution to WBL nuclear gradients under frozen-potential approximation.
 
-    Args:
-        mf_grad : grad.rhf.Gradients or grad.rks.Gradients object
-    '''
+    Parameters
+    ----------
+    mf_grad : Gradients
+        WBL gradient object.
+    mo_energy : ndarray, optional
+        MO energies (shape n_mo). If None, uses self.base.mo_energy.
+    mo_coeff : ndarray, optional
+        MO coefficients (shape n_ao x n_mo). If None, uses self.base.mo_coeff.
+    mo_occ : ndarray, optional
+        MO occupations (shape n_mo). If None, uses self.base.mo_occ.
+    atmlst : list, optional
+        List of atom indices for which to compute forces. If None, computes all atoms.
+
+    Returns
+    -------
+    de : ndarray, shape (len(atmlst), 3)
+        Real part only.
+    """
     mf = mf_grad.base
     mol = mf_grad.mol
     if mo_energy is None: mo_energy = mf.mo_energy
@@ -25,6 +41,13 @@ def grad_elec(mf_grad, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
     s1 = mf_grad.get_ovlp(mol)
     dm0 = mf.make_rdm1(mo_coeff, mo_occ)
     dm0 = mf_grad._tag_rdm1 (dm0, mo_coeff, mo_occ)
+    broad = mf.broad / HARTREE2EV
+    bias = mf.bias / HARTREE2EV
+
+    ao_labels = mol.ao_labels()
+    idx = [i for i, basis in enumerate(ao_labels) if ('S 3p' in basis) or ('S 3s' in basis)]
+    S = numpy.zeros_like(s1)
+    S[:,idx,idx] = s1[:,idx,idx]
 
     t0 = (logger.process_clock(), logger.perf_counter())
     log.debug('Computing Gradients of NR-HF Coulomb repulsion')
@@ -42,11 +65,19 @@ def grad_elec(mf_grad, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
     for k, ia in enumerate(atmlst):
         p0, p1 = aoslices [ia,2:]
         h1ao = hcore_deriv(ia)
-        de[k] += numpy.tensordot(h1ao, dm0, axes=([1,2], [0,1]))
-# nabla was applied on bra in vhf, *2 for the contributions of nabla|ket>
-        de[k] += numpy.tensordot(vhf[:,p0:p1], dm0[p0:p1], axes=([1,2], [0,1])) * 2
-        de[k] -= numpy.tensordot(s1[:,p0:p1], dme0[p0:p1], axes=([1,2], [0,1])) * 2
-
+        # Hellmann-Feynmann force
+        # Kohn-Sham Hamiltonian part
+        # One-electron contribution
+        de[k] += numpy.einsum('xij,ij->x', h1ao, dm0)
+        # Coulomb, exchange, and xc potential contribution
+        de[k] += numpy.einsum('xij,ij->x', vhf[:,p0:p1], dm0[p0:p1])*2
+        # Self-energy contribution
+        de[k] -= 0.5j*broad*numpy.einsum('xij,ij->x', s1[:,p0:p1], dm0[p0:p1])*2
+        # Voltage contribution
+        de[k] += bias*numpy.einsum('xij,ij->x',S[:,p0:p1], dm0[p0:p1])*2
+        # Pulay force
+        de[k] -= numpy.einsum('xij,ij->x',s1[:,p0:p1], dme0[p0:p1])*2
+        # Extra force contribution
         de[k] += mf_grad.extra_force(ia, locals())
 
     if log.verbose >= logger.DEBUG:
@@ -55,12 +86,6 @@ def grad_elec(mf_grad, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
     return de.real
 
 def get_veff(ks_grad, mol=None, dm=None):
-    '''
-    First order derivative of DFT effective potential matrix (wrt electron coordinates)
-
-    Args:
-        ks_grad : grad.uhf.Gradients or grad.uks.Gradients object
-    '''
     if mol is None: mol = ks_grad.mol
     if dm is None: dm = ks_grad.base.make_rdm1()
     t0 = (logger.process_clock(), logger.perf_counter())
@@ -116,7 +141,9 @@ def get_veff(ks_grad, mol=None, dm=None):
     return lib.tag_array(vxc, exc1_grid=exc)
 
 def make_rdm1e(mo_energy, mo_coeff, mo_occ):
-    '''Complex energy weighted density matrix'''
+    """
+    Construct energy-weighted density matrix.
+    """
     mo0e =  mo_coeff * (mo_energy * mo_occ)
     return numpy.dot(mo0e, mo_coeff.T)
 
@@ -288,6 +315,27 @@ class GradientsBase(rhf_grad.GradientsBase):
             return -(vkre + vkim*1.0j)        
 
 class Gradients(rks_grad.Gradients, GradientsBase):
+    """
+    Nuclear gradients for WBL-Molecule RKS.
+
+    Computes nuclear forces (first derivatives of SCF energy with respect to
+    nuclear positions) for molecules at electrode surfaces using the WBL
+    approximation. Combines PySCF RKS gradient framework with WBL-specific
+    terms (self-energy, voltage correction).
+
+    The computed gradients enable geometry optimization and vibrational analysis
+    for electrochemical systems.
+
+    Examples
+    --------
+    >>> from fcdft.wbl.rks import WBLMoleculeRKS
+    >>> mol = gto.M(atom='C 0 0 0; S 0 0 1.5', basis='6-31g**')
+    >>> wbl = WBLMoleculeRKS(mol, xc='pbe', broad=0.01, ref_pot=-4.5)
+    >>> wbl.kernel()
+    >>> grad = wbl.nuc_grad_method()
+    >>> forces = grad.kernel()  # shape (n_atoms, 3), in Hartree/Bohr
+    >>> print(forces)
+    """
     def __init__(self, mf):
         rks_grad.Gradients.__init__(self, mf)
         GradientsBase.__init__(self, mf)
@@ -297,7 +345,35 @@ class Gradients(rks_grad.Gradients, GradientsBase):
         if mo_coeff is None: mo_coeff = self.base.mo_coeff
         if mo_occ is None: mo_occ = self.base.mo_occ
         return make_rdm1e(mo_energy, mo_coeff, mo_occ)
-    
+
+    def kernel(self, mo_energy=None, mo_coeff=None, mo_occ=None, atmlst=None):
+        cput0 = (logger.process_clock(), logger.perf_counter())
+        if mo_energy is None:
+            if self.base.mo_energy is None:
+                self.base.run()
+            mo_energy = self.base.mo_energy
+        if mo_coeff is None: mo_coeff = self.base.mo_coeff
+        if mo_occ is None: mo_occ = self.base.mo_occ
+        if atmlst is None:
+            atmlst = self.atmlst
+        else:
+            self.atmlst = atmlst
+
+        if self.verbose >= logger.WARN:
+            self.check_sanity()
+        if self.verbose >= logger.INFO:
+            self.dump_flags()
+
+        de = self.grad_elec(mo_energy, mo_coeff, mo_occ, atmlst)
+        self.de = de + self.grad_nuc(atmlst=atmlst)
+        if self.mol.symmetry:
+            self.de = self.symmetrize(self.de, atmlst)
+        if self.base.do_disp():
+            self.de += self.get_dispersion()
+
+        logger.timer(self, 'SCF gradients', *cput0)
+        self._finalize()
+        return self.de
+
     get_veff = get_veff
     grad_elec = grad_elec
-    
