@@ -2,7 +2,7 @@ from pyscf.hessian import rhf as rhf_hess
 import numpy as np
 from pyscf.lib import logger
 
-def hess_generator(mol, g_scanner, h, order):
+def hess_generator(mol, g_scanner, h, order, save=False):
     """
     Generate numerical Hessian matrix from finite differences of gradients.
 
@@ -84,8 +84,8 @@ def hess_generator(mol, g_scanner, h, order):
     elif order == 5:
         H = (H + H.T) / (12*delta) / 2
 
-    # Save the Hessian just in case
-    np.save('%s.hessian' %mol.output, H)
+    if save:
+        np.save('%s.hessian' %mol.output, H)
     
     # Converting 2d hessian to 4d analogue to follow PySCF convention.
     hess = np.zeros((nat, nat, 3, 3))
