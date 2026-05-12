@@ -273,7 +273,7 @@ def ib_force(solvent_obj, dm):
     probe = solvent_obj.probe / BOHR
 
     lambda_r = solvent_obj._intermediates['lambda_r']
-    r_vdw = solvent_obj.get_atomic_radii()
+    atomic_radii = solvent_obj.get_atomic_radii()
 
     cation_rad = solvent_obj.cation_rad / BOHR
     anion_rad = solvent_obj.anion_rad / BOHR
@@ -287,17 +287,17 @@ def ib_force(solvent_obj, dm):
     equiv = solvent_obj.equiv
     if equiv == 11:
         Fib = one_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, delta2,
-                                  stern_sam, stern_mol, T, probe, r_vdw, cation_rad, anion_rad)
+                                  stern_sam, stern_mol, T, probe, atomic_radii, cation_rad, anion_rad)
     elif equiv == 21:
         Fib = two_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, delta2,
-                                  stern_sam, stern_mol, T, probe, r_vdw, cation_rad, anion_rad)
+                                  stern_sam, stern_mol, T, probe, atomic_radii, cation_rad, anion_rad)
     else:
         raise NotImplementedError
 
     return Fib
 
 def one_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, delta2,
-                        stern_sam, stern_mol, T, probe, r_vdw, cation_rad, anion_rad):
+                        stern_sam, stern_mol, T, probe, atomic_radii, cation_rad, anion_rad):
     zmin = coords[:,2].min()
     x = (coords[:,2] - zmin - stern_sam - stern_mol) / delta1
     _erf = scipy.special.erf(x)
@@ -308,34 +308,38 @@ def one_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, del
     if cb == 0.0e0:
         return Fib
     
-    dist = scipy.spatial.distance.cdist(atom_coords, coords)
-    x = (dist - r_vdw[:,None] - probe - stern_mol) / delta2
-    _erf = scipy.special.erf(x)
-    erf_list = 0.5e0 * (1.0e0 + _erf)
-    gauss_list = numpy.exp(-x**2)
-
-    c12 = 0.74e0 / (4.0e0/3.0e0 * PI * (cation_rad**3 + anion_rad**3))
-    lnexp = phi_tot / KB2HARTREE / T
-    idx = abs(lnexp) < 230.96
-    t = numpy.ones_like(lnexp) * 1.0e100
-    t[idx] = numpy.cosh(lnexp[idx])
-    
+    atom_coords = mol.atom_coords()
+    dist = scipy.spatial.distance.cdist(atom_coords, coords) # (natm, ngrids**3)
+    c12 = 0.74 / (4.0/3.0 * PI * (cation_rad**3 + anion_rad**3))
+    lnlambda = numpy.full_like(lambda_r, -numpy.inf)
+    lnlambda = numpy.log(lambda_r, where=(lambda_r > 0), out=lnlambda)
+    x = phi_tot / KB2HARTREE / T
+    lnA = numpy.log(0.5) + lnlambda - x
+    lnB = numpy.log(0.5) + lnlambda + x
+    mask = numpy.isfinite(lnlambda)
+    # exp(a) + exp(b) = exp(m) (exp(a-m) + exp(b-m))
+    lnmax = numpy.maximum(lnA, lnB)
+    exp_sum = numpy.zeros_like(lnA)
+    exp_sum[mask] = numpy.exp(lnA[mask] - lnmax[mask]) + numpy.exp(lnB[mask] - lnmax[mask])
+    log_sum = numpy.full_like(lnA, -numpy.inf)
+    log_sum[mask] = lnmax[mask] + numpy.log(exp_sum[mask])
+    # t = lambda_r * cosh(x)
+    t = numpy.exp(log_sum)
     for i in range(mol.natm):
         r = atom_coords[i]
         rp = coords - r
         er = rp / dist[i][:,None]
-        mask = [False if j == i else True for j in range(mol.natm)]
-        erf = numpy.prod(erf_list[mask], axis=0)
-        gauss_A = gauss_list[i]
-        gauss_A[x[i] < -8.0e0*delta2] = 0.0e0 # To ensure zero contribution inside the cavity.
-        dl = -1.0e0 / delta2 / numpy.sqrt(PI) * er * (erf_z*gauss_A*erf)[:,None]
-        Fib[i] = numpy.dot(1.0e0 / ((c12 / cb - 1.0e0) / t + lambda_r), dl)
+        x = (dist[i] - atomic_radii[i] - probe - stern_mol) / delta2
+        integrand = 1.0 / scipy.special.erfcx(-x)
+        integrand *= -2.0 / delta2 / numpy.sqrt(PI)
+        integrand *= t / (c12/cb + t - 1.0)
+        integrand = integrand[:,None] * er
+        Fib[i] = 2.0*c12*KB2HARTREE*T*integrand.sum(axis=0)*spacing**3
 
-    Fib = 2.0*c12*KB2HARTREE*T*Fib*spacing**3
     return Fib
 
 def two_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, delta2,
-                        stern_sam, stern_mol, T, probe, r_vdw, cation_rad, anion_rad):
+                        stern_sam, stern_mol, T, probe, atomic_radii, cation_rad, anion_rad):
     zmin = coords[:,2].min()
     x = (coords[:,2] - zmin - stern_sam - stern_mol) / delta1
     _erf = scipy.special.erf(x)
@@ -347,7 +351,7 @@ def two_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, del
         return Fib
     
     dist = scipy.spatial.distance.cdist(atom_coords, coords)
-    x = (dist - r_vdw[:,None] - probe - stern_mol) / delta2
+    x = (dist - atomic_radii[:,None] - probe - stern_mol) / delta2
     _erf = scipy.special.erf(x)
     erf_list = 0.5e0 * (1.0e0 + _erf)
     gauss_list = numpy.exp(-x**2)
@@ -373,7 +377,7 @@ def two_to_one_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, del
     return Fib
 
 def one_to_two_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, delta2,
-                        stern_sam, stern_mol, T, probe, r_vdw, cation_rad, anion_rad):
+                        stern_sam, stern_mol, T, probe, atomic_radii, cation_rad, anion_rad):
     zmin = coords[:,2].min()
     x = (coords[:,2] - zmin - stern_sam - stern_mol) / delta1
     _erf = scipy.special.erf(x)
@@ -385,7 +389,7 @@ def one_to_two_ib_force(mol, coords, spacing, phi_tot, cb, lambda_r, delta1, del
         return Fib
     
     dist = scipy.spatial.distance.cdist(atom_coords, coords)
-    x = (dist - r_vdw[:,None] - probe - stern_mol) / delta2
+    x = (dist - atomic_radii[:,None] - probe - stern_mol) / delta2
     _erf = scipy.special.erf(x)
     erf_list = 0.5e0 * (1.0e0 + _erf)
     gauss_list = numpy.exp(-x**2)
