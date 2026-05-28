@@ -268,13 +268,14 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
             else:
                 fmax = min(fmax, fermi)
 
-            if cycle >= 50 and delta_last is not None:
+            if cycle >= 20 and delta_last is not None:
                 if delta * delta_last < 0:
                     bisect = True
 
             if bisect:
                 fermi = (fmin + fmax) / 2.0
                 delta_last = delta
+                bisect = False
 
             else:
                 # Adaptive Damping
