@@ -109,7 +109,8 @@ class multigrid(lib.StreamObject):
             ngrids = self.ngrids
         if spacing is None:
             spacing = self.spacing
-        phi = self.drv(rho*spacing**2)
+        b = rho * spacing**2
+        phi = self.drv(b)
         return phi, phi 
     
     def _initialize(self):
