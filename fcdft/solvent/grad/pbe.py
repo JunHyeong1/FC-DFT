@@ -10,7 +10,6 @@ from pyscf import lib
 from pyscf.lib import logger
 from pyscf.data.nist import *
 
-libpbe = lib.load_library(os.path.join(fcdft.__path__[0], 'lib', 'libpbe'))
 PI = numpy.pi
 
 def make_grad_object(base_method):
@@ -89,7 +88,7 @@ def kernel(solvent_obj, dm, verbose=None):
     Frf = rf_force(solvent_obj, dm) # Reaction field force
     Fdb = db_force(solvent_obj, dm) # Dielectric boundary force
     Fib = ib_force(solvent_obj, dm) # Ion boundary force
-    if solvent_obj.verbose >= logger.NOTE:
+    if solvent_obj.verbose >= logger.DEBUG4:
         logger.note(solvent_obj, '------------------ Reaction field force -----------------')
         rhf_grad._write(solvent_obj, solvent_obj.mol, Frf, range(solvent_obj.mol.natm))
         logger.note(solvent_obj, '---------------------------------------------------------')
@@ -185,7 +184,6 @@ def db_force(solvent_obj, dm):
     natm = mol.natm
 
     _intermediates = solvent_obj._intermediates
-    sas = _intermediates['sas']
     eps = _intermediates['eps']
     grad_eps = _intermediates['grad_eps']
     bias = solvent_obj.bias / HARTREE2EV
@@ -208,8 +206,7 @@ def db_force(solvent_obj, dm):
     dphi_opt = solver.gradient(phi_opt, phi_optk, ngrids, spacing)
 
     grad_lneps = grad_eps / eps[:,None]
-    rho_iter_bc = 0.25e0 / PI * (grad_lneps * grad_bc).sum(axis=1)
-
+    rho_iter_bc = 0.25 / PI * (grad_lneps * grad_bc).sum(axis=1)
 
     # Preparation
     r = atom_coords[:,None,:]
@@ -217,10 +214,9 @@ def db_force(solvent_obj, dm):
     dist = scipy.spatial.distance.cdist(atom_coords, coords)
     x = (dist - atomic_radii[:,None] - probe) / delta2
     _erf = scipy.special.erf(x)
-    erf_list = 0.5e0 * (1.0e0 + _erf)
+    erf_list = 0.5 * (1.0 + _erf)
     exp_list = numpy.exp(-x**2)
     er = rp / dist[:,:,None]
-    grad_list = numpy.multiply(er, exp_list[:,:,None]) / (delta2 * numpy.sqrt(PI))
 
     zmin = coords[:,2].min()
     z = (coords[:,2] - zmin - stern_sam) / delta1
@@ -228,37 +224,31 @@ def db_force(solvent_obj, dm):
     eps_z = eps_sam + 0.5 * (eps_bulk - eps_sam) * (1.0 + _erf)
     exp_z = numpy.exp(-z**2)
 
-    drv1 = libpbe.nuc_grad_eps_drv
-    drv2 = libpbe.grad_nuc_grad_eps_drv
+    grad_lneps = grad_eps / eps[:,None]
+    rho_iter_bc = 0.25 / PI * (grad_lneps * grad_bc).sum(axis=1)
+    atmlst = range(natm)
 
-    c_erf_list = erf_list.ctypes.data_as(ctypes.c_void_p)
-    c_grad_list = grad_list.ctypes.data_as(ctypes.c_void_p)
-    c_exp_list = exp_list.ctypes.data_as(ctypes.c_void_p)
-    c_eps_z = eps_z.ctypes.data_as(ctypes.c_void_p)
-    c_exp_z = exp_z.ctypes.data_as(ctypes.c_void_p)
-    c_dist = dist.ctypes.data_as(ctypes.c_void_p)
-    c_er = er.ctypes.data_as(ctypes.c_void_p)
-    c_x = x.ctypes.data_as(ctypes.c_void_p)
-    c_delta1 = ctypes.c_double(delta1)
-    c_delta2 = ctypes.c_double(delta2)
-    c_eps_bulk = ctypes.c_double(eps_bulk)
-    c_eps_sam = ctypes.c_double(eps_sam)
-    c_ngrids = ctypes.c_int(ngrids)
-    c_natm = ctypes.c_int(natm)
+    depsdRA = numpy.zeros((natm, ngrids**3, 3))
+    ddepsdRA = numpy.zeros((natm, ngrids**3))
+    for i in atmlst:
+        mask = [False if i == j else True for j in atmlst]
+        erf_prod = numpy.prod(erf_list[mask], axis=0)
+        depsdRA[i] = -((eps_z - 1.0) / delta2 / numpy.sqrt(PI) * exp_list[i] * erf_prod)[:,None] * er[i]
+        ddepsdRA[i] -= (eps_z - 1.0) / delta2 / numpy.sqrt(PI) * 2.0 / dist[i] * exp_list[i] * erf_prod
+        ddepsdRA[i] += 2.0*(eps_z - 1.0) / delta2**2 / numpy.sqrt(PI) * (er[i]**2).sum(axis=1) * x[i] * exp_list[i] * erf_prod
+        atmlst_j = [j for j in atmlst if j != i]
+        sum_j = numpy.zeros((ngrids**3, 3))
+        for j in atmlst_j:
+            mask_j = [False if i == k or j == k else True for k in atmlst]
+            erf_prod_j = numpy.prod(erf_list[mask_j], axis=0)
+            sum_j += er[j] * exp_list[j,:,None] * erf_prod_j[:,None]
+        ddepsdRA[i] -= (eps_z - 1.0) / delta2**2 / numpy.sqrt(PI) * dist[i] * (er[i] * sum_j).sum(axis=1) * exp_list[i]
+        ddepsdRA[i,:] -= (eps_bulk - eps_sam) / delta1 / delta2 / PI * exp_z * er[i,:,2] * exp_list[i] * erf_prod
 
-    nuc_grad_eps = numpy.zeros((natm, ngrids**3, 3))
-    grad_nuc_grad_eps = numpy.zeros((natm, ngrids**3))
-    c_nuc_grad_eps = nuc_grad_eps.ctypes.data_as(ctypes.c_void_p)
-    c_grad_nuc_grad_eps = grad_nuc_grad_eps.ctypes.data_as(ctypes.c_void_p)
-
-    drv1(c_erf_list, c_grad_list, c_eps_z, c_delta2, c_ngrids, c_natm, c_nuc_grad_eps)
-    drv2(c_erf_list, c_exp_list, c_er, c_x, c_eps_z, c_exp_z, c_dist, c_delta1, c_delta2, c_eps_bulk, c_eps_sam, c_ngrids, c_natm, c_grad_nuc_grad_eps)
-
-    integrand = (dphi_opt + grad_bc)[None,:,:] * grad_nuc_grad_eps[:,:,None]
-    integrand -= 4.0 * PI * nuc_grad_eps * (rho_tot+rho_pol+rho_iter_bc)[None,:,None]
+    integrand  = (dphi_opt + grad_bc)[None,:,:] * ddepsdRA[:,:,None]
+    integrand -= 4.0 * PI * depsdRA * (rho_tot + rho_pol + rho_iter_bc)[None,:,None]
     integrand *= phi_tot[None,:,None]
     Fdb = -0.125 / PI * integrand.sum(axis=1) * spacing**3
-
     return Fdb
 
 def ib_force(solvent_obj, dm):

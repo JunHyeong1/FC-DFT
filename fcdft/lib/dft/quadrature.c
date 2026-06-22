@@ -132,7 +132,7 @@ double gsl_occ_drv(double x, void *p) {
     double broad = params->broad;
     double smear = params->smear;
 
-    double dist = 1 / (exp((x - fermi)/smear) + 1);
+    double dist = 1.0 / (exp((x - fermi)/smear) + 1.0);
     double a = x - moe_energy;
     double b = broad / 2.0;
     return dist * broad / (a*a + b*b) / TWO_PI;
@@ -145,10 +145,10 @@ double gsl_occ_grad_drv(double x, void *p) {
     double broad = params->broad;
     double smear = params->smear;
 
-    double dist = 1 / (exp((x - fermi)/smear) + 1);
+    double dist = 1.0 / (exp((x - fermi)/smear) + 1.0);
     double a = x - moe_energy;
     double b = broad / 2.0;
-    return dist * (1 - dist) * broad / (a*a + b*b) / TWO_PI / smear;
+    return dist * (1.0 - dist) * broad / (a*a + b*b) / TWO_PI / smear;
 }
 
 double gsl_occ_lap_drv(double x, void *p) {
@@ -158,10 +158,10 @@ double gsl_occ_lap_drv(double x, void *p) {
     double broad = params->broad;
     double smear = params->smear;
 
-    double dist = 1 / (exp((x - fermi)/smear) + 1);
+    double dist = 1.0 / (exp((x - fermi)/smear) + 1.0);
     double a = x - moe_energy;
     double b = broad / 2.0;
-    return dist * (1 - dist) * (1 - 2.0*dist) * broad / (a*a + b*b) / TWO_PI / smear / smear;
+    return dist * (1.0 - dist) * (1.0 - 2.0*dist) * broad / (a*a + b*b) / TWO_PI / smear / smear;
 }
 
 void gsl_occupation_drv(double *moe_energy, double fermi, double broad, double smear, int nbas, double *mo_occ) {
