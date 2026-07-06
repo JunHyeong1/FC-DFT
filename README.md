@@ -1,11 +1,11 @@
 # Fractional Charge Density Functional Theory (FC-DFT)
 
-**FC-DFT** is a Python package for DFT calculations at electrochemical interfaces. It combines the wide-band limit (WBL) approximation for electrode coupling with continuum solvation models to study molecules at electrode/solvent interfaces under applied potential.
+**FC-DFT** is a Python package for FC-DFT calculations for predicting chemical events happening at electrochemical interfaces. It combines the wide-band limit (WBL) approximation for a model electrode with continuum solvation models to voltage-dependent shifts of chemical properties.
 
-The code computes single-point energies, optimized structures, vibrational frequencies, and solvation free energies of open quantum systems using FC-DFT methodology.
+The code supports single-point energies, optimized structures, numerical vibrational frequencies, and solvation free energies calculations.
 
 ## Requirements
-- [GeomeTRIC](https://github.com/leeping/geomeTRIC)
+- [GeomeTRIC](https://github.com/leeping/geomeTRIC) (NOTE: FC-DFT has been tested with GeomeTRIC==1.0.2.)
 - [PySCF](https://pyscf.org/)
 - [PyAMG](https://github.com/pyamg/pyamg)
 - [PyAMGCL](https://github.com/ddemidov/amgcl)
@@ -48,14 +48,14 @@ The code computes single-point energies, optimized structures, vibrational frequ
 
 ## Notes
 
-Poisson-Boltzmann geometry optimization uses RESP atomic charges, which are computed by the code provided by https://github.com/swillow/pyscf_esp after some modifications for computational efficiency.
+Poisson-Boltzmann geometry optimization uses RESP atomic charges. These are computed by the code provided by https://github.com/swillow/pyscf_esp after some modifications for computational efficiency.
 
 ## How to Cite
 Please cite the paper below if this code was directly or indirectly helpful to your research.
 
 Jun-Hyeong Kim, Dongju Kim, Weitao Yang, and Mu-Hyun Baik. Fractional Charge Density Functional Theory and Its Application to the Electro-inductive Effect. _J. Phys. Chem. Lett._ **2023**, _14_, 3329-3334
 
-Jun-Hyeong Kim and Weitao Yang. Fractional Charge Density Functional Theory Elucidates Electro-Inductive and Electric Field Effects at Electrochemical Interfaces. _Submitted_ ChemRxiv: 10.26434/chemrxiv-2025-6qqfb
+Jun-Hyeong Kim and Weitao Yang. Fractional Charge Density Functional Theory Elucidates Electro-Inductive and Electric Field Effects at Electrochemical Interfaces. _Proc. Natl. Acad. Sci. U.S.A._ **2026**, _123_, e2602964123
 
 ## Bug Report and Feature Request
 

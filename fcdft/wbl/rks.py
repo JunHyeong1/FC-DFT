@@ -571,11 +571,12 @@ class WBLBase:
     def nuc_grad_method(self):
         raise NotImplementedError
 
-    def _eig(self, h, s):
+    def _eig(self, h, s, overwrite=False, x=None):
+        # TODO: linear dependency handle
         return eig(h, s)
 
-    def eig(self, h, s):
-        return self._eig(h, s)
+    def eig(self, h, s, overwrite=False, x=None):
+        return self._eig(h, s, overwrite, x)
     
     def get_fermi_level(self, nelec=None, pot_cycle=None, broad=None, mo_energy=None, fermi=None, verbose=None):
         """
@@ -794,5 +795,5 @@ H        1.3390319419     -0.0095801980     -0.2157234144''',
         charge=0, basis='6-31g**', verbose=5)
     wblmf = WBLMoleculeRKS(mol, xc='b3lyp', broad=0.01, smear=0.2, nelectron=69.00)
     wblmf.conv_tol = 1e-8
-    wblmf.quad_method='gauss'
+    wblmf.quad_method='quadpack'
     wblmf.kernel()
