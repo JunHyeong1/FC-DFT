@@ -117,7 +117,7 @@ def rf_force(solvent_obj, dm):
     esp_mol.charge = mol.charge + (mol.nelectron - solvent_obj.nelectron) # Inject fractional charge
     from fcdft.solvent.esp import esp_atomic_charges
     options_dict = {'RESP_MAXITER': 100, 'RESP_TOLERANCE': 1.0e-10}
-    qesp = esp_atomic_charges(esp_mol, dm.real, options_dict=options_dict, gpu_accel=solvent_obj.gpu_accel)
+    qesp = esp_atomic_charges(solvent_obj, esp_mol, dm.real, options_dict=options_dict)
 
     atmlst = range(mol.natm)
     logger.info(solvent_obj, '-------------- RESP Atomic Charge ------------')
