@@ -152,7 +152,7 @@ def esp_grid (mol, rcut=3.0, ngrids=49, probe=0.7):
         coords = coords[idx]
     return coords
 
-def esp_esp (mol, dm, coords, gpu_accel=False):
+def esp_esp (solvent_obj, mol, dm, coords, gpu_accel=False):
     ''' Estimate the electrostatic potential (ESP) at each grid point and atomic site as the second step.
 
     Parameters
@@ -308,7 +308,7 @@ def esp_fit (mol, grids, grids_val,
     return qf[:natoms]
 
 
-def esp_atomic_charges (mol, dm, options_dict={}, verbose=0, gpu_accel=False):
+def esp_atomic_charges (solvent_obj, mol, dm, options_dict={}, verbose=0):
     ''' Estimate (R)ESP atomic charges
 
     Parameters
@@ -350,7 +350,8 @@ def esp_atomic_charges (mol, dm, options_dict={}, verbose=0, gpu_accel=False):
                       options['NGRIDS'],
                       options['PROBE'])
 
-    grids_val = esp_esp (mol, dm, grids, gpu_accel)
+    grids_val = solvent_obj.make_phi_sol(dm, grids)
+    # grids_val = esp_esp (solvent_obj, mol, dm, grids)
 
     esp_chg = esp_fit (mol, grids, grids_val,
                        options['RESTRAINT'],

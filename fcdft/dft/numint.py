@@ -1,3 +1,4 @@
+# Deprecated
 from pyscf import lib
 from pyscf.dft import numint
 import fcdft

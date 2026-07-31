@@ -42,13 +42,16 @@ def get_veff(mf, mol=None, dm=None, dm_last=0, vhf_last=0, hermi=0, *args, **kwa
     if dm_last is not None: dm_last = dm_last
     sigmaR= mf.get_sigmaR()
     _vhf = mf._get_veff(mol, dm, dm_last, vhf_last, hermi, *args, **kwargs)
-    vhf = lib.tag_array(_vhf.real+sigmaR, ecoul=_vhf.ecoul, exc=_vhf.exc,
+    vhf = lib.tag_array(_vhf+sigmaR, ecoul=_vhf.ecoul, exc=_vhf.exc,
                         vj=_vhf.vj, vk=_vhf.vk)
     return vhf
 
-def get_fock(mf, h1e=None, s1e=None, vhf=None, dm=None, cycle=-1, diis=None, diis_start_cycle=None, level_shift_factor=None, damp_factor=None, fock_last=None):
+def get_fock(mf, h1e=None, s1e=None, vhf=None, dm=None, cycle=-1, diis=None,
+             diis_start_cycle=None, level_shift_factor=None, damp_factor=None,
+             fock_last=None):
     if vhf is None: vhf = mf.get_veff(mf.mol, dm)
-    return rhf.get_fock(mf, h1e, s1e, vhf, dm, cycle, diis, diis_start_cycle, level_shift_factor, damp_factor, fock_last)
+    return rhf.get_fock(mf, h1e, s1e, vhf, dm, cycle, diis, diis_start_cycle,
+                        level_shift_factor, damp_factor, fock_last)
 
 def get_sigmaR(mf, mol=None, s1e=None):
     """WBL-Molecule self-energy + Hamiltonian correction by bias voltage.
@@ -70,30 +73,6 @@ def get_sigmaR(mf, mol=None, s1e=None):
     S = numpy.zeros_like(s1e)
     S[idx,idx] = s1e[idx,idx]
     return (mf.bias * S - 0.5e0j * mf.broad * s1e) / HARTREE2EV # Unit in a.u.
-
-def eig(h, s):
-    """Eigensolver for nonhermitian Hamiltonian.
-
-    Args:
-        h (2D numpy.ndarray): Fock matrix
-        s (2D numpy.ndarray): Overlap matrix
-
-    Returns:
-        e, c: mo energies and mo coefficients
-    """
-    e, c = scipy.linalg.eig(h, s)
-    idx = numpy.argmax(abs(c.real), axis=0)
-    c[:,c[idx,numpy.arange(len(e))].real<0] *= -1
-
-    # Sorting the eigenvectors according to the mo energies
-    idx = e.real.argsort()
-    e, c = e[idx], c[:, idx]
-
-    # Normalization. Bug in scipy.linalg.eig
-    norm = numpy.diag(reduce(numpy.dot, (c.T, s, c)))
-    c[:,] = c[:,] / numpy.sqrt(norm[:])
-
-    return e, c
 
 def get_occ(mf, mo_energy=None, mo_coeff=None):
     """Occupation matrix through numerical integration
@@ -150,194 +129,83 @@ def get_fermi_level(mf, nelec_a, pot_cycle=None, broad=None, mo_energy=None, fer
     moe_energy = numpy.asarray(mo_energy.real, order='C')
     nbas = moe_energy.shape[0]
     smear = mf.smear / HARTREE2EV
-    window = mf.window * broad
     pot_cycle = mf.pot_cycle
     pot_damp = mf.pot_damp
-    abscissas, weights = mf.abscissas, mf.weights
-    quad_order = mf.quad_order
-
-    if mf.quad_method.upper() == 'GAUSS':
-        drv = libfcdft.fermi_level_drv
-        c_moe_energy = moe_energy.ctypes.data_as(ctypes.c_void_p)
-        c_abscissas = abscissas.ctypes.data_as(ctypes.c_void_p)
-        c_weights = weights.ctypes.data_as(ctypes.c_void_p)
-        c_quad_order = ctypes.c_int(quad_order)
-        c_window = ctypes.c_double(window)
-        c_broad = ctypes.c_double(broad)
-        c_smear = ctypes.c_double(smear)
-        c_nbas = ctypes.c_int(nbas)
-
-        fermi_last = None
-        delta_last = None
-        damp = pot_damp
-        bisect = False
-        fmin, fmax = -numpy.inf, numpy.inf        
-
-        for cycle in range(pot_cycle):
-            fermi_last = fermi
-            mo_occ = numpy.empty(nbas, order='C')
-            mo_grad = ctypes.c_double(0.0)
-            drv(c_moe_energy, c_abscissas, c_weights,
-                ctypes.c_double(fermi), c_broad, c_smear, c_window, c_quad_order, c_nbas,
-                mo_occ.ctypes.data_as(ctypes.c_void_p), ctypes.byref(mo_grad))
-            if numpy.any(mo_occ > 1.0e0):
-                raise RuntimeError('Numerical integration failed. Integration window: %s eV' % (window*HARTREE2EV))
-            nelec_last = mo_occ.sum()
-            nelec_grad = mo_grad.value
-            
-            delta = (nelec_a - nelec_last) / nelec_grad
-
-            if (nelec_a - nelec_last) > 0:
-                fmin = max(fmin, fermi)
-            else:
-                fmax = min(fmax, fermi)
-
-            if cycle >= 50 and delta_last is not None:
-                if delta * delta_last < 0:
-                    bisect = True
-
-            if bisect:
-                fermi = (fmin + fmax) / 2.0
-                delta_last = delta
-
-            else:
-                # Adaptive Damping
-                if delta_last is not None:
-                    if delta * delta_last < 0:
-                        damp = min(0.9, damp + 0.1)
-                    elif abs(delta) < abs(delta_last):
-                        damp = max(0.0, damp - 0.05)
-
-                delta_last = delta
-
-                # Step Clamping
-                if delta > 1.0e0:
-                    delta =  10**(numpy.log10( delta) - int(numpy.log10( delta)) - 1)
-                elif delta < -1.0e0:
-                    delta = -10**(numpy.log10(-delta) - int(numpy.log10(-delta)) - 1)
-
-                fermi += (1.0 - damp) * delta
-
-            if abs(fermi) == numpy.inf:
-                raise RuntimeError('Infinity chemical potential detected. Adjust the damping factor.')
-
-            if verbose >= logger.INFO:
-                if isinstance(mf, rks.RKS):
-                    logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last*2)
-                else:
-                    logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last)
-            if abs(fermi - fermi_last) < 1e-11:
-                break
-            if cycle == pot_cycle-1:
-                raise RuntimeError('Chemical potential failed to converge. Adjust the damping factor.')
-        return fermi, mo_occ
     
-    elif mf.quad_method.upper() == 'QUADPACK':
-        drv = libfcdft.gsl_fermi_level_drv
-        c_moe_energy = moe_energy.ctypes.data_as(ctypes.c_void_p)
-        c_abscissas = abscissas.ctypes.data_as(ctypes.c_void_p)
-        c_weights = weights.ctypes.data_as(ctypes.c_void_p)
-        c_quad_order = ctypes.c_int(quad_order)
-        c_window = ctypes.c_double(window)
-        c_broad = ctypes.c_double(broad)
-        c_smear = ctypes.c_double(smear)
-        c_nbas = ctypes.c_int(nbas)
+    drv = libfcdft.gsl_fermi_level_drv
+    c_moe_energy = moe_energy.ctypes.data_as(ctypes.c_void_p)
+    c_broad = ctypes.c_double(broad)
+    c_smear = ctypes.c_double(smear)
+    c_nbas = ctypes.c_int(nbas)
 
-        fermi_last = None
-        delta_last = None
-        damp = pot_damp
-        bisect = False
-        fmin, fmax = -numpy.inf, numpy.inf
+    fermi_last = None
+    delta_last = None
+    damp = pot_damp
+    bisect = False
+    fmin, fmax = -numpy.inf, numpy.inf
 
-        for cycle in range(pot_cycle):
-            fermi_last = fermi
-            mo_occ = numpy.empty(nbas, order='C')
-            mo_grad = numpy.empty(nbas, order='C')
+    for cycle in range(pot_cycle):
+        fermi_last = fermi
+        mo_occ = numpy.empty(nbas, order='C')
+        mo_grad = numpy.empty(nbas, order='C')
 
-            drv(c_moe_energy, ctypes.c_double(fermi), c_broad, c_smear, c_nbas,
-                mo_occ.ctypes.data_as(ctypes.c_void_p), mo_grad.ctypes.data_as(ctypes.c_void_p))
-            if numpy.any(mo_occ > 1.0e0):
-                raise RuntimeError('Numerical integration failed. Integration window: %s eV' % (window*HARTREE2EV))
-            nelec_last = mo_occ.sum()
-            nelec_grad = mo_grad.sum()
-            
-            delta = (nelec_a - nelec_last) / nelec_grad
+        drv(c_moe_energy, ctypes.c_double(fermi), c_broad, c_smear, c_nbas,
+            mo_occ.ctypes.data_as(ctypes.c_void_p), mo_grad.ctypes.data_as(ctypes.c_void_p))
 
-            if (nelec_a - nelec_last) > 0:
-                fmin = max(fmin, fermi)
-            else:
-                fmax = min(fmax, fermi)
+        nelec_last = mo_occ.sum()
+        nelec_grad = mo_grad.sum()
+        
+        delta = (nelec_a - nelec_last) / nelec_grad
 
-            if cycle >= 20 and delta_last is not None:
+        if (nelec_a - nelec_last) > 0:
+            fmin = max(fmin, fermi)
+        else:
+            fmax = min(fmax, fermi)
+
+        if cycle >= 20 and delta_last is not None:
+            if delta * delta_last < 0:
+                bisect = True
+
+        if bisect:
+            fermi = (fmin + fmax) / 2.0
+            delta_last = delta
+            bisect = False
+
+        else:
+            # Adaptive Damping
+            if delta_last is not None:
                 if delta * delta_last < 0:
-                    bisect = True
+                    damp = min(0.9, damp + 0.1)
+                elif abs(delta) < abs(delta_last):
+                    damp = max(0.0, damp - 0.05)
 
-            if bisect:
-                fermi = (fmin + fmax) / 2.0
-                delta_last = delta
-                bisect = False
+            delta_last = delta
 
+            # Step Clamping
+            if delta > 1.0e0:
+                delta =  10**(numpy.log10( delta) - int(numpy.log10( delta)) - 1)
+            elif delta < -1.0e0:
+                delta = -10**(numpy.log10(-delta) - int(numpy.log10(-delta)) - 1)
+
+            fermi += (1.0 - damp) * delta
+
+        if abs(fermi) == numpy.inf:
+            raise RuntimeError('Infinity chemical potential detected. Adjust the damping factor.')
+
+        if verbose >= logger.INFO:
+            if isinstance(mf, rks.RKS):
+                logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last*2)
             else:
-                # Adaptive Damping
-                if delta_last is not None:
-                    if delta * delta_last < 0:
-                        damp = min(0.9, damp + 0.1)
-                    elif abs(delta) < abs(delta_last):
-                        damp = max(0.0, damp - 0.05)
+                logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last)
+        if abs(fermi - fermi_last) < 1e-11:
+            break
+        if cycle == pot_cycle-1:
+            raise RuntimeError('Chemical potential failed to converge. Adjust the damping factor.')
+    return fermi, mo_occ        
 
-                delta_last = delta
-
-                # Step Clamping
-                if delta > 1.0e0:
-                    delta =  10**(numpy.log10( delta) - int(numpy.log10( delta)) - 1)
-                elif delta < -1.0e0:
-                    delta = -10**(numpy.log10(-delta) - int(numpy.log10(-delta)) - 1)
-
-                fermi += (1.0 - damp) * delta
-
-            if abs(fermi) == numpy.inf:
-                raise RuntimeError('Infinity chemical potential detected. Adjust the damping factor.')
-
-            if verbose >= logger.INFO:
-                if isinstance(mf, rks.RKS):
-                    logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last*2)
-                else:
-                    logger.info(mf, ' cycle=%d fermi, nelectron = %.10g, %.10g', cycle+1, fermi, nelec_last)
-            if abs(fermi - fermi_last) < 1e-11:
-                break
-            if cycle == pot_cycle-1:
-                raise RuntimeError('Chemical potential failed to converge. Adjust the damping factor.')
-        return fermi, mo_occ
-
-def make_rdm1(mo_coeff, mo_occ, **kwargs):
-    """
-    Construct the one-particle reduced density matrix from MO coefficients and occupations.
-
-    For a non-Hermitian Hamiltonian with right eigenvectors R and fractional occupations n,
-    the density matrix is:
-
-        P_μν = Σ_i R_μi diag(n_i) R^†_νi
-
-    This construction uses right eigenvectors (not orthonormal) and fractional occupations
-    from the Fermi-Dirac distribution at the electrode potential.
-
-    Parameters
-    ----------
-    mo_coeff : ndarray
-        MO coefficient matrix (right eigenvectors), shape (n_ao, n_mo).
-    mo_occ : ndarray
-        MO occupation numbers (fractional), shape (n_mo,).
-    **kwargs
-        Additional keyword arguments (unused).
-
-    Returns
-    -------
-    dm : ndarray
-        One-particle density matrix in AO representation, shape (n_ao, n_ao).
-        Tagged with attributes: mo_coeff, mo_occ.
-    """
-    dm = reduce(numpy.dot, (mo_coeff, numpy.diag(mo_occ), mo_coeff.T))
-    return lib.tag_array(dm, mo_coeff=mo_coeff, mo_occ=mo_occ)
+def eig(h, s, overwrite=False):
+    e, c = scipy.linalg.eigh(h, s, overwrite_a=overwrite)
+    return e, c
 
 def init_guess_by_chkfile(mol, chkfile_name, project=None):
     from pyscf.scf import addons, chkfile
@@ -493,24 +361,9 @@ class WBLBase:
         Default: 0.5. Adapted dynamically during convergence.
     bias : float or None
         Applied bias voltage in V. Computed as -(fermi - ref_pot) / HARTREE2EV.
-    window : float
-        Integration window for Fermi-Dirac in units of broadening. Default: 2000.
-        Actual window width = window * broad (in eV).
-    quad_order : int
-        Number of quadrature points for Fermi-Dirac integration. Default: 80001.
-        Must have precomputed abscissa/weight files in fcdft/wbl/{abscissas,weights}/.
-    abscissas : ndarray
-        Quadrature abscissas (energy points) for Gaussian quadrature.
-    weights : ndarray
-        Quadrature weights corresponding to abscissas.
-    quad_method : str
-        Quadrature method: 'GAUSS' (Gauss-Legendre) or 'QUADPACK' (GSL).
-        Default: 'GAUSS'.
-    _numint : NumInt
-        Numerical integration helper for density evaluation.
     """
     _keys = {'broad', 'fermi', 'pot_cycle', 'smear', 'nelectron', 'inner_cycle',
-             'pot_damp', 'bias', 'ref_pot', 'window', 'quad_order', 'abscissas', 'weights', 'quad_method'}
+             'pot_damp', 'bias', 'ref_pot'}
 
     def __init__(self, broad=0.0, smear=0.2, inner_cycle=1, ref_pot=5.51, nelectron=None):
         """
@@ -540,27 +393,13 @@ class WBLBase:
         self.inner_cycle = inner_cycle
         self.pot_damp = 0.5e0
         self.bias = None
-        self.window = 2000e0
-        self.quad_order = 80001
-        self._numint = numint.NumInt()
-        self.quad_method = 'GAUSS'
 
     def dump_flags(self, verbose=None):
-        """
-        Print WBL parameters to the logger.
-
-        Parameters
-        ----------
-        verbose : int, optional
-            Logger verbosity level. Uses self.verbose if None.
-        """
         logger.info(self, '******** %s ********', self.__class__)
         logger.info(self, 'Level broadening = %.5f eV', self.broad)
         logger.info(self, 'Fermi smearing = %.2f eV', self.smear)
         logger.info(self, 'Target number of electrons = %.2f', self.nelectron)
         logger.info(self, 'Reference potential = %.5f eV', self.ref_pot)
-        logger.info(self, 'Integration range = %.5f eV', self.window*self.broad)
-        logger.info(self, 'Number of Abscissas = %5d points', self.quad_order)
 
     def get_grad(self, mo_coeff, mo_occ, fock=None):
         if fock is None:
@@ -571,12 +410,10 @@ class WBLBase:
     def nuc_grad_method(self):
         raise NotImplementedError
 
-    def _eig(self, h, s, overwrite=False, x=None):
-        # TODO: linear dependency handle
-        return eig(h, s)
-
-    def eig(self, h, s, overwrite=False, x=None):
-        return self._eig(h, s, overwrite, x)
+    def _eigh(self, h, s, overwrite=False, x=None):
+        broad = self.broad / HARTREE2EV
+        e, c = eig(h.real, s, overwrite=overwrite)
+        return e - 0.5j*broad, c
     
     def get_fermi_level(self, nelec=None, pot_cycle=None, broad=None, mo_energy=None, fermi=None, verbose=None):
         """
@@ -611,40 +448,6 @@ class WBLBase:
         if nelec is None: nelec = self.nelectron / 2
         if verbose is None: verbose = self.verbose
         return get_fermi_level(self, nelec, pot_cycle, broad, mo_energy, fermi, verbose)
-
-    def build(self, mol=None):
-        """
-        Build the WBL object.
-
-        Parameters
-        ----------
-        mol : gto.Mole, optional
-            Molecule object. Default: self.mol.
-
-        Returns
-        -------
-        self : WBLBase
-            Returns self for chaining.
-        """
-        super().build(mol)
-        quad_order = self.quad_order
-        if self.quad_method.upper() == 'GAUSS':
-            logger.warn(self, 'Gauss-Legendre quadrature method will be deprecated.')
-        try:
-            if self.verbose > logger.NOTE:
-                logger.info(self, 'Load precomputed Legendre quadrature info for %s points', quad_order)
-            path = os.path.join(fcdft.__path__[0], 'wbl')
-            self.abscissas = numpy.load(os.path.join(path, 'abscissas', '%s.npy' % quad_order))
-            self.weights = numpy.load(os.path.join(path, 'weights', '%s.npy' % quad_order))
-        except FileNotFoundError:
-            if self.verbose > logger.NOTE:
-                logger.info(self, 'Compute Legendre quadrature info for %s points', quad_order)
-            drv = libfcdft.roots_legendre
-            c_quad_order = ctypes.c_int(quad_order)
-            abscissas, weights = numpy.empty(quad_order, order='C'), numpy.empty(quad_order, order='C')
-            drv(c_quad_order, abscissas.ctypes.data_as(ctypes.c_void_p), weights.ctypes.data_as(ctypes.c_void_p))
-            self.abscissas, self.weights = abscissas, weights
-        return self
 
     def init_guess_by_chkfile(self, chkfile=None, project=None):
         """
@@ -758,7 +561,7 @@ class WBLMoleculeRKS(WBLBase, rks.RKS):
         super()._finalize()
         dm = self.make_rdm1(self.mo_coeff, self.mo_occ)
         s1e = self.get_ovlp()
-        nelectron = numpy.trace(numpy.dot(dm, s1e)).real
+        nelectron = numpy.trace(numpy.dot(dm, s1e))
         logger.note(self, 'number of electrons = %.15g', nelectron)
         logger.note(self, 'optimized chemical potential = %.15g eV', self.fermi) # Unit in eV
         return self
@@ -771,7 +574,6 @@ class WBLMoleculeRKS(WBLBase, rks.RKS):
     get_veff = get_veff
     get_fock = get_fock
     get_occ = get_occ
-    make_rdm1 = lib.module_method(make_rdm1, absences=['mo_coeff', 'mo_occ'])
     energy_elec = energy_elec
 
 if __name__ == '__main__':
@@ -795,5 +597,4 @@ H        1.3390319419     -0.0095801980     -0.2157234144''',
         charge=0, basis='6-31g**', verbose=5)
     wblmf = WBLMoleculeRKS(mol, xc='b3lyp', broad=0.01, smear=0.2, nelectron=69.00)
     wblmf.conv_tol = 1e-8
-    wblmf.quad_method='quadpack'
     wblmf.kernel()
