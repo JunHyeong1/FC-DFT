@@ -9,7 +9,6 @@ import scipy
 import fcdft
 import ctypes
 import os
-from fcdft.dft import numint
 
 libfcdft = lib.load_library(os.path.join(fcdft.__path__[0], 'lib', 'libfcdft'))
 
@@ -538,7 +537,6 @@ class WBLMoleculeRKS(WBLBase, rks.RKS):
     def __init__(self, mol, xc='LDA,VWN', broad=0.0, smear=0.2, inner_cycle=1, ref_pot=5.51, nelectron=None):
         rks.RKS.__init__(self, mol, xc=xc)
         WBLBase.__init__(self, broad, smear, inner_cycle, ref_pot, nelectron)
-        self._numint = numint.NumInt()
 
     def dump_flags(self, verbose=None):
         rks.RKS.dump_flags(self, verbose)
