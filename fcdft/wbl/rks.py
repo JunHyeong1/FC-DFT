@@ -414,7 +414,11 @@ class WBLBase:
         broad = self.broad / HARTREE2EV
         e, c = eig(h.real, s, overwrite=overwrite)
         return e - 0.5j*broad, c
-    
+
+    def check_linear_dependency(self, s, verbose=None):
+        """Skipping warning message"""
+        return rhf.check_linear_dependency(s, None)
+
     def get_fermi_level(self, nelec=None, pot_cycle=None, broad=None, mo_energy=None, fermi=None, verbose=None):
         """
         Calculate Fermi level via Newton-Raphson method.
